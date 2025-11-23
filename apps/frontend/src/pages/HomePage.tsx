@@ -13,6 +13,7 @@ interface GoldenBet {
   odds: number;
   confidence: number;
   lm_probability: number;
+  markup_value: number;
   ai_explanation: string;
   result?: 'win' | 'loss' | 'pending';
 }
@@ -118,9 +119,9 @@ const HomePage: React.FC = () => {
   const getMarketLabel = (market: string) => {
     const labels: Record<string, string> = {
       'btts': 'BTTS',
-      'over_2_5_goals': 'Over 2.5',
-      'over_9_5_corners': 'O9.5 Corners',
-      'over_3_5_cards': 'O3.5 Cards'
+      'over_2_5_goals': 'Over 2.5 Goals',
+      'over_9_5_corners': 'Over 9.5 Corners',
+      'over_3_5_cards': 'Over 3.5 Cards'
     };
     return labels[market] || market;
   };
@@ -159,7 +160,165 @@ const HomePage: React.FC = () => {
       </header>
 
       <div className="max-w-7xl mx-auto px-4 py-8">
-        {/* Golden Bets Section */}
+        {/* Date Selector - FlashScore Style */}
+        <section className="mb-6">
+          <div className="flex items-center gap-3 mb-4">
+            <Calendar className="w-6 h-6 text-purple-400" />
+            <h2 className="text-2xl font-bold text-purple-300">Fixtures</h2>
+          </div>
+
+          <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-thin scrollbar-thumb-purple-700 scrollbar-track-black">
+            {dateRange.map((date) => (
+              <button
+                key={date}
+                onClick={() => setSelectedDate(date)}
+                className={`px-4 py-2 rounded-lg font-semibold whitespace-nowrap transition-all ${
+                  selectedDate === date
+                    ? 'bg-purple-600 text-white shadow-[0_0_20px_rgba(168,85,247,0.5)]'
+                    : 'bg-purple-950/30 text-purple-300 hover:bg-purple-900/50 border border-purple-800'
+                }`}
+              >
+                {formatDate(date)}
+              </button>
+            ))}
+          </div>
+        </section>
+
+        {/* Fixtures List - Compact FlashScore Style */}
+        <section className="mb-12">
+          {filteredFixtures.length === 0 ? (
+            <div className="text-center text-gray-400 py-8 bg-purple-950/20 rounded-lg border border-purple-900/50">
+              No fixtures available for this date
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {/* Group by league */}
+              {Object.entries(
+                filteredFixtures.reduce((acc, fixture) => {
+                  if (!acc[fixture.league]) acc[fixture.league] = [];
+                  acc[fixture.league].push(fixture);
+                  return acc;
+                }, {} as Record<string, Fixture[]>)
+              ).map(([league, leagueFixtures]) => (
+                <div key={league} className="bg-gradient-to-r from-purple-950/20 to-black border border-purple-900/50 rounded-lg overflow-hidden">
+                  {/* League Header - Compact */}
+                  <div className="bg-purple-950/40 px-4 py-2 border-b border-purple-800">
+                    <h3 className="font-bold text-purple-300 text-sm">{league}</h3>
+                  </div>
+
+                  {/* Fixtures - Compact Rows */}
+                  <div className="divide-y divide-purple-900/30">
+                    {leagueFixtures.map((fixture) => (
+                      <div key={fixture.fixture_id}>
+                        {/* Fixture Row - Compact */}
+                        <div
+                          onClick={() => toggleFixture(fixture.fixture_id)}
+                          className="px-4 py-2 hover:bg-purple-950/30 cursor-pointer transition-colors"
+                        >
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-3 flex-1">
+                              <span className="text-gray-400 text-xs w-10">{formatTime(fixture.kickoff)}</span>
+                              <div className="flex-1">
+                                <div className="text-sm font-medium">{fixture.home_team} vs {fixture.away_team}</div>
+                              </div>
+                            </div>
+
+                            {/* Golden Bet Indicator - Compact */}
+                            <div className="flex items-center gap-2">
+                              <div className="bg-yellow-500/20 border border-yellow-500 rounded px-2 py-0.5">
+                                <Star className="w-3 h-3 text-yellow-400 fill-yellow-400 inline mr-1" />
+                                <span className="text-yellow-400 text-xs font-bold">
+                                  {getMarketLabel(fixture.golden_bet.market)}
+                                </span>
+                              </div>
+                              {expandedFixture === fixture.fixture_id ? (
+                                <ChevronUp className="w-4 h-4 text-purple-400" />
+                              ) : (
+                                <ChevronDown className="w-4 h-4 text-purple-400" />
+                              )}
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Expanded Details */}
+                        {expandedFixture === fixture.fixture_id && (
+                          <div className="px-4 py-3 bg-black/50 border-t border-purple-900/30">
+                            <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+                              {/* BTTS */}
+                              <div className="bg-purple-950/30 rounded-lg p-2 border border-purple-800">
+                                <div className="text-purple-300 text-xs font-semibold mb-1">BTTS</div>
+                                <div className="flex justify-between items-center mb-1">
+                                  <span className="text-xs">Yes</span>
+                                  <span className="font-bold text-purple-400 text-sm">{fixture.odds?.btts_yes.toFixed(2)}</span>
+                                </div>
+                                <div className="text-xs text-green-400">
+                                  AI: {(fixture.predictions.btts.yes * 100).toFixed(0)}%
+                                </div>
+                              </div>
+
+                              {/* Over 2.5 Goals */}
+                              <div className="bg-purple-950/30 rounded-lg p-2 border border-purple-800">
+                                <div className="text-purple-300 text-xs font-semibold mb-1">Over 2.5</div>
+                                <div className="flex justify-between items-center mb-1">
+                                  <span className="text-xs">Over</span>
+                                  <span className="font-bold text-purple-400 text-sm">{fixture.odds?.over_2_5.toFixed(2)}</span>
+                                </div>
+                                <div className="text-xs text-green-400">
+                                  AI: {(fixture.predictions.over_2_5_goals.over * 100).toFixed(0)}%
+                                </div>
+                              </div>
+
+                              {/* Over 9.5 Corners */}
+                              <div className="bg-purple-950/30 rounded-lg p-2 border border-purple-800">
+                                <div className="text-purple-300 text-xs font-semibold mb-1">O9.5 Corners</div>
+                                <div className="flex justify-between items-center mb-1">
+                                  <span className="text-xs">Over</span>
+                                  <span className="font-bold text-purple-400 text-sm">{fixture.odds?.over_9_5_corners.toFixed(2)}</span>
+                                </div>
+                                <div className="text-xs text-green-400">
+                                  AI: {(fixture.predictions.over_9_5_corners.over * 100).toFixed(0)}%
+                                </div>
+                              </div>
+
+                              {/* Over 3.5 Cards */}
+                              <div className="bg-purple-950/30 rounded-lg p-2 border border-purple-800">
+                                <div className="text-purple-300 text-xs font-semibold mb-1">O3.5 Cards</div>
+                                <div className="flex justify-between items-center mb-1">
+                                  <span className="text-xs">Over</span>
+                                  <span className="font-bold text-purple-400 text-sm">{fixture.odds?.over_3_5_cards.toFixed(2)}</span>
+                                </div>
+                                <div className="text-xs text-green-400">
+                                  AI: {(fixture.predictions.over_3_5_cards.over * 100).toFixed(0)}%
+                                </div>
+                              </div>
+                            </div>
+
+                            {/* Golden Bet Highlight */}
+                            <div className="mt-3 bg-gradient-to-r from-yellow-950/30 to-purple-950/30 border border-yellow-600 rounded-lg p-3">
+                              <div className="flex items-center gap-2 mb-1">
+                                <Star className="w-4 h-4 text-yellow-400 fill-yellow-400" />
+                                <span className="text-yellow-400 font-bold text-sm">GOLDEN BET</span>
+                              </div>
+                              <div className="text-white text-sm">
+                                <span className="font-semibold">{getMarketLabel(fixture.golden_bet.market)}</span>
+                                <span className="text-gray-400 mx-2">•</span>
+                                <span className="text-green-400 font-bold">
+                                  {(fixture.golden_bet.probability * 100).toFixed(0)}% Confidence
+                                </span>
+                              </div>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </section>
+
+        {/* Golden Bets Section - Enhanced Detail */}
         <section className="mb-12">
           <div className="flex items-center gap-3 mb-6">
             <Star className="w-8 h-8 text-yellow-400 fill-yellow-400" />
@@ -172,40 +331,42 @@ const HomePage: React.FC = () => {
                 key={bet.bet_id}
                 className="relative bg-gradient-to-br from-purple-950/40 via-black to-purple-950/40 border-2 border-purple-500 rounded-xl p-6 hover:border-purple-400 transition-all hover:shadow-[0_0_30px_rgba(168,85,247,0.3)]"
               >
-                {/* Golden Star Badge */}
-                <div className="absolute -top-3 -right-3 bg-yellow-400 rounded-full p-2">
-                  <Star className="w-6 h-6 text-black fill-black" />
+                {/* AI % Badge - Top Right */}
+                <div className="absolute -top-3 -right-3 bg-gray-800 border-2 border-purple-500 rounded-full px-3 py-1">
+                  <span className="text-white font-bold text-sm">{(bet.lm_probability * 100).toFixed(0)}%</span>
                 </div>
 
-                {/* League */}
-                <div className="text-purple-300 text-sm font-semibold mb-2">{bet.league}</div>
-
-                {/* Teams */}
-                <div className="text-xl font-bold mb-3">
+                {/* Fixture */}
+                <div className="text-xl font-bold mb-2">
                   {bet.home_team} <span className="text-purple-400">vs</span> {bet.away_team}
                 </div>
 
-                {/* Time */}
-                <div className="flex items-center gap-2 text-gray-400 text-sm mb-4">
-                  <Clock className="w-4 h-4" />
-                  {formatTime(bet.kickoff)}
+                {/* League */}
+                <div className="text-purple-300 text-sm font-semibold mb-4">{bet.league}</div>
+
+                {/* Market Name */}
+                <div className="text-gray-400 text-sm mb-1">{getMarketLabel(bet.market)}</div>
+
+                {/* Selection + Odds */}
+                <div className="flex items-baseline gap-3 mb-3">
+                  <span className="text-2xl font-bold text-white">{bet.selection}</span>
+                  <div className="flex items-center gap-2">
+                    <svg className="w-4 h-4 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
+                    </svg>
+                    <span className="text-3xl font-bold text-green-400">{bet.odds.toFixed(2)}</span>
+                  </div>
                 </div>
 
-                {/* Market & Odds */}
-                <div className="bg-black/50 rounded-lg p-4 mb-4">
-                  <div className="flex justify-between items-center mb-2">
-                    <span className="text-purple-300 font-semibold">{getMarketLabel(bet.market)}</span>
-                    <span className="text-2xl font-bold text-purple-400">{bet.odds.toFixed(2)}</span>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <span className="text-gray-400 text-sm">AI Probability</span>
-                    <span className="text-green-400 font-bold text-lg">{(bet.lm_probability * 100).toFixed(0)}%</span>
-                  </div>
+                {/* AI + Markup Value Line */}
+                <div className="text-center bg-black/50 rounded-lg py-2 mb-4">
+                  <span className="text-white font-semibold text-sm">
+                    AI - {(bet.lm_probability * 100).toFixed(0)}% - {bet.markup_value.toFixed(0)}% Markup Value
+                  </span>
                 </div>
 
                 {/* AI Reasoning */}
                 <div className="bg-purple-950/30 rounded-lg p-3 mb-4">
-                  <div className="text-xs text-purple-300 mb-1">AI REASONING</div>
                   <div className="text-sm text-gray-300 leading-relaxed">{bet.ai_explanation}</div>
                 </div>
 
@@ -278,167 +439,6 @@ const HomePage: React.FC = () => {
             </div>
           </section>
         )}
-
-        {/* Date Selector - FlashScore Style */}
-        <section className="mb-8">
-          <div className="flex items-center gap-3 mb-4">
-            <Calendar className="w-6 h-6 text-purple-400" />
-            <h2 className="text-2xl font-bold text-purple-300">Fixtures</h2>
-          </div>
-
-          <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-thin scrollbar-thumb-purple-700 scrollbar-track-black">
-            {dateRange.map((date) => (
-              <button
-                key={date}
-                onClick={() => setSelectedDate(date)}
-                className={`px-4 py-2 rounded-lg font-semibold whitespace-nowrap transition-all ${
-                  selectedDate === date
-                    ? 'bg-purple-600 text-white shadow-[0_0_20px_rgba(168,85,247,0.5)]'
-                    : 'bg-purple-950/30 text-purple-300 hover:bg-purple-900/50 border border-purple-800'
-                }`}
-              >
-                {formatDate(date)}
-              </button>
-            ))}
-          </div>
-        </section>
-
-        {/* Fixtures List - FlashScore Style */}
-        <section>
-          {filteredFixtures.length === 0 ? (
-            <div className="text-center text-gray-400 py-12">
-              No fixtures available for this date
-            </div>
-          ) : (
-            <div className="space-y-6">
-              {/* Group by league */}
-              {Object.entries(
-                filteredFixtures.reduce((acc, fixture) => {
-                  if (!acc[fixture.league]) acc[fixture.league] = [];
-                  acc[fixture.league].push(fixture);
-                  return acc;
-                }, {} as Record<string, Fixture[]>)
-              ).map(([league, leagueFixtures]) => (
-                <div key={league} className="bg-gradient-to-r from-purple-950/20 to-black border border-purple-900/50 rounded-xl overflow-hidden">
-                  {/* League Header */}
-                  <div className="bg-purple-950/40 px-4 py-3 border-b border-purple-800">
-                    <h3 className="font-bold text-purple-300">{league}</h3>
-                  </div>
-
-                  {/* Fixtures */}
-                  <div className="divide-y divide-purple-900/30">
-                    {leagueFixtures.map((fixture) => (
-                      <div key={fixture.fixture_id}>
-                        {/* Fixture Row */}
-                        <div
-                          onClick={() => toggleFixture(fixture.fixture_id)}
-                          className="px-4 py-3 hover:bg-purple-950/30 cursor-pointer transition-colors"
-                        >
-                          <div className="flex items-center justify-between">
-                            <div className="flex-1">
-                              <div className="flex items-center gap-3">
-                                <span className="text-gray-400 text-sm w-12">{formatTime(fixture.kickoff)}</span>
-                                <div className="flex-1">
-                                  <div className="font-semibold">{fixture.home_team}</div>
-                                  <div className="font-semibold">{fixture.away_team}</div>
-                                </div>
-                              </div>
-                            </div>
-
-                            {/* Golden Bet Indicator */}
-                            <div className="flex items-center gap-3">
-                              <div className="bg-yellow-500/20 border border-yellow-500 rounded-lg px-3 py-1">
-                                <Star className="w-4 h-4 text-yellow-400 fill-yellow-400 inline mr-1" />
-                                <span className="text-yellow-400 text-sm font-bold">
-                                  {getMarketLabel(fixture.golden_bet.market)}
-                                </span>
-                              </div>
-                              {expandedFixture === fixture.fixture_id ? (
-                                <ChevronUp className="w-5 h-5 text-purple-400" />
-                              ) : (
-                                <ChevronDown className="w-5 h-5 text-purple-400" />
-                              )}
-                            </div>
-                          </div>
-                        </div>
-
-                        {/* Expanded Details */}
-                        {expandedFixture === fixture.fixture_id && (
-                          <div className="px-4 py-4 bg-black/50 border-t border-purple-900/30">
-                            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                              {/* BTTS */}
-                              <div className="bg-purple-950/30 rounded-lg p-3 border border-purple-800">
-                                <div className="text-purple-300 text-xs font-semibold mb-2">BTTS</div>
-                                <div className="flex justify-between items-center mb-1">
-                                  <span className="text-sm">Yes</span>
-                                  <span className="font-bold text-purple-400">{fixture.odds?.btts_yes.toFixed(2)}</span>
-                                </div>
-                                <div className="text-xs text-green-400">
-                                  AI: {(fixture.predictions.btts.yes * 100).toFixed(0)}%
-                                </div>
-                              </div>
-
-                              {/* Over 2.5 Goals */}
-                              <div className="bg-purple-950/30 rounded-lg p-3 border border-purple-800">
-                                <div className="text-purple-300 text-xs font-semibold mb-2">Over 2.5</div>
-                                <div className="flex justify-between items-center mb-1">
-                                  <span className="text-sm">Over</span>
-                                  <span className="font-bold text-purple-400">{fixture.odds?.over_2_5.toFixed(2)}</span>
-                                </div>
-                                <div className="text-xs text-green-400">
-                                  AI: {(fixture.predictions.over_2_5_goals.over * 100).toFixed(0)}%
-                                </div>
-                              </div>
-
-                              {/* Over 9.5 Corners */}
-                              <div className="bg-purple-950/30 rounded-lg p-3 border border-purple-800">
-                                <div className="text-purple-300 text-xs font-semibold mb-2">O9.5 Corners</div>
-                                <div className="flex justify-between items-center mb-1">
-                                  <span className="text-sm">Over</span>
-                                  <span className="font-bold text-purple-400">{fixture.odds?.over_9_5_corners.toFixed(2)}</span>
-                                </div>
-                                <div className="text-xs text-green-400">
-                                  AI: {(fixture.predictions.over_9_5_corners.over * 100).toFixed(0)}%
-                                </div>
-                              </div>
-
-                              {/* Over 3.5 Cards */}
-                              <div className="bg-purple-950/30 rounded-lg p-3 border border-purple-800">
-                                <div className="text-purple-300 text-xs font-semibold mb-2">O3.5 Cards</div>
-                                <div className="flex justify-between items-center mb-1">
-                                  <span className="text-sm">Over</span>
-                                  <span className="font-bold text-purple-400">{fixture.odds?.over_3_5_cards.toFixed(2)}</span>
-                                </div>
-                                <div className="text-xs text-green-400">
-                                  AI: {(fixture.predictions.over_3_5_cards.over * 100).toFixed(0)}%
-                                </div>
-                              </div>
-                            </div>
-
-                            {/* Golden Bet Highlight */}
-                            <div className="mt-4 bg-gradient-to-r from-yellow-950/30 to-purple-950/30 border-2 border-yellow-600 rounded-lg p-4">
-                              <div className="flex items-center gap-2 mb-2">
-                                <Star className="w-5 h-5 text-yellow-400 fill-yellow-400" />
-                                <span className="text-yellow-400 font-bold">GOLDEN BET</span>
-                              </div>
-                              <div className="text-white">
-                                <span className="font-semibold">{getMarketLabel(fixture.golden_bet.market)}</span>
-                                <span className="text-gray-400 mx-2">•</span>
-                                <span className="text-green-400 font-bold">
-                                  {(fixture.golden_bet.probability * 100).toFixed(0)}% Confidence
-                                </span>
-                              </div>
-                            </div>
-                          </div>
-                        )}
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </section>
       </div>
     </div>
   );
