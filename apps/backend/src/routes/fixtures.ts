@@ -1,5 +1,12 @@
-import { Router } from 'express';
+import { Router, Request, Response } from 'express';
 import { Fixture } from '../models/Fixture.js';
+import { 
+  analyzeFixture, 
+  analyzeBulkFixtures, 
+  findGoldenBets, 
+  findValueBets,
+  Fixture as FixtureInput 
+} from '../services/fixturesService';
 
 const router = Router();
 
@@ -81,6 +88,137 @@ router.get('/meta/leagues', async (req, res) => {
       error: error.message,
     });
   }
+});
+
+// AI-POWERED ENDPOINTS
+
+/**
+ * POST /api/fixtures/analyze
+ * Analyze a single fixture with AI
+ */
+router.post('/analyze', async (req: Request, res: Response) => {
+  try {
+    const fixture: FixtureInput = req.body;
+    
+    if (!fixture.homeTeam || !fixture.awayTeam || !fixture.league) {
+      return res.status(400).json({ 
+        error: 'Missing required fields: homeTeam, awayTeam, league' 
+      });
+    }
+
+    const prediction = await analyzeFixture(fixture);
+    res.json({ success: true, data: prediction });
+  } catch (error: any) {
+    console.error('Error analyzing fixture:', error);
+    res.status(500).json({ 
+      error: 'Failed to analyze fixture', 
+      message: error.message 
+    });
+  }
+});
+
+/**
+ * POST /api/fixtures/analyze-bulk
+ * Analyze multiple fixtures with AI
+ */
+router.post('/analyze-bulk', async (req: Request, res: Response) => {
+  try {
+    const fixtures: FixtureInput[] = req.body.fixtures;
+    
+    if (!Array.isArray(fixtures) || fixtures.length === 0) {
+      return res.status(400).json({ 
+        error: 'fixtures array is required and must not be empty' 
+      });
+    }
+
+    const predictions = await analyzeBulkFixtures(fixtures);
+    res.json({ 
+      success: true, 
+      data: predictions,
+      count: predictions.length 
+    });
+  } catch (error: any) {
+    console.error('Error analyzing fixtures:', error);
+    res.status(500).json({ 
+      error: 'Failed to analyze fixtures', 
+      message: error.message 
+    });
+  }
+});
+
+/**
+ * POST /api/fixtures/golden-bets
+ * Find golden bets from fixtures using AI
+ */
+router.post('/golden-bets', async (req: Request, res: Response) => {
+  try {
+    const fixtures: FixtureInput[] = req.body.fixtures;
+    
+    if (!Array.isArray(fixtures) || fixtures.length === 0) {
+      return res.status(400).json({ 
+        error: 'fixtures array is required' 
+      });
+    }
+
+    const predictions = await analyzeBulkFixtures(fixtures);
+    const goldenBets = await findGoldenBets(predictions);
+    
+    res.json({ 
+      success: true, 
+      data: goldenBets,
+      count: goldenBets.length 
+    });
+  } catch (error: any) {
+    console.error('Error finding golden bets:', error);
+    res.status(500).json({ 
+      error: 'Failed to find golden bets', 
+      message: error.message 
+    });
+  }
+});
+
+/**
+ * POST /api/fixtures/value-bets
+ * Find value bets from fixtures using AI
+ */
+router.post('/value-bets', async (req: Request, res: Response) => {
+  try {
+    const fixtures: FixtureInput[] = req.body.fixtures;
+    
+    if (!Array.isArray(fixtures) || fixtures.length === 0) {
+      return res.status(400).json({ 
+        error: 'fixtures array is required' 
+      });
+    }
+
+    const predictions = await analyzeBulkFixtures(fixtures);
+    const valueBets = await findValueBets(predictions);
+    
+    res.json({ 
+      success: true, 
+      data: valueBets,
+      count: valueBets.length 
+    });
+  } catch (error: any) {
+    console.error('Error finding value bets:', error);
+    res.status(500).json({ 
+      error: 'Failed to find value bets', 
+      message: error.message 
+    });
+  }
+});
+
+/**
+ * GET /api/fixtures/health
+ * Health check for fixtures service
+ */
+router.get('/health', (req: Request, res: Response) => {
+  res.json({ 
+    success: true, 
+    service: 'fixtures',
+    openai: !!process.env.OPENAI_API_KEY,
+    timestamp: new Date().toISOString()
+  });
 });
 
 export default router;
