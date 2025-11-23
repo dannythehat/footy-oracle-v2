@@ -1,0 +1,12 @@
+# Footy Oracle v2 - Monorepo
+
+node_modules/
+dist/
+build/
+.env
+.env.local
+.DS_Store
+*.log
+coverage/
+.vscode/
+.idea/
