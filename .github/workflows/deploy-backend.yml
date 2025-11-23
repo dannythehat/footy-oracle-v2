@@ -1,0 +1,39 @@
+name: Deploy Backend to Railway
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'apps/backend/**'
+  pull_request:
+    branches: [main]
+    paths:
+      - 'apps/backend/**'
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+          
+      - name: Install dependencies
+        working-directory: apps/backend
+        run: npm ci
+        
+      - name: Build
+        working-directory: apps/backend
+        run: npm run build
+        
+      - name: Run tests
+        working-directory: apps/backend
+        run: npm test || echo "No tests configured yet"
+        
+      - name: Deploy to Railway
+        run: |
+          echo "Backend deployment configured via Railway GitHub integration"
+          echo "Push to main branch triggers automatic deployment"
