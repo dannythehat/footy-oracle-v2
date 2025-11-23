@@ -9,7 +9,8 @@
     "build": "tsc",
     "start": "node dist/server.js",
     "lint": "eslint src --ext .ts",
-    "test": "jest"
+    "test": "jest",
+    "test:fixtures": "tsx test-fixtures.ts"
   },
   "dependencies": {
     "express": "^4.18.2",
