@@ -5,6 +5,42 @@ import { bettingInsightsService } from '../services/bettingInsightsService.js';
 const router = express.Router();
 
 /**
+ * GET /api/betting-insights/fixtures/upcoming
+ * Get all fixtures with AI betting insights available
+ * NOTE: This must be defined BEFORE /:fixtureId to avoid route conflicts
+ */
+router.get('/fixtures/upcoming', async (req, res) => {
+  try {
+    const now = new Date();
+    const sevenDaysFromNow = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
+
+    const fixtures = await Fixture.find({
+      date: {
+        $gte: now,
+        $lte: sevenDaysFromNow
+      },
+      status: 'scheduled',
+      'aiBets.generatedAt': { $exists: true }
+    }).sort({ date: 1 });
+
+    res.json({
+      count: fixtures.length,
+      fixtures: fixtures.map(f => ({
+        fixtureId: f.fixtureId,
+        homeTeam: f.homeTeam,
+        awayTeam: f.awayTeam,
+        league: f.league,
+        date: f.date,
+        aiBets: f.aiBets
+      }))
+    });
+  } catch (error) {
+    console.error('Error fetching upcoming fixtures with insights:', error);
+    res.status(500).json({ error: 'Failed to fetch fixtures' });
+  }
+});
+
+/**
  * GET /api/betting-insights/:fixtureId
  * Get AI betting insights for a specific fixture
  */
@@ -89,41 +125,6 @@ router.post('/:fixtureId/reveal-golden', async (req, res) => {
   } catch (error) {
     console.error('Error revealing golden bet:', error);
     res.status(500).json({ error: 'Failed to reveal golden bet' });
-  }
-});
-
-/**
- * GET /api/betting-insights/fixtures/upcoming
- * Get all fixtures with AI betting insights available
- */
-router.get('/fixtures/upcoming', async (req, res) => {
-  try {
-    const now = new Date();
-    const sevenDaysFromNow = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
-
-    const fixtures = await Fixture.find({
-      date: {
-        $gte: now,
-        $lte: sevenDaysFromNow
-      },
-      status: 'scheduled',
-      'aiBets.generatedAt': { $exists: true }
-    }).sort({ date: 1 });
-
-    res.json({
-      count: fixtures.length,
-      fixtures: fixtures.map(f => ({
-        fixtureId: f.fixtureId,
-        homeTeam: f.homeTeam,
-        awayTeam: f.awayTeam,
-        league: f.league,
-        date: f.date,
-        aiBets: f.aiBets
-      }))
-    });
-  } catch (error) {
-    console.error('Error fetching upcoming fixtures with insights:', error);
-    res.status(500).json({ error: 'Failed to fetch fixtures' });
   }
 });
 
