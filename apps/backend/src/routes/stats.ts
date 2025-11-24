@@ -1,9 +1,11 @@
 import { Router } from 'express';
 import { Prediction } from '../models/Prediction.js';
+import { getTrebleStats, getTodaysTreble, getHistoricalTrebles } from '../services/trebleService.js';
+import { getSettlementStats } from '../services/resultSettlementService.js';
 
 const router = Router();
 
-// Get P&L statistics
+// Get P&L statistics for Golden Bets
 router.get('/pnl', async (req, res) => {
   try {
     const { period = 'all' } = req.query;
@@ -55,7 +57,12 @@ router.get('/pnl', async (req, res) => {
     
     res.json({
       success: true,
-      data: stats,
+      data: {
+        ...stats,
+        totalProfit: parseFloat(stats.totalProfit.toFixed(2)),
+        winRate: parseFloat(stats.winRate.toFixed(2)),
+        roi: parseFloat(stats.roi.toFixed(2)),
+      },
       period,
     });
   } catch (error: any) {
@@ -66,40 +73,64 @@ router.get('/pnl', async (req, res) => {
   }
 });
 
-// Get treble calculator stats
-router.get('/treble', async (req, res) => {
+// Get today's treble calculator
+router.get('/treble/today', async (req, res) => {
   try {
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
+    const treble = await getTodaysTreble();
     
-    const tomorrow = new Date(today);
-    tomorrow.setDate(tomorrow.getDate() + 1);
-    
-    const goldenBets = await Prediction.find({
-      isGoldenBet: true,
-      date: { $gte: today, $lt: tomorrow },
-    })
-      .sort({ confidence: -1 })
-      .limit(3);
-    
-    const trebleOdds = goldenBets.reduce((acc, bet) => acc * bet.odds, 1);
-    const stake = 10;
-    const potentialReturn = stake * trebleOdds;
-    const potentialProfit = potentialReturn - stake;
+    if (!treble) {
+      return res.status(404).json({
+        success: false,
+        error: 'No treble available for today',
+      });
+    }
     
     res.json({
       success: true,
-      data: {
-        bets: goldenBets.map(b => ({
-          match: `${b.homeTeam} vs ${b.awayTeam}`,
-          prediction: b.prediction,
-          odds: b.odds,
-        })),
-        trebleOdds: parseFloat(trebleOdds.toFixed(2)),
-        stake,
-        potentialReturn: parseFloat(potentialReturn.toFixed(2)),
-        potentialProfit: parseFloat(potentialProfit.toFixed(2)),
-      },
+      data: treble,
+    });
+  } catch (error: any) {
+    res.status(500).json({
+      success: false,
+      error: error.message,
+    });
+  }
+});
+
+// Get treble statistics
+router.get('/treble', async (req, res) => {
+  try {
+    const { period = 'all' } = req.query;
+    
+    const stats = await getTrebleStats(period as any);
+    
+    res.json({
+      success: true,
+      data: stats,
+    });
+  } catch (error: any) {
+    res.status(500).json({
+      success: false,
+      error: error.message,
+    });
+  }
+});
+
+// Get historical trebles
+router.get('/treble/history', async (req, res) => {
+  try {
+    const { startDate, endDate, status } = req.query;
+    
+    const trebles = await getHistoricalTrebles(
+      startDate as string,
+      endDate as string,
+      status as any
+    );
+    
+    res.json({
+      success: true,
+      data: trebles,
+      count: trebles.length,
     });
   } catch (error: any) {
     res.status(500).json({
@@ -132,6 +163,12 @@ router.get('/overview', async (req, res) => {
       ? (winningBets / totalGoldenBetsSettled) * 100 
       : 0;
     
+    // Get settlement stats
+    const settlementStats = await getSettlementStats();
+    
+    // Get treble stats
+    const trebleStats = await getTrebleStats('all');
+    
     res.json({
       success: true,
       data: {
@@ -139,7 +176,110 @@ router.get('/overview', async (req, res) => {
         goldenBets,
         pendingBets,
         winRate: parseFloat(winRate.toFixed(2)),
+        settlement: settlementStats,
+        trebles: {
+          total: trebleStats.totalTrebles,
+          won: trebleStats.wonTrebles,
+          lost: trebleStats.lostTrebles,
+          pending: trebleStats.pendingTrebles,
+          winRate: trebleStats.winRate,
+          totalProfit: trebleStats.totalProfit,
+        },
       },
+    });
+  } catch (error: any) {
+    res.status(500).json({
+      success: false,
+      error: error.message,
+    });
+  }
+});
+
+// Get performance by league
+router.get('/by-league', async (req, res) => {
+  try {
+    const predictions = await Prediction.find({
+      isGoldenBet: true,
+      result: { $in: ['win', 'loss'] },
+    });
+    
+    // Group by league
+    const leagueStats = predictions.reduce((acc: any, pred) => {
+      if (!acc[pred.league]) {
+        acc[pred.league] = {
+          league: pred.league,
+          totalBets: 0,
+          wins: 0,
+          losses: 0,
+          totalProfit: 0,
+        };
+      }
+      
+      acc[pred.league].totalBets++;
+      if (pred.result === 'win') acc[pred.league].wins++;
+      if (pred.result === 'loss') acc[pred.league].losses++;
+      acc[pred.league].totalProfit += pred.profit || 0;
+      
+      return acc;
+    }, {});
+    
+    // Calculate win rates and sort
+    const leagueArray = Object.values(leagueStats).map((stats: any) => ({
+      ...stats,
+      winRate: parseFloat(((stats.wins / stats.totalBets) * 100).toFixed(2)),
+      totalProfit: parseFloat(stats.totalProfit.toFixed(2)),
+    })).sort((a: any, b: any) => b.winRate - a.winRate);
+    
+    res.json({
+      success: true,
+      data: leagueArray,
+    });
+  } catch (error: any) {
+    res.status(500).json({
+      success: false,
+      error: error.message,
+    });
+  }
+});
+
+// Get performance by market
+router.get('/by-market', async (req, res) => {
+  try {
+    const predictions = await Prediction.find({
+      isGoldenBet: true,
+      result: { $in: ['win', 'loss'] },
+    });
+    
+    // Group by market
+    const marketStats = predictions.reduce((acc: any, pred) => {
+      if (!acc[pred.market]) {
+        acc[pred.market] = {
+          market: pred.market,
+          totalBets: 0,
+          wins: 0,
+          losses: 0,
+          totalProfit: 0,
+        };
+      }
+      
+      acc[pred.market].totalBets++;
+      if (pred.result === 'win') acc[pred.market].wins++;
+      if (pred.result === 'loss') acc[pred.market].losses++;
+      acc[pred.market].totalProfit += pred.profit || 0;
+      
+      return acc;
+    }, {});
+    
+    // Calculate win rates and sort
+    const marketArray = Object.values(marketStats).map((stats: any) => ({
+      ...stats,
+      winRate: parseFloat(((stats.wins / stats.totalBets) * 100).toFixed(2)),
+      totalProfit: parseFloat(stats.totalProfit.toFixed(2)),
+    })).sort((a: any, b: any) => b.winRate - a.winRate);
+    
+    res.json({
+      success: true,
+      data: marketArray,
     });
   } catch (error: any) {
     res.status(500).json({
