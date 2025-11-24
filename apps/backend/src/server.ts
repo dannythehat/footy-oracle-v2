@@ -7,6 +7,7 @@ import goldenBetsRouter from './routes/goldenBets.js';
 import fixturesRouter from './routes/fixtures.js';
 import predictionsRouter from './routes/predictions.js';
 import statsRouter from './routes/stats.js';
+import bettingInsightsRouter from './routes/bettingInsights.js';
 
 dotenv.config();
 
@@ -35,6 +36,7 @@ app.use('/api/golden-bets', goldenBetsRouter);
 app.use('/api/fixtures', fixturesRouter);
 app.use('/api/predictions', predictionsRouter);
 app.use('/api/stats', statsRouter);
+app.use('/api/betting-insights', bettingInsightsRouter);
 
 // Error handling middleware
 app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {

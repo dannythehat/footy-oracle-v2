@@ -62,7 +62,7 @@ export const fixturesApi = {
     return response.data;
   },
 
-  // NEW: Get Head-to-Head data
+  // Get Head-to-Head data
   getH2H: async (fixtureId: number, homeTeamId: number, awayTeamId: number, last: number = 10) => {
     const response = await apiClient.get(`/api/fixtures/${fixtureId}/h2h`, {
       params: { homeTeamId, awayTeamId, last }
@@ -70,7 +70,7 @@ export const fixturesApi = {
     return response.data;
   },
 
-  // NEW: Get team statistics
+  // Get team statistics
   getTeamStats: async (teamId: number, leagueId: number, season: number) => {
     const response = await apiClient.get(`/api/fixtures/team/${teamId}/stats`, {
       params: { leagueId, season }
@@ -78,7 +78,7 @@ export const fixturesApi = {
     return response.data;
   },
 
-  // NEW: Get complete fixture statistics (H2H + both teams)
+  // Get complete fixture statistics (H2H + both teams)
   getFixtureStats: async (
     fixtureId: number,
     homeTeamId: number,
@@ -92,7 +92,7 @@ export const fixturesApi = {
     return response.data;
   },
 
-  // NEW: Get team's last fixtures
+  // Get team's last fixtures
   getTeamLastFixtures: async (teamId: number, last: number = 5) => {
     const response = await apiClient.get(`/api/fixtures/team/${teamId}/last-fixtures`, {
       params: { last }
@@ -137,6 +137,33 @@ export const statsApi = {
   
   getOverview: async () => {
     const response = await apiClient.get('/api/stats/overview');
+    return response.data;
+  },
+};
+
+// Betting Insights API
+export const bettingInsightsApi = {
+  // Get AI betting insights for a specific fixture
+  getByFixture: async (fixtureId: number) => {
+    const response = await apiClient.get(`/api/betting-insights/${fixtureId}`);
+    return response.data;
+  },
+
+  // Reveal a specific bet type
+  revealBetType: async (fixtureId: number, betType: 'bts' | 'over25' | 'over35cards' | 'over95corners') => {
+    const response = await apiClient.post(`/api/betting-insights/${fixtureId}/reveal/${betType}`);
+    return response.data;
+  },
+
+  // Reveal the golden bet
+  revealGoldenBet: async (fixtureId: number) => {
+    const response = await apiClient.post(`/api/betting-insights/${fixtureId}/reveal-golden`);
+    return response.data;
+  },
+
+  // Get all upcoming fixtures with AI insights
+  getUpcoming: async () => {
+    const response = await apiClient.get('/api/betting-insights/fixtures/upcoming');
     return response.data;
   },
 };
