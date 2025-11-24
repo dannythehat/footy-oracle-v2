@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { Star, TrendingUp, Calendar, Trophy, Target, Brain, Zap, ChevronRight } from 'lucide-react';
+import { Star, TrendingUp, Calendar, Trophy, Target, Brain, Zap, ChevronRight, AlertCircle } from 'lucide-react';
 import FixturesModal from '../components/FixturesModal';
+import { goldenBetsApi, statsApi } from '../services/api';
 
 interface GoldenBet {
   bet_id: string;
@@ -37,9 +38,43 @@ const HomePage: React.FC = () => {
   const [plStats, setPLStats] = useState<PLStats | null>(null);
   const [showFixturesModal, setShowFixturesModal] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [usingMockData, setUsingMockData] = useState(false);
 
-  // Mock data for demo
   useEffect(() => {
+    fetchData();
+  }, []);
+
+  const fetchData = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      
+      // Try to fetch real data from backend
+      const [betsResponse, statsResponse] = await Promise.all([
+        goldenBetsApi.getToday().catch(() => null),
+        statsApi.getPnL('all').catch(() => null)
+      ]);
+
+      if (betsResponse && statsResponse) {
+        setGoldenBets(betsResponse.data || []);
+        setPLStats(statsResponse.data || null);
+        setUsingMockData(false);
+      } else {
+        // Fallback to mock data if backend is not available
+        loadMockData();
+        setUsingMockData(true);
+      }
+    } catch (err) {
+      console.error('Error fetching data:', err);
+      loadMockData();
+      setUsingMockData(true);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const loadMockData = () => {
     const mockGoldenBets: GoldenBet[] = [
       {
         bet_id: '1',
@@ -104,8 +139,7 @@ const HomePage: React.FC = () => {
 
     setGoldenBets(mockGoldenBets);
     setPLStats(mockPLStats);
-    setLoading(false);
-  }, []);
+  };
 
   const formatTime = (kickoff: string) => {
     return new Date(kickoff).toLocaleTimeString('en-GB', { 
@@ -127,13 +161,26 @@ const HomePage: React.FC = () => {
   if (loading) {
     return (
       <div className="min-h-screen bg-black flex items-center justify-center">
-        <div className="text-purple-500 text-xl">Loading...</div>
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-500 mx-auto mb-4"></div>
+          <div className="text-purple-500 text-xl">Loading Golden Bets...</div>
+        </div>
       </div>
     );
   }
 
   return (
     <div className="min-h-screen bg-black text-white">
+      {/* Backend Status Banner */}
+      {usingMockData && (
+        <div className="bg-yellow-900/20 border-b border-yellow-500/30 px-4 py-2">
+          <div className="max-w-7xl mx-auto flex items-center gap-2 text-sm text-yellow-400">
+            <AlertCircle className="w-4 h-4" />
+            <span>Demo Mode: Showing sample data. Backend connection will be established after deployment.</span>
+          </div>
+        </div>
+      )}
+
       {/* Hero Section */}
       <div className="relative overflow-hidden bg-gradient-to-br from-purple-900/20 via-black to-black border-b border-purple-500/20">
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_20%,rgba(168,85,247,0.1),transparent_50%)]" />
@@ -198,7 +245,7 @@ const HomePage: React.FC = () => {
             </div>
           </div>
 
-          {/* Feature 3: Performance Tracking */}
+          {/* Feature 3: P&L Tracking */}
           <div className="bg-gradient-to-br from-purple-900/30 to-purple-800/10 border border-purple-500/30 rounded-xl p-6 hover:border-purple-500/50 transition-all">
             <div className="flex items-center gap-3 mb-4">
               <div className="p-3 bg-purple-500/20 rounded-lg">
@@ -207,11 +254,11 @@ const HomePage: React.FC = () => {
               <h3 className="text-xl font-bold">Live P&L Tracking</h3>
             </div>
             <p className="text-gray-400 mb-4">
-              Real-time profit/loss tracking with daily, weekly, and monthly breakdowns. Full transparency on every bet.
+              Real-time profit tracking with daily, weekly, and monthly breakdowns. Full transparency on every bet.
             </p>
             <div className="flex items-center gap-2 text-sm text-green-400">
               <TrendingUp className="w-4 h-4" />
-              <span>+€187.50 This Month</span>
+              <span>+£187.50 This Month</span>
             </div>
           </div>
         </div>
@@ -219,120 +266,168 @@ const HomePage: React.FC = () => {
         {/* Today's Golden Bets */}
         <div className="mb-12">
           <div className="flex items-center justify-between mb-6">
-            <h2 className="text-3xl font-bold flex items-center gap-3">
-              <Star className="w-8 h-8 text-yellow-400 fill-yellow-400" />
-              Today's Golden Bets
-            </h2>
-            <div className="text-sm text-gray-400">
-              Updated {new Date().toLocaleDateString()}
+            <div>
+              <h2 className="text-3xl font-bold mb-2">Today's Golden Bets</h2>
+              <p className="text-gray-400">3 premium AI-selected picks with detailed reasoning</p>
+            </div>
+            <div className="flex items-center gap-2 px-4 py-2 bg-purple-500/10 border border-purple-500/30 rounded-lg">
+              <Star className="w-5 h-5 text-yellow-400" />
+              <span className="text-sm font-semibold">Premium Picks</span>
             </div>
           </div>
 
-          <div className="grid grid-cols-1 gap-4">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             {goldenBets.map((bet) => (
               <div
                 key={bet.bet_id}
-                className="bg-gradient-to-r from-purple-900/40 via-purple-800/20 to-transparent border border-purple-500/30 rounded-xl p-6 hover:border-purple-500/50 transition-all"
+                className="bg-gradient-to-br from-purple-900/40 to-purple-800/20 border border-purple-500/40 rounded-xl p-6 hover:border-purple-500/60 transition-all"
               >
-                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-4">
+                {/* Match Header */}
+                <div className="flex items-start justify-between mb-4">
                   <div className="flex-1">
                     <div className="flex items-center gap-2 mb-2">
-                      <span className="text-xs text-purple-400 bg-purple-500/20 px-2 py-1 rounded">
-                        {bet.league}
-                      </span>
-                      <span className="text-xs text-gray-500">{formatTime(bet.kickoff)}</span>
-                      {bet.result === 'win' && (
-                        <span className="text-xs text-green-400 bg-green-500/20 px-2 py-1 rounded font-semibold">
-                          WON +€{bet.profit_loss?.toFixed(2)}
-                        </span>
-                      )}
-                      {bet.result === 'pending' && (
-                        <span className="text-xs text-yellow-400 bg-yellow-500/20 px-2 py-1 rounded">
-                          PENDING
-                        </span>
-                      )}
+                      <Star className="w-5 h-5 text-yellow-400 fill-yellow-400" />
+                      <span className="text-xs text-purple-300 font-semibold">{bet.league}</span>
                     </div>
-                    <div className="text-xl font-bold mb-1">
+                    <div className="text-lg font-bold mb-1">
                       {bet.home_team} vs {bet.away_team}
                     </div>
-                    <div className="flex items-center gap-4 text-sm">
-                      <span className="text-purple-300 font-semibold">
-                        {getMarketLabel(bet.market)}
+                    <div className="text-sm text-gray-400">{formatTime(bet.kickoff)}</div>
+                  </div>
+                  {bet.result && (
+                    <div
+                      className={`px-3 py-1 rounded-full text-xs font-semibold ${
+                        bet.result === 'win'
+                          ? 'bg-green-500/20 text-green-400 border border-green-500/30'
+                          : bet.result === 'loss'
+                          ? 'bg-red-500/20 text-red-400 border border-red-500/30'
+                          : 'bg-yellow-500/20 text-yellow-400 border border-yellow-500/30'
+                      }`}
+                    >
+                      {bet.result === 'win' ? '✓ Won' : bet.result === 'loss' ? '✗ Lost' : 'Pending'}
+                    </div>
+                  )}
+                </div>
+
+                {/* Bet Details */}
+                <div className="bg-black/40 rounded-lg p-4 mb-4">
+                  <div className="flex items-center justify-between mb-3">
+                    <span className="text-sm text-gray-400">Market</span>
+                    <span className="font-semibold">{getMarketLabel(bet.market)}</span>
+                  </div>
+                  <div className="flex items-center justify-between mb-3">
+                    <span className="text-sm text-gray-400">Odds</span>
+                    <span className="font-semibold text-purple-400">{bet.odds.toFixed(2)}</span>
+                  </div>
+                  <div className="flex items-center justify-between mb-3">
+                    <span className="text-sm text-gray-400">AI Confidence</span>
+                    <span className="font-semibold text-green-400">{(bet.ai_probability * 100).toFixed(1)}%</span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-gray-400">Value</span>
+                    <span className="font-semibold text-yellow-400">+{bet.markup_value.toFixed(1)}%</span>
+                  </div>
+                </div>
+
+                {/* AI Reasoning */}
+                <div className="bg-purple-500/10 border border-purple-500/30 rounded-lg p-4">
+                  <div className="flex items-center gap-2 mb-2">
+                    <Brain className="w-4 h-4 text-purple-400" />
+                    <span className="text-xs font-semibold text-purple-300">AI Analysis</span>
+                  </div>
+                  <p className="text-sm text-gray-300 leading-relaxed">{bet.ai_explanation}</p>
+                </div>
+
+                {/* Profit/Loss */}
+                {bet.profit_loss !== undefined && (
+                  <div className="mt-4 pt-4 border-t border-purple-500/30">
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm text-gray-400">Profit/Loss</span>
+                      <span
+                        className={`font-bold ${
+                          bet.profit_loss > 0 ? 'text-green-400' : bet.profit_loss < 0 ? 'text-red-400' : 'text-gray-400'
+                        }`}
+                      >
+                        {bet.profit_loss > 0 ? '+' : ''}£{bet.profit_loss.toFixed(2)}
                       </span>
-                      <span className="text-gray-400">@{bet.odds.toFixed(2)}</span>
                     </div>
                   </div>
-
-                  <div className="flex items-center gap-6">
-                    <div className="text-center">
-                      <div className="text-2xl font-bold text-purple-400">
-                        {(bet.ai_probability * 100).toFixed(0)}%
-                      </div>
-                      <div className="text-xs text-gray-500">AI Confidence</div>
-                    </div>
-                    <div className="text-center">
-                      <div className="text-2xl font-bold text-green-400">
-                        {bet.markup_value.toFixed(1)}%
-                      </div>
-                      <div className="text-xs text-gray-500">Value</div>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="bg-black/40 border border-purple-500/20 rounded-lg p-4">
-                  <div className="flex items-start gap-2 mb-2">
-                    <Brain className="w-4 h-4 text-purple-400 mt-1 flex-shrink-0" />
-                    <span className="text-xs text-purple-400 font-semibold">AI REASONING</span>
-                  </div>
-                  <p className="text-sm text-gray-300 leading-relaxed">
-                    {bet.ai_explanation}
-                  </p>
-                </div>
+                )}
               </div>
             ))}
           </div>
         </div>
 
-        {/* P&L Stats */}
+        {/* P&L Statistics */}
         {plStats && (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {/* Golden Bets P&L */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {/* Golden Bets Stats */}
             <div className="bg-gradient-to-br from-purple-900/30 to-purple-800/10 border border-purple-500/30 rounded-xl p-6">
-              <h3 className="text-xl font-bold mb-6 flex items-center gap-2">
-                <Star className="w-5 h-5 text-yellow-400" />
-                Golden Bets Performance
-              </h3>
+              <div className="flex items-center gap-3 mb-6">
+                <Star className="w-6 h-6 text-yellow-400" />
+                <h3 className="text-2xl font-bold">Golden Bets Performance</h3>
+              </div>
+
               <div className="space-y-4">
-                <div className="flex justify-between items-center pb-3 border-b border-purple-500/20">
-                  <span className="text-gray-400">Today</span>
-                  <div className="text-right">
-                    <div className={`text-lg font-bold ${plStats.golden_bets.today.profit >= 0 ? 'text-green-400' : 'text-red-400'}`}>
-                      {plStats.golden_bets.today.profit >= 0 ? '+' : ''}€{plStats.golden_bets.today.profit.toFixed(2)}
+                {/* Today */}
+                <div className="bg-black/40 rounded-lg p-4">
+                  <div className="text-sm text-gray-400 mb-2">Today</div>
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <div className="text-2xl font-bold text-green-400">
+                        +£{plStats.golden_bets.today.profit.toFixed(2)}
+                      </div>
+                      <div className="text-sm text-gray-400">
+                        {plStats.golden_bets.today.wins}/{plStats.golden_bets.today.bets} wins
+                      </div>
                     </div>
-                    <div className="text-xs text-gray-500">
-                      {plStats.golden_bets.today.wins}/{plStats.golden_bets.today.bets} wins
-                    </div>
-                  </div>
-                </div>
-                <div className="flex justify-between items-center pb-3 border-b border-purple-500/20">
-                  <span className="text-gray-400">This Week</span>
-                  <div className="text-right">
-                    <div className={`text-lg font-bold ${plStats.golden_bets.week.profit >= 0 ? 'text-green-400' : 'text-red-400'}`}>
-                      {plStats.golden_bets.week.profit >= 0 ? '+' : ''}€{plStats.golden_bets.week.profit.toFixed(2)}
-                    </div>
-                    <div className="text-xs text-gray-500">
-                      {plStats.golden_bets.week.wins}/{plStats.golden_bets.week.bets} wins ({((plStats.golden_bets.week.wins / plStats.golden_bets.week.bets) * 100).toFixed(1)}%)
+                    <div className="text-right">
+                      <div className="text-sm text-gray-400">Win Rate</div>
+                      <div className="text-lg font-semibold text-purple-400">
+                        {((plStats.golden_bets.today.wins / plStats.golden_bets.today.bets) * 100).toFixed(1)}%
+                      </div>
                     </div>
                   </div>
                 </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-gray-400">This Month</span>
-                  <div className="text-right">
-                    <div className={`text-lg font-bold ${plStats.golden_bets.month.profit >= 0 ? 'text-green-400' : 'text-red-400'}`}>
-                      {plStats.golden_bets.month.profit >= 0 ? '+' : ''}€{plStats.golden_bets.month.profit.toFixed(2)}
+
+                {/* This Week */}
+                <div className="bg-black/40 rounded-lg p-4">
+                  <div className="text-sm text-gray-400 mb-2">This Week</div>
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <div className="text-2xl font-bold text-green-400">
+                        +£{plStats.golden_bets.week.profit.toFixed(2)}
+                      </div>
+                      <div className="text-sm text-gray-400">
+                        {plStats.golden_bets.week.wins}/{plStats.golden_bets.week.bets} wins
+                      </div>
                     </div>
-                    <div className="text-xs text-gray-500">
-                      {plStats.golden_bets.month.wins}/{plStats.golden_bets.month.bets} wins ({((plStats.golden_bets.month.wins / plStats.golden_bets.month.bets) * 100).toFixed(1)}%)
+                    <div className="text-right">
+                      <div className="text-sm text-gray-400">Win Rate</div>
+                      <div className="text-lg font-semibold text-purple-400">
+                        {((plStats.golden_bets.week.wins / plStats.golden_bets.week.bets) * 100).toFixed(1)}%
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* This Month */}
+                <div className="bg-black/40 rounded-lg p-4">
+                  <div className="text-sm text-gray-400 mb-2">This Month</div>
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <div className="text-2xl font-bold text-green-400">
+                        +£{plStats.golden_bets.month.profit.toFixed(2)}
+                      </div>
+                      <div className="text-sm text-gray-400">
+                        {plStats.golden_bets.month.wins}/{plStats.golden_bets.month.bets} wins
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <div className="text-sm text-gray-400">Win Rate</div>
+                      <div className="text-lg font-semibold text-purple-400">
+                        {((plStats.golden_bets.month.wins / plStats.golden_bets.month.bets) * 100).toFixed(1)}%
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -340,43 +435,80 @@ const HomePage: React.FC = () => {
             </div>
 
             {/* Treble Stats */}
-            <div className="bg-gradient-to-br from-green-900/30 to-green-800/10 border border-green-500/30 rounded-xl p-6">
-              <h3 className="text-xl font-bold mb-6 flex items-center gap-2">
-                <Trophy className="w-5 h-5 text-green-400" />
-                Daily Treble (€10 Stake)
-              </h3>
+            <div className="bg-gradient-to-br from-purple-900/30 to-purple-800/10 border border-purple-500/30 rounded-xl p-6">
+              <div className="flex items-center gap-3 mb-6">
+                <Trophy className="w-6 h-6 text-purple-400" />
+                <h3 className="text-2xl font-bold">Treble Performance</h3>
+              </div>
+
               <div className="space-y-4">
-                <div className="flex justify-between items-center pb-3 border-b border-green-500/20">
-                  <span className="text-gray-400">Today's Treble</span>
-                  <div className="text-right">
-                    <div className="text-lg font-bold text-green-400">
-                      €{plStats.treble.today.potential_return.toFixed(2)}
+                {/* Today's Treble */}
+                <div className="bg-black/40 rounded-lg p-4">
+                  <div className="text-sm text-gray-400 mb-2">Today's Treble</div>
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <div className="text-sm text-gray-400">Stake</div>
+                      <div className="text-xl font-bold">£{plStats.treble.today.stake.toFixed(2)}</div>
                     </div>
-                    <div className="text-xs text-yellow-400 uppercase">
-                      {plStats.treble.today.status}
+                    <div className="text-right">
+                      <div className="text-sm text-gray-400">Potential Return</div>
+                      <div className="text-xl font-bold text-purple-400">
+                        £{plStats.treble.today.potential_return.toFixed(2)}
+                      </div>
+                    </div>
+                  </div>
+                  <div className="mt-3 pt-3 border-t border-purple-500/30">
+                    <div
+                      className={`inline-flex px-3 py-1 rounded-full text-xs font-semibold ${
+                        plStats.treble.today.status === 'won'
+                          ? 'bg-green-500/20 text-green-400'
+                          : plStats.treble.today.status === 'lost'
+                          ? 'bg-red-500/20 text-red-400'
+                          : 'bg-yellow-500/20 text-yellow-400'
+                      }`}
+                    >
+                      {plStats.treble.today.status.toUpperCase()}
                     </div>
                   </div>
                 </div>
-                <div className="flex justify-between items-center pb-3 border-b border-green-500/20">
-                  <span className="text-gray-400">This Week</span>
-                  <div className="text-right">
-                    <div className={`text-lg font-bold ${plStats.treble.week.total_returned - plStats.treble.week.total_staked >= 0 ? 'text-green-400' : 'text-red-400'}`}>
-                      {plStats.treble.week.total_returned - plStats.treble.week.total_staked >= 0 ? '+' : ''}€{(plStats.treble.week.total_returned - plStats.treble.week.total_staked).toFixed(2)}
+
+                {/* This Week */}
+                <div className="bg-black/40 rounded-lg p-4">
+                  <div className="text-sm text-gray-400 mb-2">This Week</div>
+                  <div className="flex items-center justify-between mb-2">
+                    <div>
+                      <div className="text-sm text-gray-400">Total Staked</div>
+                      <div className="text-lg font-bold">£{plStats.treble.week.total_staked.toFixed(2)}</div>
                     </div>
-                    <div className="text-xs text-gray-500">
-                      {plStats.treble.week.wins}/{plStats.treble.week.total} trebles won
+                    <div className="text-right">
+                      <div className="text-sm text-gray-400">Total Returned</div>
+                      <div className="text-lg font-bold text-green-400">
+                        £{plStats.treble.week.total_returned.toFixed(2)}
+                      </div>
                     </div>
                   </div>
+                  <div className="text-sm text-gray-400">
+                    {plStats.treble.week.wins}/{plStats.treble.week.total} trebles won
+                  </div>
                 </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-gray-400">This Month</span>
-                  <div className="text-right">
-                    <div className={`text-lg font-bold ${plStats.treble.month.total_returned - plStats.treble.month.total_staked >= 0 ? 'text-green-400' : 'text-red-400'}`}>
-                      {plStats.treble.month.total_returned - plStats.treble.month.total_staked >= 0 ? '+' : ''}€{(plStats.treble.month.total_returned - plStats.treble.month.total_staked).toFixed(2)}
+
+                {/* This Month */}
+                <div className="bg-black/40 rounded-lg p-4">
+                  <div className="text-sm text-gray-400 mb-2">This Month</div>
+                  <div className="flex items-center justify-between mb-2">
+                    <div>
+                      <div className="text-sm text-gray-400">Total Staked</div>
+                      <div className="text-lg font-bold">£{plStats.treble.month.total_staked.toFixed(2)}</div>
                     </div>
-                    <div className="text-xs text-gray-500">
-                      {plStats.treble.month.wins}/{plStats.treble.month.total} trebles won ({((plStats.treble.month.wins / plStats.treble.month.total) * 100).toFixed(1)}%)
+                    <div className="text-right">
+                      <div className="text-sm text-gray-400">Total Returned</div>
+                      <div className="text-lg font-bold text-green-400">
+                        £{plStats.treble.month.total_returned.toFixed(2)}
+                      </div>
                     </div>
+                  </div>
+                  <div className="text-sm text-gray-400">
+                    {plStats.treble.month.wins}/{plStats.treble.month.total} trebles won
                   </div>
                 </div>
               </div>
@@ -386,9 +518,7 @@ const HomePage: React.FC = () => {
       </div>
 
       {/* Fixtures Modal */}
-      {showFixturesModal && (
-        <FixturesModal onClose={() => setShowFixturesModal(false)} />
-      )}
+      {showFixturesModal && <FixturesModal onClose={() => setShowFixturesModal(false)} />}
     </div>
   );
 };
