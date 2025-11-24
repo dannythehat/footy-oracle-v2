@@ -61,6 +61,44 @@ export const fixturesApi = {
     const response = await apiClient.get('/api/fixtures/meta/leagues');
     return response.data;
   },
+
+  // NEW: Get Head-to-Head data
+  getH2H: async (fixtureId: number, homeTeamId: number, awayTeamId: number, last: number = 10) => {
+    const response = await apiClient.get(`/api/fixtures/${fixtureId}/h2h`, {
+      params: { homeTeamId, awayTeamId, last }
+    });
+    return response.data;
+  },
+
+  // NEW: Get team statistics
+  getTeamStats: async (teamId: number, leagueId: number, season: number) => {
+    const response = await apiClient.get(`/api/fixtures/team/${teamId}/stats`, {
+      params: { leagueId, season }
+    });
+    return response.data;
+  },
+
+  // NEW: Get complete fixture statistics (H2H + both teams)
+  getFixtureStats: async (
+    fixtureId: number,
+    homeTeamId: number,
+    awayTeamId: number,
+    leagueId: number,
+    season: number
+  ) => {
+    const response = await apiClient.get(`/api/fixtures/${fixtureId}/stats`, {
+      params: { homeTeamId, awayTeamId, leagueId, season }
+    });
+    return response.data;
+  },
+
+  // NEW: Get team's last fixtures
+  getTeamLastFixtures: async (teamId: number, last: number = 5) => {
+    const response = await apiClient.get(`/api/fixtures/team/${teamId}/last-fixtures`, {
+      params: { last }
+    });
+    return response.data;
+  },
 };
 
 // Predictions API
