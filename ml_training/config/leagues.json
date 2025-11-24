@@ -1,0 +1,184 @@
+{
+  "leagues": [
+    {
+      "id": 39,
+      "name": "Premier League",
+      "country": "England",
+      "priority": 1
+    },
+    {
+      "id": 140,
+      "name": "La Liga",
+      "country": "Spain",
+      "priority": 1
+    },
+    {
+      "id": 78,
+      "name": "Bundesliga",
+      "country": "Germany",
+      "priority": 1
+    },
+    {
+      "id": 135,
+      "name": "Serie A",
+      "country": "Italy",
+      "priority": 1
+    },
+    {
+      "id": 61,
+      "name": "Ligue 1",
+      "country": "France",
+      "priority": 1
+    },
+    {
+      "id": 2,
+      "name": "UEFA Champions League",
+      "country": "World",
+      "priority": 1
+    },
+    {
+      "id": 3,
+      "name": "UEFA Europa League",
+      "country": "World",
+      "priority": 2
+    },
+    {
+      "id": 94,
+      "name": "Primeira Liga",
+      "country": "Portugal",
+      "priority": 2
+    },
+    {
+      "id": 88,
+      "name": "Eredivisie",
+      "country": "Netherlands",
+      "priority": 2
+    },
+    {
+      "id": 203,
+      "name": "Super Lig",
+      "country": "Turkey",
+      "priority": 2
+    },
+    {
+      "id": 144,
+      "name": "Jupiler Pro League",
+      "country": "Belgium",
+      "priority": 2
+    },
+    {
+      "id": 179,
+      "name": "Scottish Premiership",
+      "country": "Scotland",
+      "priority": 3
+    },
+    {
+      "id": 40,
+      "name": "Championship",
+      "country": "England",
+      "priority": 3
+    },
+    {
+      "id": 41,
+      "name": "League One",
+      "country": "England",
+      "priority": 3
+    },
+    {
+      "id": 42,
+      "name": "League Two",
+      "country": "England",
+      "priority": 3
+    },
+    {
+      "id": 141,
+      "name": "La Liga 2",
+      "country": "Spain",
+      "priority": 3
+    },
+    {
+      "id": 79,
+      "name": "Bundesliga 2",
+      "country": "Germany",
+      "priority": 3
+    },
+    {
+      "id": 136,
+      "name": "Serie B",
+      "country": "Italy",
+      "priority": 3
+    },
+    {
+      "id": 62,
+      "name": "Ligue 2",
+      "country": "France",
+      "priority": 3
+    },
+    {
+      "id": 253,
+      "name": "Major League Soccer",
+      "country": "USA",
+      "priority": 2
+    },
+    {
+      "id": 71,
+      "name": "Serie A",
+      "country": "Brazil",
+      "priority": 2
+    },
+    {
+      "id": 128,
+      "name": "Liga Profesional",
+      "country": "Argentina",
+      "priority": 2
+    },
+    {
+      "id": 262,
+      "name": "Liga MX",
+      "country": "Mexico",
+      "priority": 2
+    },
+    {
+      "id": 188,
+      "name": "Premiership",
+      "country": "Russia",
+      "priority": 3
+    },
+    {
+      "id": 235,
+      "name": "Premier League",
+      "country": "Russia",
+      "priority": 3
+    },
+    {
+      "id": 119,
+      "name": "Superliga",
+      "country": "Denmark",
+      "priority": 3
+    },
+    {
+      "id": 113,
+      "name": "Allsvenskan",
+      "country": "Sweden",
+      "priority": 3
+    },
+    {
+      "id": 103,
+      "name": "Eliteserien",
+      "country": "Norway",
+      "priority": 3
+    },
+    {
+      "id": 197,
+      "name": "Super League",
+      "country": "Greece",
+      "priority": 3
+    },
+    {
+      "id": 218,
+      "name": "Super League",
+      "country": "Switzerland",
+      "priority": 3
+    }
+  ]
+}
