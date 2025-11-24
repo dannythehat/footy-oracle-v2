@@ -1,0 +1,62 @@
+# Training Configuration
+
+# Model Parameters
+model:
+  n_estimators: 200
+  max_depth: 6
+  learning_rate: 0.1
+  random_state: 42
+  
+  # Ensemble weights
+  ensemble:
+    xgboost: 0.35
+    lightgbm: 0.35
+    catboost: 0.30
+
+# Feature Engineering
+features:
+  rolling_windows: [5, 10, 20]
+  h2h_lookback: 5
+  min_games_required: 3
+  
+  # Feature groups
+  groups:
+    - core_stats
+    - rolling_averages
+    - h2h_analysis
+    - momentum
+    - market_specific
+
+# Data Processing
+data:
+  train_test_split: 0.8
+  validation_split: 0.2
+  min_fixtures_per_team: 10
+  
+  # Data quality
+  remove_outliers: true
+  handle_missing: "mean"
+
+# Training Schedule
+schedule:
+  full_retrain: "weekly"  # Sunday
+  incremental_update: "daily"
+  evaluation_frequency: "weekly"
+
+# Performance Thresholds
+thresholds:
+  min_accuracy: 0.60
+  deploy_improvement: 0.01  # Deploy if 1%+ improvement
+  
+  # Target accuracy per market
+  targets:
+    btts: 0.70
+    goals: 0.75
+    corners: 0.70
+    cards: 0.70
+
+# Logging
+logging:
+  level: "INFO"
+  save_predictions: true
+  save_feature_importance: true
