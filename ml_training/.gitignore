@@ -1,0 +1,63 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+venv/
+env/
+ENV/
+*.egg-info/
+dist/
+build/
+
+# Jupyter Notebook
+.ipynb_checkpoints/
+*.ipynb
+
+# Environment
+.env
+.env.local
+
+# Data files (too large for Git)
+data/raw/*.csv
+data/processed/*.csv
+data/incremental/*.csv
+
+# Keep directory structure
+!data/raw/.gitkeep
+!data/processed/.gitkeep
+!data/incremental/.gitkeep
+
+# Models (too large for Git)
+models/*.pkl
+models/*.joblib
+models/*.h5
+models/*.pt
+
+# Keep metadata
+!models/metadata.json
+!models/.gitkeep
+
+# Logs
+logs/*.log
+logs/*.txt
+
+# Keep log directory
+!logs/.gitkeep
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Temporary files
+*.tmp
+*.bak
+*.cache
