@@ -3,6 +3,7 @@ import { loadMLPredictions, selectGoldenBets } from './mlService.js';
 import { fetchFixtures, fetchOdds } from './apiFootballService.js';
 import { generateBulkReasoning } from './aiService.js';
 import { bettingInsightsService } from './bettingInsightsService.js';
+import { settlePendingPredictions } from './resultSettlementService.js';
 import { Prediction } from '../models/Prediction.js';
 import { Fixture } from '../models/Fixture.js';
 
@@ -21,9 +22,16 @@ export function startCronJobs() {
     await generateBettingInsights();
   });
 
+  // Result settlement job (runs every 2 hours)
+  cron.schedule('0 */2 * * *', async () => {
+    console.log('⚖️  Starting result settlement...');
+    await settleResults();
+  });
+
   console.log(`✅ Cron jobs scheduled:`);
   console.log(`   - Daily predictions: ${schedule}`);
   console.log(`   - AI betting insights: 0 5 * * * (5am daily)`);
+  console.log(`   - Result settlement: 0 */2 * * * (every 2 hours)`);
 }
 
 async function generateBettingInsights() {
@@ -33,6 +41,24 @@ async function generateBettingInsights() {
     console.log('✅ AI betting insights generation completed');
   } catch (error) {
     console.error('❌ Error generating betting insights:', error);
+  }
+}
+
+async function settleResults() {
+  try {
+    const settlements = await settlePendingPredictions();
+    console.log(`✅ Settled ${settlements.length} predictions`);
+    
+    if (settlements.length > 0) {
+      const wins = settlements.filter(s => s.result === 'win').length;
+      const losses = settlements.filter(s => s.result === 'loss').length;
+      const totalProfit = settlements.reduce((sum, s) => sum + s.profit, 0);
+      
+      console.log(`   - Wins: ${wins}, Losses: ${losses}`);
+      console.log(`   - Total P&L: £${totalProfit.toFixed(2)}`);
+    }
+  } catch (error) {
+    console.error('❌ Error settling results:', error);
   }
 }
 
@@ -129,4 +155,4 @@ function getOddsForMarket(odds: any, market: string): number {
 }
 
 // Export for manual trigger
-export { updateDailyPredictions, generateBettingInsights };
+export { updateDailyPredictions, generateBettingInsights, settleResults };
