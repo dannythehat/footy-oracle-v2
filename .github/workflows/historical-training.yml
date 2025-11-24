@@ -28,6 +28,22 @@ jobs:
           pip install --upgrade pip
           pip install -r requirements.txt
       
+      - name: 🔑 Setup API Key
+        run: |
+          cd ml_training
+          # Try to use GitHub secret first, fallback to checking backend .env
+          if [ -n "${{ secrets.API_FOOTBALL_KEY }}" ]; then
+            echo "Using API key from GitHub Secrets"
+            echo "API_FOOTBALL_KEY=${{ secrets.API_FOOTBALL_KEY }}" > .env
+          elif [ -f "../apps/backend/.env" ]; then
+            echo "Using API key from backend .env"
+            grep "API_FOOTBALL_KEY" ../apps/backend/.env > .env || echo "API_FOOTBALL_KEY not found in backend .env"
+          else
+            echo "⚠️ No API key found! Please add API_FOOTBALL_KEY to GitHub Secrets"
+            echo "Go to: https://github.com/${{ github.repository }}/settings/secrets/actions"
+            exit 1
+          fi
+      
       - name: 📊 Check current progress
         run: |
           cd ml_training
@@ -39,8 +55,6 @@ jobs:
           fi
       
       - name: 🤖 Run historical training pipeline
-        env:
-          API_FOOTBALL_KEY: ${{ secrets.API_FOOTBALL_KEY }}
         run: |
           cd ml_training
           python scripts/00_historical_training.py --start-year 2018 --leagues 50
