@@ -1,0 +1,82 @@
+name: 🤖 Daily LM Training Pipeline
+
+on:
+  schedule:
+    - cron: '0 2 * * *'  # 2 AM UTC daily
+  workflow_dispatch:      # Manual trigger
+
+jobs:
+  train-lm-babies:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+      
+      - name: 🐍 Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+          cache: 'pip'
+      
+      - name: 📦 Install dependencies
+        run: |
+          cd ml_training
+          pip install -r requirements.txt
+      
+      - name: 📊 Fetch yesterday's fixtures
+        env:
+          API_FOOTBALL_KEY: ${{ secrets.API_FOOTBALL_KEY }}
+        run: |
+          python ml_training/scripts/01_fetch_fixtures.py
+        continue-on-error: true
+      
+      - name: 🔧 Process and merge data
+        run: |
+          python ml_training/scripts/02_process_data.py
+      
+      - name: 🤖 Train LM babies
+        run: |
+          python ml_training/scripts/03_train_models.py
+      
+      - name: 📈 Evaluate performance
+        id: evaluate
+        run: |
+          python ml_training/scripts/04_evaluate.py
+        continue-on-error: true
+      
+      - name: 🚀 Deploy models
+        if: steps.evaluate.outcome == 'success'
+        run: |
+          python ml_training/scripts/05_deploy.py
+      
+      - name: 💾 Commit updated models and data
+        run: |
+          git config user.name "LM Training Bot"
+          git config user.email "lm-bot@footy-oracle.com"
+          git add ml_training/models/*
+          git add ml_training/data/incremental/*
+          git add ml_training/data/processed/*
+          git add ml_training/logs/*
+          git add analytics_hub/metrics/*
+          git add shared/ml_outputs/*
+          git diff --staged --quiet || git commit -m "🤖 Daily LM training - $(date +%Y-%m-%d)"
+          git push
+      
+      - name: 📊 Training Summary
+        if: always()
+        run: |
+          echo "## 🤖 LM Training Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Date:** $(date +%Y-%m-%d)" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          if [ -f ml_training/models/metadata.json ]; then
+            echo "### Model Performance" >> $GITHUB_STEP_SUMMARY
+            cat ml_training/models/metadata.json >> $GITHUB_STEP_SUMMARY
+          fi
+          
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Status:** ${{ job.status }}" >> $GITHUB_STEP_SUMMARY
