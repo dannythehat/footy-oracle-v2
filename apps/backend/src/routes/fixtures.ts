@@ -7,6 +7,12 @@ import {
   findValueBets,
   Fixture as FixtureInput 
 } from '../services/fixturesService';
+import {
+  fetchH2H,
+  fetchTeamStats,
+  fetchFixtureStats,
+  fetchTeamLastFixtures
+} from '../services/apiFootballService';
 
 const router = Router();
 
@@ -86,6 +92,124 @@ router.get('/meta/leagues', async (req, res) => {
     res.status(500).json({
       success: false,
       error: error.message,
+    });
+  }
+});
+
+// NEW: Get Head-to-Head data
+router.get('/:id/h2h', async (req: Request, res: Response) => {
+  try {
+    const { homeTeamId, awayTeamId, last } = req.query;
+    
+    if (!homeTeamId || !awayTeamId) {
+      return res.status(400).json({
+        success: false,
+        error: 'homeTeamId and awayTeamId are required'
+      });
+    }
+
+    const h2hData = await fetchH2H(
+      Number(homeTeamId),
+      Number(awayTeamId),
+      last ? Number(last) : 10
+    );
+
+    res.json({
+      success: true,
+      data: h2hData
+    });
+  } catch (error: any) {
+    res.status(500).json({
+      success: false,
+      error: error.message
+    });
+  }
+});
+
+// NEW: Get team statistics
+router.get('/team/:teamId/stats', async (req: Request, res: Response) => {
+  try {
+    const { teamId } = req.params;
+    const { leagueId, season } = req.query;
+    
+    if (!leagueId || !season) {
+      return res.status(400).json({
+        success: false,
+        error: 'leagueId and season are required'
+      });
+    }
+
+    const stats = await fetchTeamStats(
+      Number(teamId),
+      Number(leagueId),
+      Number(season)
+    );
+
+    res.json({
+      success: true,
+      data: stats
+    });
+  } catch (error: any) {
+    res.status(500).json({
+      success: false,
+      error: error.message
+    });
+  }
+});
+
+// NEW: Get complete fixture statistics (H2H + both teams)
+router.get('/:id/stats', async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    const { homeTeamId, awayTeamId, leagueId, season } = req.query;
+    
+    if (!homeTeamId || !awayTeamId || !leagueId || !season) {
+      return res.status(400).json({
+        success: false,
+        error: 'homeTeamId, awayTeamId, leagueId, and season are required'
+      });
+    }
+
+    const stats = await fetchFixtureStats(
+      Number(id),
+      Number(homeTeamId),
+      Number(awayTeamId),
+      Number(leagueId),
+      Number(season)
+    );
+
+    res.json({
+      success: true,
+      data: stats
+    });
+  } catch (error: any) {
+    res.status(500).json({
+      success: false,
+      error: error.message
+    });
+  }
+});
+
+// NEW: Get team's last fixtures
+router.get('/team/:teamId/last-fixtures', async (req: Request, res: Response) => {
+  try {
+    const { teamId } = req.params;
+    const { last } = req.query;
+
+    const fixtures = await fetchTeamLastFixtures(
+      Number(teamId),
+      last ? Number(last) : 5
+    );
+
+    res.json({
+      success: true,
+      data: fixtures,
+      count: fixtures.length
+    });
+  } catch (error: any) {
+    res.status(500).json({
+      success: false,
+      error: error.message
     });
   }
 });
@@ -217,6 +341,7 @@ router.get('/health', (req: Request, res: Response) => {
     success: true, 
     service: 'fixtures',
     openai: !!process.env.OPENAI_API_KEY,
+    apiFootball: !!process.env.API_FOOTBALL_KEY,
     timestamp: new Date().toISOString()
   });
 });
