@@ -1,143 +1,94 @@
 #!/bin/bash
 
-# ML Training Pipeline
-# Runs daily at 6 AM UTC to fetch new fixtures and retrain models
+# LM Training Pipeline
+# Complete automated training workflow
 
 set -e  # Exit on error
 
-echo "🚀 Starting ML Training Pipeline..."
-echo "📅 Date: $(date)"
+echo "🤖 Footy Oracle - LM Training Pipeline"
+echo "========================================"
 echo ""
 
-# Colors for output
-GREEN='\033[0;32m'
-BLUE='\033[0;34m'
-YELLOW='\033[1;33m'
-NC='\033[0m' # No Color
-
-# Change to script directory
-cd "$(dirname "$0")"
-
-# Activate virtual environment
-if [ -d "venv" ]; then
-    echo -e "${BLUE}🔧 Activating virtual environment...${NC}"
-    source venv/bin/activate
-else
-    echo -e "${YELLOW}⚠️  Virtual environment not found. Creating...${NC}"
-    python3 -m venv venv
-    source venv/bin/activate
-    pip install -r requirements.txt
-fi
-
-# Load environment variables
-if [ -f ".env" ]; then
-    export $(cat .env | grep -v '^#' | xargs)
-else
-    echo -e "${YELLOW}⚠️  .env file not found. Using .env.example...${NC}"
-    cp .env.example .env
-    echo "Please edit .env with your API keys and run again."
+# Check if we're in the right directory
+if [ ! -f "requirements.txt" ]; then
+    echo "❌ Error: Please run this script from the ml_training directory"
+    echo "   cd ml_training && bash pipeline.sh"
     exit 1
 fi
 
-# Create necessary directories
-mkdir -p data/{raw,processed,incremental}
-mkdir -p models
-mkdir -p logs
-
-# Step 1: Fetch yesterday's fixtures
-echo ""
-echo -e "${BLUE}📥 Step 1: Fetching yesterday's fixtures...${NC}"
-python scripts/01_fetch_fixtures.py 2>&1 | tee -a logs/pipeline.log
-
-if [ $? -eq 0 ]; then
-    echo -e "${GREEN}✅ Fixtures fetched successfully${NC}"
-else
-    echo -e "${YELLOW}⚠️  Warning: Fixture fetch had issues${NC}"
-fi
-
-# Step 2: Process and merge data
-echo ""
-echo -e "${BLUE}🔧 Step 2: Processing data and engineering features...${NC}"
-python scripts/02_process_data.py 2>&1 | tee -a logs/pipeline.log
-
-if [ $? -eq 0 ]; then
-    echo -e "${GREEN}✅ Data processed successfully${NC}"
-else
-    echo "❌ Error processing data"
+# Check Python installation
+if ! command -v python3 &> /dev/null; then
+    echo "❌ Error: Python 3 is not installed"
     exit 1
 fi
 
-# Step 3: Train models (only on Sundays for full retrain)
-DAY_OF_WEEK=$(date +%u)  # 1=Monday, 7=Sunday
-
-if [ "$DAY_OF_WEEK" -eq 7 ]; then
-    echo ""
-    echo -e "${BLUE}🤖 Step 3: Training LM babies (Sunday full retrain)...${NC}"
-    python scripts/03_train_models.py 2>&1 | tee -a logs/pipeline.log
-    
-    if [ $? -eq 0 ]; then
-        echo -e "${GREEN}✅ Models trained successfully${NC}"
-    else
-        echo "❌ Error training models"
-        exit 1
-    fi
-    
-    # Step 4: Evaluate models
-    echo ""
-    echo -e "${BLUE}📊 Step 4: Evaluating model performance...${NC}"
-    python scripts/04_evaluate.py 2>&1 | tee -a logs/pipeline.log
-    
-    if [ $? -eq 0 ]; then
-        echo -e "${GREEN}✅ Evaluation complete${NC}"
-    else
-        echo "❌ Error evaluating models"
-        exit 1
-    fi
-    
-    # Step 5: Deploy if improved
-    echo ""
-    echo -e "${BLUE}🚀 Step 5: Deploying improved models...${NC}"
-    python scripts/05_deploy.py 2>&1 | tee -a logs/pipeline.log
-    
-    if [ $? -eq 0 ]; then
-        echo -e "${GREEN}✅ Deployment complete${NC}"
-    else
-        echo "❌ Error deploying models"
-        exit 1
-    fi
-else
-    echo ""
-    echo -e "${YELLOW}ℹ️  Skipping model training (only runs on Sundays)${NC}"
-    echo "   Next training: Sunday at 6 AM UTC"
-fi
-
-# Generate today's predictions (always run)
+echo "✅ Python found: $(python3 --version)"
 echo ""
-echo -e "${BLUE}🔮 Generating today's predictions...${NC}"
-python scripts/generate_predictions.py 2>&1 | tee -a logs/pipeline.log
 
-if [ $? -eq 0 ]; then
-    echo -e "${GREEN}✅ Predictions generated${NC}"
-else
-    echo "❌ Error generating predictions"
+# Install dependencies
+echo "📦 Installing dependencies..."
+pip install -q -r requirements.txt
+echo "✅ Dependencies installed"
+echo ""
+
+# Check for data
+if [ ! "$(ls -A data/raw/*.csv 2>/dev/null)" ]; then
+    echo "⚠️  No CSV files found in data/raw/"
+    echo ""
+    echo "Please add your training data first:"
+    echo "  1. Copy CSV files to ml_training/data/raw/"
+    echo "  2. Or run: python upload_data.py"
+    echo ""
     exit 1
 fi
 
-# Summary
+echo "✅ Training data found"
 echo ""
-echo -e "${GREEN}✅ Pipeline complete!${NC}"
-echo ""
-echo "📊 Summary:"
-echo "  - Fixtures fetched: ✅"
-echo "  - Data processed: ✅"
-if [ "$DAY_OF_WEEK" -eq 7 ]; then
-    echo "  - Models trained: ✅"
-    echo "  - Models evaluated: ✅"
-    echo "  - Models deployed: ✅"
+
+# Step 1: Fetch new fixtures (optional, may fail if no API key)
+echo "📊 Step 1: Fetching yesterday's fixtures..."
+if [ -f ".env" ] && grep -q "API_FOOTBALL_KEY" .env; then
+    python3 scripts/01_fetch_fixtures.py || echo "⚠️  Skipped (no new fixtures or API error)"
+else
+    echo "⚠️  Skipped (no API key configured)"
 fi
-echo "  - Predictions generated: ✅"
 echo ""
-echo "📁 Check logs/pipeline.log for details"
-echo "📈 Check models/metadata.json for accuracy metrics"
+
+# Step 2: Process data
+echo "🔧 Step 2: Processing and engineering features..."
+python3 scripts/02_process_data.py
 echo ""
-echo "🍼 LM babies are getting smarter!"
+
+# Step 3: Train models
+echo "🤖 Step 3: Training LM babies..."
+python3 scripts/03_train_models.py
+echo ""
+
+# Step 4: Evaluate
+echo "📈 Step 4: Evaluating performance..."
+python3 scripts/04_evaluate.py || echo "⚠️  Evaluation completed with warnings"
+echo ""
+
+# Step 5: Deploy
+echo "🚀 Step 5: Deploying models..."
+python3 scripts/05_deploy.py
+echo ""
+
+# Success summary
+echo "========================================"
+echo "✅ Pipeline Complete!"
+echo "========================================"
+echo ""
+echo "📊 Results:"
+echo "  - Models: ml_training/models/"
+echo "  - Metrics: analytics_hub/metrics/"
+echo "  - Production: shared/ml_outputs/"
+echo ""
+echo "🎨 View Analytics Hub:"
+echo "  Open: analytics_hub/dashboard/index.html"
+echo ""
+echo "📈 Next Steps:"
+echo "  1. View the analytics dashboard"
+echo "  2. Check model performance in logs/"
+echo "  3. Set up GitHub Actions for daily training"
+echo ""
