@@ -10,7 +10,10 @@
     "start": "node dist/server.js",
     "lint": "eslint src --ext .ts",
     "test": "jest",
-    "test:fixtures": "tsx test-fixtures.ts"
+    "test:fixtures": "tsx test-fixtures.ts",
+    "test:api": "tsx test-api-integration.ts api",
+    "test:db": "tsx test-api-integration.ts db",
+    "test:all": "tsx test-api-integration.ts all"
   },
   "dependencies": {
     "express": "^4.18.2",
