@@ -24,14 +24,12 @@ interface AIBets {
 }
 
 interface BettingTabProps {
-  fixtureId: string;
   aiBets?: AIBets;
   onRevealBet: (betType: string) => void;
   onRevealGolden: () => void;
 }
 
 const BettingTab: React.FC<BettingTabProps> = ({ 
-  fixtureId, 
   aiBets, 
   onRevealBet, 
   onRevealGolden 
