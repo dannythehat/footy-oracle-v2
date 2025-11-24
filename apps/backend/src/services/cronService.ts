@@ -2,19 +2,38 @@ import cron from 'node-cron';
 import { loadMLPredictions, selectGoldenBets } from './mlService.js';
 import { fetchFixtures, fetchOdds } from './apiFootballService.js';
 import { generateBulkReasoning } from './aiService.js';
+import { bettingInsightsService } from './bettingInsightsService.js';
 import { Prediction } from '../models/Prediction.js';
 import { Fixture } from '../models/Fixture.js';
 
 export function startCronJobs() {
   const schedule = process.env.PREDICTION_CRON_SCHEDULE || '0 6 * * *';
   
-  // Daily prediction update job
+  // Daily prediction update job (6am)
   cron.schedule(schedule, async () => {
     console.log('🔄 Starting daily prediction update...');
     await updateDailyPredictions();
   });
 
-  console.log(`✅ Cron job scheduled: ${schedule}`);
+  // AI Betting Insights generation (5am daily)
+  cron.schedule('0 5 * * *', async () => {
+    console.log('🎯 Starting AI betting insights generation...');
+    await generateBettingInsights();
+  });
+
+  console.log(`✅ Cron jobs scheduled:`);
+  console.log(`   - Daily predictions: ${schedule}`);
+  console.log(`   - AI betting insights: 0 5 * * * (5am daily)`);
+}
+
+async function generateBettingInsights() {
+  try {
+    console.log('🤖 Processing fixtures for AI betting insights (48 hours before kickoff)...');
+    await bettingInsightsService.processUpcomingFixtures();
+    console.log('✅ AI betting insights generation completed');
+  } catch (error) {
+    console.error('❌ Error generating betting insights:', error);
+  }
 }
 
 async function updateDailyPredictions() {
@@ -110,4 +129,4 @@ function getOddsForMarket(odds: any, market: string): number {
 }
 
 // Export for manual trigger
-export { updateDailyPredictions };
+export { updateDailyPredictions, generateBettingInsights };
