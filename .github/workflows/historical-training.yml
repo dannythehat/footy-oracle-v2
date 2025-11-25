@@ -1,14 +1,14 @@
-name: 🤖 Historical Training Pipeline
+name: 🤖 Historical Model Training
 
 on:
   schedule:
-    - cron: '0 2 * * *'  # Daily at 2am UTC
-  workflow_dispatch:  # Allow manual trigger
+    - cron: '0 2 * * *'  # 2am UTC (after midnight download completes)
+  workflow_dispatch:  # Manual trigger
 
 jobs:
-  historical-training:
+  train-models:
     runs-on: ubuntu-latest
-    timeout-minutes: 360  # 6 hours max
+    timeout-minutes: 60  # Should complete in ~30 min with pre-downloaded data
     
     steps:
       - name: 📥 Checkout repository
@@ -28,36 +28,41 @@ jobs:
           pip install --upgrade pip
           pip install -r requirements.txt
       
-      - name: 🔑 Setup API Key
-        run: |
-          cd ml_training
-          # Try to use GitHub secret first, fallback to checking backend .env
-          if [ -n "${{ secrets.API_FOOTBALL_KEY }}" ]; then
-            echo "Using API key from GitHub Secrets"
-            echo "API_FOOTBALL_KEY=${{ secrets.API_FOOTBALL_KEY }}" > .env
-          elif [ -f "../apps/backend/.env" ]; then
-            echo "Using API key from backend .env"
-            grep "API_FOOTBALL_KEY" ../apps/backend/.env > .env || echo "API_FOOTBALL_KEY not found in backend .env"
-          else
-            echo "⚠️ No API key found! Please add API_FOOTBALL_KEY to GitHub Secrets"
-            echo "Go to: https://github.com/${{ github.repository }}/settings/secrets/actions"
-            exit 1
-          fi
-      
-      - name: 📊 Check current progress
+      - name: 📊 Check downloaded data
         run: |
           cd ml_training
           if [ -f data/training_progress.json ]; then
             echo "Current progress:"
             cat data/training_progress.json
+            YEAR=$(cat data/training_progress.json | grep -o '"current_year": [0-9]*' | grep -o '[0-9]*')
+            echo "TRAIN_YEAR=$YEAR" >> $GITHUB_ENV
           else
-            echo "No progress file found - starting fresh"
+            echo "No progress file - starting with 2018"
+            echo "TRAIN_YEAR=2018" >> $GITHUB_ENV
+          fi
+          
+          echo ""
+          echo "Checking for downloaded data..."
+          
+          if [ -f data/historical/raw/${TRAIN_YEAR}_fixtures.json ]; then
+            echo "✅ Fixtures file found"
+          else
+            echo "❌ Fixtures file missing! Download may have failed."
+            exit 1
+          fi
+          
+          if [ -f data/historical/raw/${TRAIN_YEAR}_stats.json ]; then
+            echo "✅ Stats file found"
+          else
+            echo "❌ Stats file missing! Download may have failed."
+            exit 1
           fi
       
-      - name: 🤖 Run historical training pipeline
+      - name: 🤖 Process data and train models
         run: |
           cd ml_training
-          python scripts/00_historical_training.py --start-year 2018 --leagues 50
+          echo "Training models on year: $TRAIN_YEAR"
+          python scripts/00b_train_historical_models.py --year $TRAIN_YEAR
       
       - name: 📈 Display training results
         if: always()
@@ -72,29 +77,38 @@ jobs:
           
           echo ""
           echo "=== Latest Log (last 50 lines) ==="
-          tail -n 50 logs/historical_training_$(date +%Y%m%d).log || echo "No log file"
+          tail -n 50 logs/train_historical_$(date +%Y%m%d).log || echo "No log file"
       
-      - name: 💾 Commit and push changes
+      - name: 💾 Commit training results
         run: |
           git config --local user.email "github-actions[bot]@users.noreply.github.com"
           git config --local user.name "github-actions[bot]"
           
           # Add all training artifacts
-          git add ml_training/data/historical/ || true
+          git add ml_training/data/historical/fixtures_*.csv || true
           git add ml_training/data/training_progress.json || true
           git add ml_training/data/processed/ || true
           git add ml_training/models/ || true
           git add ml_training/logs/ || true
           
           # Commit with detailed message
-          CURRENT_YEAR=$(cat ml_training/data/training_progress.json | grep -o '"current_year": [0-9]*' | grep -o '[0-9]*' || echo "unknown")
+          NEXT_YEAR=$((TRAIN_YEAR - 1))
           TOTAL_FIXTURES=$(cat ml_training/data/training_progress.json | grep -o '"total_fixtures": [0-9]*' | grep -o '[0-9]*' || echo "unknown")
           
-          git commit -m "🤖 Historical training: Year $CURRENT_YEAR complete ($TOTAL_FIXTURES fixtures)" \
-                     -m "Automated training run: $(date +'%Y-%m-%d %H:%M:%S UTC')" \
-                     -m "Next training year: $((CURRENT_YEAR - 1))" || echo "No changes to commit"
+          git commit -m "🤖 Historical training: Year $TRAIN_YEAR complete ($TOTAL_FIXTURES fixtures)" \
+                     -m "Automated training: $(date +'%Y-%m-%d %H:%M:%S UTC')" \
+                     -m "Next training year: $NEXT_YEAR" || echo "No changes to commit"
           
           git push || echo "Nothing to push"
+      
+      - name: 🧹 Cleanup raw data (optional)
+        run: |
+          cd ml_training
+          # Remove raw data after successful processing to save space
+          # Uncomment if you want to delete raw files after training
+          # rm -f data/historical/raw/${TRAIN_YEAR}_fixtures.json
+          # rm -f data/historical/raw/${TRAIN_YEAR}_stats.json
+          echo "Raw data retained for debugging"
       
       - name: 📊 Upload training logs
         if: always()
