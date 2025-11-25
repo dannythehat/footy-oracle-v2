@@ -6,6 +6,11 @@ AI-powered sports betting platform with Golden Bets, Value Bets, and fixture pre
 ![Node](https://img.shields.io/badge/node-%3E%3D18.0.0-brightgreen.svg)
 ![TypeScript](https://img.shields.io/badge/TypeScript-5.3-blue.svg)
 
+## 🌐 Live Deployments
+
+- **Frontend**: [https://footy-oracle-v2-kr92se707-dannys-projects-83c67aed.vercel.app](https://footy-oracle-v2-kr92se707-dannys-projects-83c67aed.vercel.app)
+- **Backend**: [https://footy-oracle-backend-production.up.railway.app](https://footy-oracle-backend-production.up.railway.app)
+
 ## ✨ Features
 
 - **3 Golden Bets Daily** - Top AI predictions with 80%+ confidence
@@ -151,7 +156,7 @@ CORS_ORIGIN=https://your-frontend-url.vercel.app
 
 See [BUILD_BLUEPRINT.md](BUILD_BLUEPRINT.md) for detailed 15-day development plan.
 
-**Current Status:** ✅ Backend Complete | ✅ Frontend Complete | 🚧 Deployment
+**Current Status:** ✅ Backend Complete | ✅ Frontend Complete | ✅ Deployed
 
 ## 🧪 Testing
 
