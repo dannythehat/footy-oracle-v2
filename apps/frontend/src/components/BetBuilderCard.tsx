@@ -1,5 +1,5 @@
-import React from 'react';
-import { Brain, TrendingUp, Target, Clock, Trophy, Zap } from 'lucide-react';
+import React, { useState } from 'react';
+import { Brain, TrendingUp, Target, Clock, Trophy, Zap, Share2, Copy, Check } from 'lucide-react';
 
 interface MarketPrediction {
   market: string;
@@ -43,6 +43,9 @@ const BetBuilderCard: React.FC<BetBuilderCardProps> = ({ betBuilder }) => {
     profit,
   } = betBuilder;
 
+  const [showShareMenu, setShowShareMenu] = useState(false);
+  const [copied, setCopied] = useState(false);
+
   const kickoffTime = new Date(kickoff).toLocaleTimeString('en-GB', {
     hour: '2-digit',
     minute: '2-digit',
@@ -67,11 +70,90 @@ const BetBuilderCard: React.FC<BetBuilderCardProps> = ({ betBuilder }) => {
     );
   };
 
+  const generateShareText = () => {
+    const marketsList = markets.map(m => `${m.marketName} (${m.confidence}%)`).join(', ');
+    return `🧠 Bet Builder: ${homeTeam} vs ${awayTeam}\n${league} • ${kickoffTime}\n\nMarkets: ${marketsList}\n\nCombined Confidence: ${combinedConfidence}%\nCombined Odds: ${estimatedCombinedOdds.toFixed(2)}x\n€10 → €${(10 * estimatedCombinedOdds).toFixed(2)}\n\n#FootyOracle #BetBuilder`;
+  };
+
+  const handleShare = (platform: string) => {
+    const text = generateShareText();
+    const url = window.location.href;
+
+    switch (platform) {
+      case 'twitter':
+        window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(url)}`, '_blank');
+        break;
+      case 'facebook':
+        window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}&quote=${encodeURIComponent(text)}`, '_blank');
+        break;
+      case 'whatsapp':
+        window.open(`https://wa.me/?text=${encodeURIComponent(text + '\n' + url)}`, '_blank');
+        break;
+      case 'telegram':
+        window.open(`https://t.me/share/url?url=${encodeURIComponent(url)}&text=${encodeURIComponent(text)}`, '_blank');
+        break;
+      case 'copy':
+        navigator.clipboard.writeText(text + '\n' + url);
+        setCopied(true);
+        setTimeout(() => setCopied(false), 2000);
+        break;
+    }
+    setShowShareMenu(false);
+  };
+
   return (
     <div className="relative bg-gradient-to-br from-gray-900 via-purple-900/20 to-gray-900 border-2 border-purple-500/30 rounded-xl p-6 hover:border-purple-500/60 hover:shadow-[0_0_30px_rgba(168,85,247,0.4)] transition-all duration-300 group">
       {/* Brain Badge */}
       <div className="absolute -top-3 -left-3 bg-gradient-to-br from-purple-500 to-pink-500 rounded-full p-3 shadow-lg shadow-purple-500/50 group-hover:scale-110 transition-transform">
         <Brain className="w-6 h-6 text-white" />
+      </div>
+
+      {/* Share Button */}
+      <div className="absolute top-4 left-4">
+        <button
+          onClick={() => setShowShareMenu(!showShareMenu)}
+          className="bg-purple-600/80 hover:bg-purple-600 text-white p-2 rounded-full transition-colors"
+          title="Share"
+        >
+          <Share2 className="w-4 h-4" />
+        </button>
+        
+        {/* Share Menu */}
+        {showShareMenu && (
+          <div className="absolute top-12 left-0 bg-gray-900 border border-purple-500/50 rounded-lg shadow-xl p-2 z-10 min-w-[160px]">
+            <button
+              onClick={() => handleShare('twitter')}
+              className="w-full text-left px-3 py-2 hover:bg-purple-600/20 rounded text-sm text-white flex items-center gap-2"
+            >
+              <span>🐦</span> Twitter
+            </button>
+            <button
+              onClick={() => handleShare('facebook')}
+              className="w-full text-left px-3 py-2 hover:bg-purple-600/20 rounded text-sm text-white flex items-center gap-2"
+            >
+              <span>📘</span> Facebook
+            </button>
+            <button
+              onClick={() => handleShare('whatsapp')}
+              className="w-full text-left px-3 py-2 hover:bg-purple-600/20 rounded text-sm text-white flex items-center gap-2"
+            >
+              <span>💬</span> WhatsApp
+            </button>
+            <button
+              onClick={() => handleShare('telegram')}
+              className="w-full text-left px-3 py-2 hover:bg-purple-600/20 rounded text-sm text-white flex items-center gap-2"
+            >
+              <span>✈️</span> Telegram
+            </button>
+            <button
+              onClick={() => handleShare('copy')}
+              className="w-full text-left px-3 py-2 hover:bg-purple-600/20 rounded text-sm text-white flex items-center gap-2"
+            >
+              {copied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
+              {copied ? 'Copied!' : 'Copy Link'}
+            </button>
+          </div>
+        )}
       </div>
 
       {getResultBadge()}
