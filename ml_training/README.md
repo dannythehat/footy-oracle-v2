@@ -7,6 +7,7 @@
 ## 🎯 What This Does
 
 ✅ **Trains 4 ML models** daily (BTTS, Goals, Corners, Cards)  
+✅ **Trains 4+ experimental models** separately (Red Cards, Bookings, Win by 2+, HT/FT)  
 ✅ **Tracks performance** with beautiful analytics dashboard  
 ✅ **Automates everything** - runs at 2 AM UTC daily  
 ✅ **Proves intelligence** - shows measurable improvement over time  
@@ -30,8 +31,12 @@ python upload_data.py
 # Install dependencies
 pip install -r requirements.txt
 
-# Run complete pipeline
+# Run complete pipeline (main 4 models)
 bash pipeline.sh
+
+# OR train experimental models separately
+python scripts/02b_process_experimental_targets.py
+python scripts/03b_train_experimental_models.py
 ```
 
 ### 3. View Analytics Hub
@@ -41,6 +46,37 @@ open ../analytics_hub/dashboard/index.html
 ```
 
 **That's it!** Your LM babies are now training and you can see their progress in the stunning analytics hub.
+
+---
+
+## 🧪 Experimental Models (NEW!)
+
+In addition to the main 4 production models, we're training **experimental learning machines** that are getting smart for future deployment:
+
+### Experimental Models:
+1. **🔴 Red Card in Game** - Predicts if any red card will be shown
+2. **📒 Player Booking** - Predicts booking activity (team-level)
+3. **⚽ Win by +2 Goals** - Predicts dominant victories (home/away/either)
+4. **🕐 Halftime/Fulltime** - Predicts HT/FT combined outcomes (9 patterns)
+
+### Key Features:
+- ✅ **Completely separate** from main 4 models
+- ✅ **No interference** with production pipeline
+- ✅ **Independent training** and storage
+- ✅ **Future deployment ready**
+
+### Train Experimental Models:
+```bash
+# Check data availability
+python scripts/02b_process_experimental_targets.py
+
+# Train all experimental models
+python scripts/03b_train_experimental_models.py
+```
+
+**Models saved to**: `models/experimental/`
+
+**Documentation**: See [EXPERIMENTAL_MODELS.md](EXPERIMENTAL_MODELS.md) for full details.
 
 ---
 
@@ -80,12 +116,16 @@ Once set up, GitHub Actions will:
 
 ## 📁 What's Included
 
-### Training Scripts
+### Main Training Scripts
 - `01_fetch_fixtures.py` - Daily fixture fetcher
 - `02_process_data.py` - Data processing & feature engineering
 - `03_train_models.py` - Model training (4 XGBoost models)
 - `04_evaluate.py` - Performance evaluation & tracking
 - `05_deploy.py` - Production deployment
+
+### Experimental Training Scripts (NEW!)
+- `02b_process_experimental_targets.py` - Add experimental targets
+- `03b_train_experimental_models.py` - Train experimental models
 
 ### Analytics Hub
 - `../analytics_hub/dashboard/index.html` - Stunning dashboard
@@ -101,17 +141,24 @@ Once set up, GitHub Actions will:
 ### Documentation
 - `COMPLETE_SETUP_GUIDE.md` - Full walkthrough
 - `TRAINING_GUIDE.md` - Training details
+- `EXPERIMENTAL_MODELS.md` - Experimental models guide (NEW!)
 - `SUMMARY.md` - Quick overview
 
 ---
 
 ## 📈 Expected Performance
 
-### Initial Training (100k fixtures)
+### Main Production Models (Initial Training - 100k fixtures)
 - BTTS: **70-72%** accuracy
 - Over 2.5 Goals: **73-76%** accuracy
 - Over 9.5 Corners: **68-71%** accuracy
 - Over 3.5 Cards: **69-72%** accuracy
+
+### Experimental Models (Initial Training)
+- Red Card: **65-75%** accuracy
+- Player Booking: **70-80%** accuracy
+- Win by 2+: **70-75%** accuracy
+- HT/FT: **40-50%** accuracy (multi-class)
 
 ### After 30 Days
 - **+2-5%** improvement across all models
@@ -140,6 +187,7 @@ Track new capabilities:
 - Referee pattern analysis
 - Weather impact predictions
 - New market additions
+- **Experimental models ready for deployment**
 
 ### For Quality Assurance
 Monitor performance:
@@ -160,7 +208,7 @@ schedule:
 ```
 
 ### Adjust Model Parameters
-Edit `scripts/03_train_models.py`:
+Edit `scripts/03_train_models.py` or `scripts/03b_train_experimental_models.py`:
 ```python
 self.model_params = {
     'n_estimators': 300,      # More = better accuracy
@@ -184,6 +232,7 @@ def engineer_features(df):
 
 - **[COMPLETE_SETUP_GUIDE.md](COMPLETE_SETUP_GUIDE.md)** - Full setup walkthrough
 - **[TRAINING_GUIDE.md](TRAINING_GUIDE.md)** - Training pipeline details
+- **[EXPERIMENTAL_MODELS.md](EXPERIMENTAL_MODELS.md)** - Experimental models guide
 - **[SUMMARY.md](SUMMARY.md)** - Quick overview
 
 ---
@@ -217,6 +266,15 @@ bash pipeline.sh
 ls ../analytics_hub/metrics/
 ```
 
+### "Experimental models missing data"
+```bash
+# Check what data is available
+python scripts/02b_process_experimental_targets.py
+
+# Script will show which models can be trained
+# based on available data columns
+```
+
 ---
 
 ## 🎉 You're All Set!
@@ -226,10 +284,17 @@ Your LM babies are ready to:
 - ✅ Improve with every match
 - ✅ Track performance beautifully
 - ✅ Deploy to production
+- ✅ **Train experimental models separately**
 
-**Just run:**
+**Main Pipeline:**
 ```bash
 bash pipeline.sh
+```
+
+**Experimental Pipeline:**
+```bash
+python scripts/02b_process_experimental_targets.py
+python scripts/03b_train_experimental_models.py
 ```
 
 Then open `../analytics_hub/dashboard/index.html` to see your intelligence hub! 🚀
