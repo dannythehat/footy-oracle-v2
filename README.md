@@ -9,7 +9,7 @@ AI-powered sports betting platform with Golden Bets, Value Bets, and fixture pre
 ## 🌐 Live Deployments
 
 - **Frontend**: [https://footy-oracle-v2-kr92se707-dannys-projects-83c67aed.vercel.app](https://footy-oracle-v2-kr92se707-dannys-projects-83c67aed.vercel.app)
-- **Backend**: [https://footy-oracle-backend-production.up.railway.app](https://footy-oracle-backend-production.up.railway.app)
+- **Backend**: Deployed on Vercel
 
 ## ✨ Features
 
@@ -35,7 +35,7 @@ AI-powered sports betting platform with Golden Bets, Value Bets, and fixture pre
 - **Database:** MongoDB with Mongoose
 - **APIs:** API-Football, OpenAI GPT-4
 - **Cron:** Daily prediction updates
-- **Deployment:** Railway
+- **Deployment:** Vercel
 
 ### ML Pipeline
 - **Training Data:** 300k+ historical fixtures
@@ -125,20 +125,11 @@ footy-oracle-v2/
 
 ## 🚢 Deployment
 
-### Frontend (Vercel)
+### Both Frontend & Backend (Vercel)
 ```bash
 # Connect GitHub repo to Vercel
 # Auto-deploys on push to main
-```
-
-### Backend (Railway)
-```bash
-# Install Railway CLI
-npm i -g @railway/cli
-
-# Login and deploy
-railway login
-railway up
+# Configure separate projects for frontend and backend
 ```
 
 ### Environment Variables
@@ -199,8 +190,7 @@ MIT License - see [LICENSE](LICENSE) file
 
 - API-Football for fixture and odds data
 - OpenAI for GPT-4 reasoning
-- Vercel for frontend hosting
-- Railway for backend hosting
+- Vercel for hosting (frontend & backend)
 
 ---
 
