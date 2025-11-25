@@ -8,6 +8,7 @@ import fixturesRouter from './routes/fixtures.js';
 import predictionsRouter from './routes/predictions.js';
 import statsRouter from './routes/stats.js';
 import bettingInsightsRouter from './routes/bettingInsights.js';
+import betBuilderRouter from './routes/betBuilder.js';
 
 dotenv.config();
 
@@ -37,6 +38,7 @@ app.use('/api/fixtures', fixturesRouter);
 app.use('/api/predictions', predictionsRouter);
 app.use('/api/stats', statsRouter);
 app.use('/api/betting-insights', bettingInsightsRouter);
+app.use('/api/bet-builders', betBuilderRouter);
 
 // Error handling middleware
 app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
@@ -68,6 +70,7 @@ async function startServer() {
       console.log(`🚀 Footy Oracle API running on port ${PORT}`);
       console.log(`📍 Environment: ${process.env.NODE_ENV}`);
       console.log(`🔗 Health check: http://localhost:${PORT}/health`);
+      console.log(`🧠 Bet Builder Brain: http://localhost:${PORT}/api/bet-builders/today`);
     });
   } catch (error) {
     console.error('❌ Failed to start server:', error);
