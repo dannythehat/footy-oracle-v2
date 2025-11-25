@@ -1,11 +1,25 @@
 import { Router } from 'express';
 import { Prediction } from '../models/Prediction.js';
+import { loadGoldenBets } from '../services/mlService.js';
 
 const router = Router();
 
-// Get today's Golden Bets (top 3)
+// Get today's Golden Bets from LM outputs
 router.get('/today', async (req, res) => {
   try {
+    // First try to load from LM outputs (golden-betopia)
+    const lmGoldenBets = await loadGoldenBets();
+    
+    if (lmGoldenBets && lmGoldenBets.length > 0) {
+      return res.json({
+        success: true,
+        data: lmGoldenBets,
+        count: lmGoldenBets.length,
+        source: 'LM_OUTPUTS'
+      });
+    }
+    
+    // Fallback to database
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     
@@ -23,6 +37,7 @@ router.get('/today', async (req, res) => {
       success: true,
       data: goldenBets,
       count: goldenBets.length,
+      source: 'DATABASE'
     });
   } catch (error: any) {
     res.status(500).json({
