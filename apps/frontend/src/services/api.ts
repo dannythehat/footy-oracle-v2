@@ -43,6 +43,24 @@ export const goldenBetsApi = {
   },
 };
 
+// Value Bets API
+export const valueBetsApi = {
+  getToday: async () => {
+    const response = await apiClient.get('/api/value-bets/today');
+    return response.data;
+  },
+  
+  getAll: async (params?: {
+    minEdge?: number;
+    minConfidence?: number;
+    league?: string;
+    market?: string;
+  }) => {
+    const response = await apiClient.get('/api/value-bets', { params });
+    return response.data;
+  },
+};
+
 // Bet Builder API
 export const betBuilderApi = {
   getToday: async () => {
