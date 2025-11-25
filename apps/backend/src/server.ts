@@ -4,6 +4,7 @@ import dotenv from 'dotenv';
 import { connectDatabase } from './config/database.js';
 import { startCronJobs } from './services/cronService.js';
 import goldenBetsRouter from './routes/goldenBets.js';
+import valueBetsRouter from './routes/valueBets.js';
 import fixturesRouter from './routes/fixtures.js';
 import predictionsRouter from './routes/predictions.js';
 import statsRouter from './routes/stats.js';
@@ -34,6 +35,7 @@ app.get('/health', (req, res) => {
 
 // API Routes
 app.use('/api/golden-bets', goldenBetsRouter);
+app.use('/api/value-bets', valueBetsRouter);
 app.use('/api/fixtures', fixturesRouter);
 app.use('/api/predictions', predictionsRouter);
 app.use('/api/stats', statsRouter);
@@ -70,6 +72,8 @@ async function startServer() {
       console.log(`🚀 Footy Oracle API running on port ${PORT}`);
       console.log(`📍 Environment: ${process.env.NODE_ENV}`);
       console.log(`🔗 Health check: http://localhost:${PORT}/health`);
+      console.log(`⭐ Golden Bets: http://localhost:${PORT}/api/golden-bets/today`);
+      console.log(`💎 Value Bets: http://localhost:${PORT}/api/value-bets/today`);
       console.log(`🧠 Bet Builder Brain: http://localhost:${PORT}/api/bet-builders/today`);
     });
   } catch (error) {
