@@ -10,6 +10,7 @@ export interface IPrediction extends Document {
   prediction: string;
   odds: number;
   confidence: number;
+  value?: number; // Value bet percentage (AI% - Bookie%)
   aiReasoning?: string;
   isGoldenBet: boolean;
   result?: 'win' | 'loss' | 'pending';
@@ -28,6 +29,7 @@ const PredictionSchema = new Schema<IPrediction>({
   prediction: { type: String, required: true },
   odds: { type: Number, required: true },
   confidence: { type: Number, required: true, min: 0, max: 100 },
+  value: { type: Number }, // Value bet percentage
   aiReasoning: { type: String },
   isGoldenBet: { type: Boolean, default: false },
   result: { type: String, enum: ['win', 'loss', 'pending'], default: 'pending' },
@@ -40,5 +42,6 @@ const PredictionSchema = new Schema<IPrediction>({
 PredictionSchema.index({ date: -1 });
 PredictionSchema.index({ isGoldenBet: 1, date: -1 });
 PredictionSchema.index({ result: 1 });
+PredictionSchema.index({ value: -1 }); // Index for value bet queries
 
 export const Prediction = mongoose.model<IPrediction>('Prediction', PredictionSchema);
