@@ -11,17 +11,98 @@ export interface MLPrediction {
   confidence: number;
 }
 
+export interface GoldenBet extends MLPrediction {
+  odds?: number;
+  stake?: number;
+  potentialReturn?: number;
+}
+
+export interface ValueBet extends MLPrediction {
+  odds?: number;
+  expectedValue?: number;
+  edge?: number;
+}
+
 export async function loadMLPredictions(): Promise<MLPrediction[]> {
   try {
-    const mlPath = process.env.ML_MODEL_PATH || '../../shared/ml_outputs/predictions.json';
-    const fullPath = path.resolve(process.cwd(), mlPath);
+    // Primary path: Local golden-betopia ML outputs (Windows absolute path)
+    const localPath = 'C:\\Users\\Danny\\Documents\\GitHub\\golden-betopia\\shared\\ml_outputs\\predictions.json';
+    
+    // Fallback path: Relative path for deployment
+    const relativePath = process.env.ML_MODEL_PATH || '../../shared/ml_outputs/predictions.json';
+    
+    let fullPath = localPath;
+    
+    // Try local path first, fallback to relative
+    try {
+      await fs.access(localPath);
+      console.log('✅ Reading ML predictions from local golden-betopia:', localPath);
+    } catch {
+      fullPath = path.resolve(process.cwd(), relativePath);
+      console.log('⚠️ Local path not found, using relative path:', fullPath);
+    }
     
     const data = await fs.readFile(fullPath, 'utf-8');
-    return JSON.parse(data);
+    const predictions = JSON.parse(data);
+    
+    console.log(`📊 Loaded ${predictions.length} ML predictions`);
+    return predictions;
   } catch (error) {
-    console.error('Error loading ML predictions:', error);
-    // Return mock data for development
+    console.error('❌ Error loading ML predictions:', error);
+    console.log('🔄 Returning mock data for development');
     return generateMockPredictions();
+  }
+}
+
+export async function loadGoldenBets(): Promise<GoldenBet[]> {
+  try {
+    const localPath = 'C:\\Users\\Danny\\Documents\\GitHub\\golden-betopia\\shared\\ml_outputs\\golden_bets.json';
+    const relativePath = '../../shared/ml_outputs/golden_bets.json';
+    
+    let fullPath = localPath;
+    
+    try {
+      await fs.access(localPath);
+      console.log('✅ Reading Golden Bets from local golden-betopia:', localPath);
+    } catch {
+      fullPath = path.resolve(process.cwd(), relativePath);
+      console.log('⚠️ Local path not found, using relative path:', fullPath);
+    }
+    
+    const data = await fs.readFile(fullPath, 'utf-8');
+    const goldenBets = JSON.parse(data);
+    
+    console.log(`⭐ Loaded ${goldenBets.length} Golden Bets`);
+    return goldenBets;
+  } catch (error) {
+    console.error('❌ Error loading Golden Bets:', error);
+    return [];
+  }
+}
+
+export async function loadValueBets(): Promise<ValueBet[]> {
+  try {
+    const localPath = 'C:\\Users\\Danny\\Documents\\GitHub\\golden-betopia\\shared\\ml_outputs\\value_bets.json';
+    const relativePath = '../../shared/ml_outputs/value_bets.json';
+    
+    let fullPath = localPath;
+    
+    try {
+      await fs.access(localPath);
+      console.log('✅ Reading Value Bets from local golden-betopia:', localPath);
+    } catch {
+      fullPath = path.resolve(process.cwd(), relativePath);
+      console.log('⚠️ Local path not found, using relative path:', fullPath);
+    }
+    
+    const data = await fs.readFile(fullPath, 'utf-8');
+    const valueBets = JSON.parse(data);
+    
+    console.log(`💎 Loaded ${valueBets.length} Value Bets`);
+    return valueBets;
+  } catch (error) {
+    console.error('❌ Error loading Value Bets:', error);
+    return [];
   }
 }
 
