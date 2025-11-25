@@ -265,7 +265,7 @@ function getRealOdds(fixture: FixtureWithOdds, market: string, prediction: strin
 }
 
 /**
- * Generate ChatGPT-style AI reasoning for a Golden Bet
+ * Generate engaging, humorous AI reasoning for a Golden Bet
  */
 function generateChatGPTPrediction(
   fixture: FixtureWithOdds, 
@@ -277,24 +277,25 @@ function generateChatGPTPrediction(
   const impliedProb = ((1 / odds) * 100).toFixed(1);
   const value = (confidence - parseFloat(impliedProb)).toFixed(1);
   
+  // Humorous and engaging reasoning templates
   const reasoningTemplates = [
-    // Match Winner reasoning
-    `After analyzing ${fixture.homeTeam} vs ${fixture.awayTeam}, I'm backing ${prediction}. ${fixture.homeTeam}'s recent form shows 3 wins in their last 5 home matches, with a strong defensive record of just 0.8 goals conceded per game. ${fixture.awayTeam} has struggled away from home, winning only 1 of their last 6 away fixtures. The tactical matchup favors ${fixture.homeTeam}'s high-pressing style against ${fixture.awayTeam}'s possession-based approach. At ${odds} odds, this represents excellent value with ${confidence}% confidence.`,
+    // Match Winner - Engaging style
+    `Alright, let's talk ${fixture.homeTeam} vs ${fixture.awayTeam}. I'm feeling ${prediction} here, and here's why: ${fixture.homeTeam} has been absolutely cooking at home lately - 3 wins in their last 5, and they're only letting in 0.8 goals per game. That's tighter than my budget after Christmas! 🎄\n\nMeanwhile, ${fixture.awayTeam}? They've been struggling on the road like a GPS with no signal - just 1 win in their last 6 away games. Ouch. The tactical matchup is juicy too: ${fixture.homeTeam}'s high-pressing chaos vs ${fixture.awayTeam}'s possession game? That's like bringing a knife to a gunfight.\n\nAt ${odds} odds, this is screaming value. I'm ${confidence}% confident, which in betting terms means "yeah, I'd actually put my money where my mouth is." 💰`,
     
-    `My analysis of ${fixture.homeTeam} vs ${fixture.awayTeam} points strongly toward ${prediction}. Key factors include ${fixture.homeTeam}'s exceptional home record (4W-1D-0L in last 5), their attacking prowess averaging 2.1 goals per home game, and ${fixture.awayTeam}'s defensive vulnerabilities on the road. Head-to-head history shows ${prediction.toLowerCase()} occurred in 3 of the last 4 meetings. The odds of ${odds} offer significant value given my ${confidence}% confidence level.`,
+    `Okay, ${fixture.homeTeam} vs ${fixture.awayTeam} - buckle up! I'm backing ${prediction} and feeling pretty smug about it. 😎\n\nHere's the tea: ${fixture.homeTeam} at home is like a different beast - 4W-1D-0L in their last 5. They're averaging 2.1 goals per home game, which is basically a goal party every match. ${fixture.awayTeam} on the road? Let's just say their defense has more holes than Swiss cheese. 🧀\n\nHead-to-head history backs this up too - ${prediction.toLowerCase()} happened in 3 of the last 4 meetings. The bookies are offering ${odds} odds, but with my ${confidence}% confidence level, this is what we call "free money" (well, almost). Let's get it! 🚀`,
     
-    // BTTS reasoning
-    `For ${fixture.homeTeam} vs ${fixture.awayTeam}, I'm predicting ${prediction} for Both Teams to Score. ${fixture.homeTeam} has scored in 8 of their last 10 home games while conceding in 6, showing both attacking threat and defensive gaps. ${fixture.awayTeam} averages 1.4 goals per away game but also concedes regularly. Both teams play open, attacking football which should create chances at both ends. At ${odds} odds with ${confidence}% confidence, this is a strong value bet.`,
+    // BTTS - Fun and engaging
+    `${fixture.homeTeam} vs ${fixture.awayTeam} for BTTS? I'm going with ${prediction}, and I'm not even sweating it. Here's the deal: ${fixture.homeTeam} has scored in 8 of their last 10 home games, but they've also conceded in 6. Classic "we'll score more than you" mentality. Love it. ⚽\n\n${fixture.awayTeam} averages 1.4 goals per away game but leaks goals like a broken faucet. Both teams play attacking football, which means we're getting end-to-end action - basically a goal fest waiting to happen. At ${odds} odds with ${confidence}% confidence, this is chef's kiss. 👨‍🍳💋`,
     
-    `My BTTS prediction for ${fixture.homeTeam} vs ${fixture.awayTeam} is ${prediction}. Statistical analysis shows both teams have scored in 70% of ${fixture.homeTeam}'s home matches and 65% of ${fixture.awayTeam}'s away fixtures this season. Both managers favor attacking formations, and recent meetings have been high-scoring affairs. The ${odds} odds represent excellent value for this ${confidence}% confidence selection.`,
+    `BTTS prediction time for ${fixture.homeTeam} vs ${fixture.awayTeam}: ${prediction}. And honestly? This one's almost too easy. 🎯\n\nThe stats don't lie - both teams have scored in 70% of ${fixture.homeTeam}'s home matches and 65% of ${fixture.awayTeam}'s away games. Both managers are attack-minded (defense is overrated anyway, right?), and their recent meetings have been absolute goal fests. The ${odds} odds here are basically the bookies giving us a gift. ${confidence}% confidence? More like ${confidence}% certainty! 💪`,
     
-    // Goals reasoning
-    `I'm backing ${prediction} for ${fixture.homeTeam} vs ${fixture.awayTeam}. ${fixture.homeTeam} averages 2.3 goals per home game while ${fixture.awayTeam} averages 1.6 away, suggesting a combined total that supports this prediction. Both teams have strong attacking units but defensive frailties - ${fixture.homeTeam} has conceded in 7 of last 10, while ${fixture.awayTeam} has conceded in 8 of last 10 away games. Weather conditions and pitch quality favor open play. ${odds} odds with ${confidence}% confidence makes this excellent value.`,
+    // Goals - Entertaining style
+    `Let's dive into ${fixture.homeTeam} vs ${fixture.awayTeam} for the goals market. I'm hammering ${prediction}, and here's why I'm so confident: ${fixture.homeTeam} averages 2.3 goals per home game, ${fixture.awayTeam} chips in 1.6 away. Do the math - that's a lot of goals! 🧮\n\nBoth teams have defensive issues (who needs defenders anyway?). ${fixture.homeTeam} has conceded in 7 of their last 10, ${fixture.awayTeam} in 8 of their last 10 away. Add in good weather and a decent pitch, and we've got ourselves a goal party. At ${odds} odds with ${confidence}% confidence, this is what dreams are made of. 🌟`,
     
-    `For the goals market in ${fixture.homeTeam} vs ${fixture.awayTeam}, I'm confident in ${prediction}. Form analysis shows ${fixture.homeTeam}'s last 5 home games averaged 3.2 total goals, while ${fixture.awayTeam}'s away fixtures averaged 2.8 goals. Both teams play high-tempo football with aggressive pressing, creating numerous chances. xG data supports this prediction with ${confidence}% confidence. At ${odds} odds, this represents strong value.`,
+    `Goals prediction for ${fixture.homeTeam} vs ${fixture.awayTeam}: ${prediction}. And I'm feeling VERY good about this one. 😏\n\nForm check: ${fixture.homeTeam}'s last 5 home games averaged 3.2 total goals. ${fixture.awayTeam}'s away fixtures? 2.8 goals. Both teams play high-tempo, aggressive football - it's like watching two caffeinated squirrels fight over a nut. ☕🐿️\n\nThe xG data backs this up too. ${confidence}% confidence at ${odds} odds? That's not just value, that's MEGA value. Let's ride! 🎢`,
     
-    // Corners reasoning
-    `My corners prediction for ${fixture.homeTeam} vs ${fixture.awayTeam} is ${prediction}. ${fixture.homeTeam} averages 6.2 corners at home while forcing opponents to take 5.1, totaling 11.3 per game. ${fixture.awayTeam} averages 4.8 corners away while conceding 5.9, totaling 10.7. Both teams utilize wide play and crossing strategies, which generates corner opportunities. The tactical setup and playing styles strongly support ${prediction} with ${confidence}% confidence at ${odds} odds.`,
+    // Corners - Witty and fun
+    `Corners prediction for ${fixture.homeTeam} vs ${fixture.awayTeam}: ${prediction}. Now, I know corners aren't sexy, but hear me out - this is where the smart money goes. 🧠💰\n\n${fixture.homeTeam} averages 6.2 corners at home while forcing opponents to take 5.1 - that's 11.3 per game. ${fixture.awayTeam} averages 4.8 away while conceding 5.9 (10.7 total). Both teams love wide play and crossing, which means corner flags are getting a workout today. 🚩\n\nAt ${odds} odds with ${confidence}% confidence, this is the kind of bet that makes you look like a genius at the pub. You're welcome. 🍺`,
   ];
   
   // Select appropriate template based on market
