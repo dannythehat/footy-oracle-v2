@@ -12,6 +12,7 @@
  * - Daily tracker with cumulative profit
  * - Value bet calculations (confidence vs implied probability)
  * - ACCA profit tracking
+ * - ONLY ADDS MISSING DAYS - preserves existing data
  * 
  * Usage:
  *   npx tsx src/scripts/seedHistoricalPredictions.ts
@@ -503,9 +504,16 @@ async function seedHistoricalPredictions() {
     await mongoose.connect(mongoUri);
     console.log('✅ Connected to MongoDB\n');
     
-    // Clear existing predictions
-    const deleteResult = await Prediction.deleteMany({});
-    console.log(`🗑️  Cleared ${deleteResult.deletedCount} existing predictions\n`);
+    // Check existing predictions and get dates that already have data
+    const existingPredictions = await Prediction.find({}).select('date');
+    const existingDates = new Set(
+      existingPredictions.map(p => p.date.toISOString().split('T')[0])
+    );
+    
+    console.log(`📋 Found ${existingPredictions.length} existing predictions across ${existingDates.size} days\n`);
+    if (existingDates.size > 0) {
+      console.log(`📅 Existing dates: ${Array.from(existingDates).sort().join(', ')}\n`);
+    }
     
     // Fetch fixtures with REAL odds
     const startDate = '2025-11-01';
@@ -527,22 +535,32 @@ async function seedHistoricalPredictions() {
     
     const allDates = Object.keys(fixturesByDate).sort();
     
-    // Select 2-3 random days for guaranteed ACCA wins
-    const guaranteedWinDays = new Set<string>();
-    const shuffledDates = [...allDates].sort(() => Math.random() - 0.5);
+    // Filter out dates that already have data
+    const missingDates = allDates.filter(date => !existingDates.has(date));
     
-    for (let i = 0; i < Math.min(3, shuffledDates.length); i++) {
-      guaranteedWinDays.add(shuffledDates[i]);
+    if (missingDates.length === 0) {
+      console.log('✅ All dates already have data! Nothing to add.\n');
+      return;
+    }
+    
+    console.log(`🎯 Missing ${missingDates.length} days: ${missingDates.join(', ')}\n`);
+    
+    // Select 2-3 random days from MISSING dates for guaranteed ACCA wins
+    const guaranteedWinDays = new Set<string>();
+    const shuffledMissingDates = [...missingDates].sort(() => Math.random() - 0.5);
+    
+    for (let i = 0; i < Math.min(3, shuffledMissingDates.length); i++) {
+      guaranteedWinDays.add(shuffledMissingDates[i]);
     }
     
     console.log(`🎯 Guaranteed ACCA Win Days: ${Array.from(guaranteedWinDays).join(', ')}\n`);
     
-    // Generate Golden Bets for each day
+    // Generate Golden Bets ONLY for missing days
     console.log('🌟 Generating Golden Bets (3 per day) with UNIQUE AI predictions...\n');
     const allGoldenBets: any[] = [];
     let cumulativeProfit = 0;
     
-    for (const dateKey of allDates) {
+    for (const dateKey of missingDates) {
       const dayFixtures = fixturesByDate[dateKey];
       const forceAllWins = guaranteedWinDays.has(dateKey);
       
@@ -563,9 +581,14 @@ async function seedHistoricalPredictions() {
       }
     }
     
-    console.log(`\n✅ Generated ${allGoldenBets.length} Golden Bets with UNIQUE AI predictions\n`);
+    if (allGoldenBets.length === 0) {
+      console.log('\n⚠️  No new Golden Bets to add.\n');
+      return;
+    }
     
-    // Calculate statistics
+    console.log(`\n✅ Generated ${allGoldenBets.length} NEW Golden Bets with UNIQUE AI predictions\n`);
+    
+    // Calculate statistics for NEW bets only
     const totalBets = allGoldenBets.length;
     const wins = allGoldenBets.filter(b => b.result === 'win').length;
     const losses = allGoldenBets.filter(b => b.result === 'loss').length;
@@ -580,10 +603,10 @@ async function seedHistoricalPredictions() {
     const valueBetWinRate = valueBets.length > 0 ? ((valueBetWins / valueBets.length) * 100).toFixed(1) : '0.0';
     const avgValue = (allGoldenBets.reduce((sum, b) => sum + b.value, 0) / totalBets).toFixed(2);
     
-    // Calculate ACCA stats
+    // Calculate ACCA stats for NEW days
     const accaStats = { wins: 0, losses: 0, profit: 0 };
     
-    for (const dateKey of allDates) {
+    for (const dateKey of missingDates) {
       const dayBets = allGoldenBets.filter(b => b.date.toISOString().split('T')[0] === dateKey);
       
       if (dayBets.length === 3) {
@@ -604,7 +627,7 @@ async function seedHistoricalPredictions() {
     const accaTotal = accaStats.wins + accaStats.losses;
     const accaWinRate = accaTotal > 0 ? ((accaStats.wins / accaTotal) * 100).toFixed(1) : '0.0';
     
-    console.log('\n📊 GOLDEN BETS STATISTICS (REAL ODDS):');
+    console.log('\n📊 NEW GOLDEN BETS STATISTICS (REAL ODDS):');
     console.log(`  Total Golden Bets: ${totalBets}`);
     console.log(`  Wins: ${wins} | Losses: ${losses}`);
     console.log(`  Win Rate: ${winRate}%`);
@@ -626,17 +649,23 @@ async function seedHistoricalPredictions() {
     console.log(`  ACCA Profit: £${accaStats.profit.toFixed(2)}`);
     
     // Insert into MongoDB
-    console.log('\n💾 Inserting Golden Bets into MongoDB...');
+    console.log('\n💾 Inserting NEW Golden Bets into MongoDB...');
     await Prediction.insertMany(allGoldenBets);
-    console.log(`✅ Inserted ${allGoldenBets.length} Golden Bets with UNIQUE predictions\n`);
+    console.log(`✅ Inserted ${allGoldenBets.length} NEW Golden Bets with UNIQUE predictions\n`);
+    
+    // Get total stats including existing data
+    const allPredictionsNow = await Prediction.find({});
+    const totalAllBets = allPredictionsNow.length;
+    const totalAllWins = allPredictionsNow.filter(p => p.result === 'win').length;
+    const totalAllProfit = allPredictionsNow.reduce((sum, p) => sum + (p.profit || 0), 0);
+    const totalAllDates = new Set(allPredictionsNow.map(p => p.date.toISOString().split('T')[0])).size;
     
     console.log('🎉 Historical seeding complete!\n');
     console.log('📈 Your platform now has:');
-    console.log(`   - ${allDates.length} days of historical data`);
-    console.log(`   - ${totalBets} Golden Bets with ${winRate}% win rate`);
-    console.log(`   - ${accaStats.wins} profitable ACCA days`);
-    console.log(`   - £${totalProfit.toFixed(2)} total profit`);
-    console.log(`   - ${valueBets.length} value bets with ${avgValue}% avg value`);
+    console.log(`   - ${totalAllDates} days of historical data (${missingDates.length} new)`);
+    console.log(`   - ${totalAllBets} Golden Bets total (${allGoldenBets.length} new)`);
+    console.log(`   - ${((totalAllWins / totalAllBets) * 100).toFixed(1)}% overall win rate`);
+    console.log(`   - £${totalAllProfit.toFixed(2)} total profit`);
     console.log(`   - Every prediction is UNIQUE - no repetition!\n`);
     
   } catch (error: any) {
