@@ -52,6 +52,10 @@ jobs:
         run: |
           python ml_training/scripts/05_deploy.py
       
+      - name: 📊 Update Analytics Hub
+        run: |
+          python ml_training/scripts/06_update_analytics_hub.py
+      
       - name: 💾 Commit updated models and data
         run: |
           git config user.name "LM Training Bot"
@@ -75,8 +79,12 @@ jobs:
           
           if [ -f ml_training/models/metadata.json ]; then
             echo "### Model Performance" >> $GITHUB_STEP_SUMMARY
+            echo "\`\`\`json" >> $GITHUB_STEP_SUMMARY
             cat ml_training/models/metadata.json >> $GITHUB_STEP_SUMMARY
+            echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
           fi
           
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "**Status:** ${{ job.status }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "📊 **View Analytics Hub:** [Dashboard](https://github.com/${{ github.repository }}/blob/main/analytics_hub/dashboard/index.html)" >> $GITHUB_STEP_SUMMARY
