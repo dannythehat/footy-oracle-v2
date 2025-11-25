@@ -43,6 +43,49 @@ export const goldenBetsApi = {
   },
 };
 
+// Bet Builder API
+export const betBuilderApi = {
+  getToday: async () => {
+    const response = await apiClient.get('/api/bet-builders/today');
+    return response.data;
+  },
+  
+  getById: async (id: string) => {
+    const response = await apiClient.get(`/api/bet-builders/${id}`);
+    return response.data;
+  },
+  
+  getByDate: async (date: string) => {
+    const response = await apiClient.get('/api/bet-builders', {
+      params: { date },
+    });
+    return response.data;
+  },
+  
+  getHistorical: async (params?: {
+    startDate?: string;
+    endDate?: string;
+    page?: number;
+    limit?: number;
+  }) => {
+    const response = await apiClient.get('/api/bet-builders', { params });
+    return response.data;
+  },
+  
+  getWeekly: async () => {
+    const response = await apiClient.get('/api/bet-builders/weekly');
+    return response.data;
+  },
+  
+  getStats: async (params?: {
+    startDate?: string;
+    endDate?: string;
+  }) => {
+    const response = await apiClient.get('/api/bet-builders/stats/summary', { params });
+    return response.data;
+  },
+};
+
 // Fixtures API
 export const fixturesApi = {
   getByDate: async (date: string, league?: string, status?: string) => {
