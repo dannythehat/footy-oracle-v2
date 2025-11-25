@@ -1,25 +1,33 @@
 # 🏆 THE FOOTY ORACLE v2
 
-AI-powered sports betting platform with Golden Bets, Value Bets, and fixture predictions.
+AI-powered sports betting platform with Golden Bets, Bet Builder Brain, and transparent performance tracking.
 
 ![License](https://img.shields.io/badge/license-MIT-blue.svg)
 ![Node](https://img.shields.io/badge/node-%3E%3D18.0.0-brightgreen.svg)
 ![TypeScript](https://img.shields.io/badge/TypeScript-5.3-blue.svg)
+![Status](https://img.shields.io/badge/status-production%20ready-success.svg)
 
 ## 🌐 Live Deployments
 
 - **Frontend**: [https://footy-oracle-v2-kr92se707-dannys-projects-83c67aed.vercel.app](https://footy-oracle-v2-kr92se707-dannys-projects-83c67aed.vercel.app)
-- **Backend**: Deployed on Vercel
+- **Backend**: Deployed on Vercel (serverless)
 
 ## ✨ Features
 
+### **Core Features**
 - **3 Golden Bets Daily** - Top AI predictions with 80%+ confidence
-- **AI Reasoning** - GPT-4 powered explanations for each bet
-- **P&L Tracking** - Daily/Weekly/Monthly/Yearly profit tracking
-- **FlashScore-Style Fixtures** - Browse 30+ top leagues
+- **Bet Builder Brain** - Multi-market convergence detection (3+ markets @ 75%+ confidence)
+- **AI Reasoning** - GPT-4 powered explanations for every bet
+- **P&L Tracking** - Daily/Weekly/Monthly/Yearly profit tracking with full transparency
+- **FlashScore-Style Fixtures** - Browse 30+ top leagues with real-time odds
+- **Historical Results** - Advanced filtering, search, and CSV export
 - **Smart Filtering** - Only quality markets, no junk bets
-- **Treble Calculator** - €10 ACCA with potential returns
-- **Historical Results** - Export and analyze past performance
+
+### **What Makes Us Different**
+- 🧠 **Multi-Market AI Convergence** - Identifies rare opportunities where 3+ markets align
+- 📊 **Full Transparency** - Every bet tracked, every result published
+- 🎯 **Value-Focused** - Markup value analysis on every prediction
+- 🤖 **GPT-4 Reasoning** - Understand the "why" behind each bet
 
 ## 🏗️ Architecture
 
@@ -35,12 +43,13 @@ AI-powered sports betting platform with Golden Bets, Value Bets, and fixture pre
 - **Database:** MongoDB with Mongoose
 - **APIs:** API-Football, OpenAI GPT-4
 - **Cron:** Daily prediction updates
-- **Deployment:** Vercel
+- **Deployment:** Vercel (serverless functions)
 
 ### ML Pipeline
 - **Training Data:** 300k+ historical fixtures
 - **Confidence Scoring:** 0-100% prediction confidence
 - **Golden Bet Selection:** Top 3 daily picks (80%+ confidence)
+- **Bet Builder Detection:** Multi-market convergence analysis
 
 ## 🚀 Quick Start
 
@@ -89,21 +98,24 @@ footy-oracle-v2/
 ├── apps/
 │   ├── frontend/          # React + Vite frontend
 │   │   ├── src/
-│   │   │   ├── pages/     # HomePage, HistoricalResults
+│   │   │   ├── pages/     # HomePage, HistoricalResults, BetBuilderHistory
+│   │   │   ├── components/ # BetBuilderCard, FixturesModal, BetFilters
 │   │   │   ├── App.tsx
 │   │   │   └── main.tsx
 │   │   └── package.json
 │   └── backend/           # Express API
 │       ├── src/
-│       │   ├── models/    # Mongoose models
+│       │   ├── models/    # Mongoose models (GoldenBet, BetBuilder)
 │       │   ├── routes/    # API endpoints
-│       │   ├── services/  # Business logic
+│       │   ├── services/  # Business logic (betBuilderService)
 │       │   └── server.ts
 │       └── package.json
 ├── shared/
 │   └── ml_outputs/        # ML predictions data
 ├── BUILD_BLUEPRINT.md     # Development roadmap
 ├── COMPLETE_SPECIFICATION.md
+├── BET_BUILDER_LM_INTEGRATION.md  # LM system integration guide
+├── IMPLEMENTATION_STATUS.md       # Current status summary
 ├── TODO.md
 └── VISION.md
 ```
@@ -114,14 +126,21 @@ footy-oracle-v2/
 - `GET /api/golden-bets/today` - Today's top 3 predictions
 - `GET /api/golden-bets` - Historical Golden Bets
 
+### Bet Builder
+- `GET /api/bet-builders/today` - Today's multi-market opportunities
+- `GET /api/bet-builders/history` - Historical Bet Builders
+
 ### Fixtures
 - `GET /api/fixtures?date=YYYY-MM-DD` - Get fixtures by date
 - `GET /api/fixtures/meta/leagues` - Available leagues
 
 ### Statistics
 - `GET /api/stats/pnl?period=daily|weekly|monthly|yearly` - P&L stats
-- `GET /api/stats/treble` - Today's treble calculator
 - `GET /api/stats/overview` - Platform overview
+
+### Notifications
+- `POST /api/notifications/subscribe` - Subscribe to push notifications
+- `POST /api/notifications/send` - Send notification (admin)
 
 ## 🚢 Deployment
 
@@ -141,13 +160,23 @@ API_FOOTBALL_KEY=your_key
 OPENAI_API_KEY=your_key
 MONGODB_URI=your_mongodb_uri
 CORS_ORIGIN=https://your-frontend-url.vercel.app
+VAPID_PUBLIC_KEY=your_vapid_public_key
+VAPID_PRIVATE_KEY=your_vapid_private_key
 ```
 
-## 📊 Development Roadmap
+## 📊 Implementation Status
 
-See [BUILD_BLUEPRINT.md](BUILD_BLUEPRINT.md) for detailed 15-day development plan.
+**Current Status:** ✅ **Production Ready**
 
-**Current Status:** ✅ Backend Complete | ✅ Frontend Complete | ✅ Deployed
+See [IMPLEMENTATION_STATUS.md](IMPLEMENTATION_STATUS.md) for detailed completion status.
+
+| Component | Status |
+|-----------|--------|
+| Backend API | ✅ 100% Complete |
+| Frontend UI | ✅ 100% Complete |
+| Bet Builder Brain | ✅ 100% Complete |
+| Deployment | ✅ Live on Vercel |
+| Documentation | ✅ Complete |
 
 ## 🧪 Testing
 
@@ -163,10 +192,26 @@ npm test
 
 ## 📝 Documentation
 
+- [Implementation Status](IMPLEMENTATION_STATUS.md) - Current completion status
 - [Build Blueprint](BUILD_BLUEPRINT.md) - Daily sprint plan
 - [Complete Specification](COMPLETE_SPECIFICATION.md) - Full requirements
 - [Vision Document](VISION.md) - Product vision
+- [Bet Builder LM Integration](BET_BUILDER_LM_INTEGRATION.md) - ML system integration
 - [TODO List](TODO.md) - Task tracking
+
+## 🎯 Key Differentiators
+
+### 1. **Bet Builder Brain**
+Unlike generic bet builders, our AI identifies **rare multi-market convergence opportunities** where 3+ markets show 75%+ confidence simultaneously. This is statistically rare and represents genuine value.
+
+### 2. **Full Transparency**
+Every bet is tracked. Every result is published. CSV exports available. No hiding losses.
+
+### 3. **AI Reasoning**
+GPT-4 explains the "why" behind each prediction, covering form, head-to-head, tactics, and more.
+
+### 4. **Value-Focused**
+Markup value analysis on every bet. We don't just predict outcomes—we find value.
 
 ## 🤝 Contributing
 
