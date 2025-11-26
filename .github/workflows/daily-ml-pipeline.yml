@@ -1,0 +1,149 @@
+name: 🚀 Daily ML Pipeline - Golden Betopia
+
+on:
+  schedule:
+    - cron: '0 3 * * *'  # 3 AM UTC daily (before training at 4 AM)
+  workflow_dispatch:      # Manual trigger
+
+jobs:
+  generate-predictions:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: 📥 Checkout footy-oracle-v2
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.PAT_TOKEN }}
+          path: footy-oracle-v2
+      
+      - name: 📥 Checkout football-betting-ai-system
+        uses: actions/checkout@v4
+        with:
+          repository: dannythehat/football-betting-ai-system
+          token: ${{ secrets.PAT_TOKEN }}
+          path: football-betting-ai-system
+      
+      - name: 🐍 Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+          cache: 'pip'
+      
+      - name: 📦 Install dependencies
+        run: |
+          cd football-betting-ai-system
+          pip install -r requirements.txt
+      
+      - name: 📊 Fetch today's fixtures
+        env:
+          API_FOOTBALL_KEY: ${{ secrets.API_FOOTBALL_KEY }}
+        run: |
+          cd football-betting-ai-system
+          python -c "
+          import os
+          import requests
+          from datetime import datetime
+          import json
+          
+          API_KEY = os.environ['API_FOOTBALL_KEY']
+          today = datetime.now().strftime('%Y-%m-%d')
+          
+          headers = {'x-apisports-key': API_KEY}
+          url = f'https://v3.football.api-sports.io/fixtures?date={today}'
+          
+          print(f'📅 Fetching fixtures for {today}...')
+          response = requests.get(url, headers=headers)
+          
+          if response.status_code == 200:
+              fixtures = response.json()['response']
+              print(f'✅ Found {len(fixtures)} fixtures')
+              
+              # Save fixtures
+              os.makedirs('data', exist_ok=True)
+              with open('data/today_fixtures.json', 'w') as f:
+                  json.dump(fixtures, f, indent=2)
+          else:
+              print(f'❌ API Error: {response.status_code}')
+              exit(1)
+          "
+      
+      - name: 🤖 Generate LM Predictions (v27 anti-leak)
+        run: |
+          cd football-betting-ai-system
+          python generate_predictions.py
+          
+          echo "📊 Prediction Summary:"
+          if [ -f "outputs/golden_bets.json" ]; then
+            echo "✅ Golden Bets: $(jq length outputs/golden_bets.json) bets"
+          fi
+          if [ -f "outputs/value_bets.json" ]; then
+            echo "✅ Value Bets: $(jq length outputs/value_bets.json) bets"
+          fi
+          if [ -f "outputs/predictions.json" ]; then
+            echo "✅ All Predictions: $(jq length outputs/predictions.json) predictions"
+          fi
+      
+      - name: 📤 Copy outputs to footy-oracle-v2
+        run: |
+          # Create shared/ml_outputs directory
+          mkdir -p footy-oracle-v2/shared/ml_outputs
+          
+          # Copy prediction files
+          cp football-betting-ai-system/outputs/*.json footy-oracle-v2/shared/ml_outputs/ || true
+          
+          # Add timestamp
+          echo "{\"generated_at\": \"$(date -u +%Y-%m-%dT%H:%M:%SZ)\", \"version\": \"v27-anti-leak\"}" > footy-oracle-v2/shared/ml_outputs/metadata.json
+          
+          echo "✅ Outputs copied to footy-oracle-v2/shared/ml_outputs/"
+          ls -lh footy-oracle-v2/shared/ml_outputs/
+      
+      - name: 💾 Commit and push to footy-oracle-v2
+        run: |
+          cd footy-oracle-v2
+          git config user.name "Golden Betopia Bot"
+          git config user.email "bot@golden-betopia.com"
+          
+          git add shared/ml_outputs/*
+          
+          if git diff --staged --quiet; then
+            echo "📭 No changes to commit"
+          else
+            git commit -m "🤖 Daily ML predictions - $(date +%Y-%m-%d) [v27 anti-leak]"
+            git push
+            echo "✅ Predictions pushed to repository"
+          fi
+      
+      - name: 🔔 Trigger frontend deployment
+        if: success()
+        run: |
+          cd footy-oracle-v2
+          curl -X POST \
+            -H "Accept: application/vnd.github.v3+json" \
+            -H "Authorization: token ${{ secrets.PAT_TOKEN }}" \
+            https://api.github.com/repos/dannythehat/footy-oracle-v2/dispatches \
+            -d '{"event_type":"ml-predictions-updated"}'
+      
+      - name: 📊 Pipeline Summary
+        if: always()
+        run: |
+          echo "## 🚀 ML Pipeline Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Date:** $(date +%Y-%m-%d)" >> $GITHUB_STEP_SUMMARY
+          echo "**Time:** $(date +%H:%M:%S) UTC" >> $GITHUB_STEP_SUMMARY
+          echo "**Version:** v27 anti-leak" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          if [ -f "football-betting-ai-system/outputs/golden_bets.json" ]; then
+            echo "✅ **Golden Bets:** $(jq length football-betting-ai-system/outputs/golden_bets.json)" >> $GITHUB_STEP_SUMMARY
+          fi
+          
+          if [ -f "football-betting-ai-system/outputs/value_bets.json" ]; then
+            echo "✅ **Value Bets:** $(jq length football-betting-ai-system/outputs/value_bets.json)" >> $GITHUB_STEP_SUMMARY
+          fi
+          
+          if [ -f "football-betting-ai-system/outputs/predictions.json" ]; then
+            echo "✅ **Total Predictions:** $(jq length football-betting-ai-system/outputs/predictions.json)" >> $GITHUB_STEP_SUMMARY
+          fi
+          
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "🎯 **Next:** Training pipeline runs at 4 AM UTC" >> $GITHUB_STEP_SUMMARY
