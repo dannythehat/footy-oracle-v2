@@ -1,1 +1,92 @@
-[]
+[
+  {
+    "fixtureId": 1001,
+    "homeTeam": "Manchester City",
+    "awayTeam": "Liverpool",
+    "league": "Premier League",
+    "market": "Over/Under 2.5",
+    "prediction": "Over 2.5",
+    "confidence": 88
+  },
+  {
+    "fixtureId": 1002,
+    "homeTeam": "Real Madrid",
+    "awayTeam": "Barcelona",
+    "league": "La Liga",
+    "market": "Both Teams to Score",
+    "prediction": "Yes",
+    "confidence": 85
+  },
+  {
+    "fixtureId": 1003,
+    "homeTeam": "Bayern Munich",
+    "awayTeam": "Borussia Dortmund",
+    "league": "Bundesliga",
+    "market": "Match Winner",
+    "prediction": "Home Win",
+    "confidence": 82
+  },
+  {
+    "fixtureId": 1004,
+    "homeTeam": "Inter Milan",
+    "awayTeam": "AC Milan",
+    "league": "Serie A",
+    "market": "Over/Under 9.5 Corners",
+    "prediction": "Over 9.5",
+    "confidence": 79
+  },
+  {
+    "fixtureId": 1005,
+    "homeTeam": "PSG",
+    "awayTeam": "Marseille",
+    "league": "Ligue 1",
+    "market": "Both Teams to Score",
+    "prediction": "Yes",
+    "confidence": 86
+  },
+  {
+    "fixtureId": 1006,
+    "homeTeam": "Arsenal",
+    "awayTeam": "Chelsea",
+    "league": "Premier League",
+    "market": "Over/Under 2.5",
+    "prediction": "Over 2.5",
+    "confidence": 84
+  },
+  {
+    "fixtureId": 1007,
+    "homeTeam": "Atletico Madrid",
+    "awayTeam": "Sevilla",
+    "league": "La Liga",
+    "market": "Match Winner",
+    "prediction": "Home Win",
+    "confidence": 77
+  },
+  {
+    "fixtureId": 1008,
+    "homeTeam": "RB Leipzig",
+    "awayTeam": "Bayer Leverkusen",
+    "league": "Bundesliga",
+    "market": "Both Teams to Score",
+    "prediction": "Yes",
+    "confidence": 81
+  },
+  {
+    "fixtureId": 1009,
+    "homeTeam": "Napoli",
+    "awayTeam": "Roma",
+    "league": "Serie A",
+    "market": "Over/Under 2.5",
+    "prediction": "Over 2.5",
+    "confidence": 83
+  },
+  {
+    "fixtureId": 1010,
+    "homeTeam": "Monaco",
+    "awayTeam": "Lyon",
+    "league": "Ligue 1",
+    "market": "Match Winner",
+    "prediction": "Home Win",
+    "confidence": 76
+  }
+]
