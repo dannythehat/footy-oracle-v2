@@ -1,6 +1,3 @@
-import fs from 'fs/promises';
-import path from 'path';
-
 export interface MLPrediction {
   fixtureId: number;
   homeTeam: string;
@@ -23,56 +20,53 @@ export interface ValueBet extends MLPrediction {
   edge?: number;
 }
 
-export async function loadMLPredictions(): Promise<MLPrediction[]> {
+// GitHub raw URLs for ML outputs
+const GITHUB_RAW_BASE = 'https://raw.githubusercontent.com/dannythehat/footy-oracle-v2/main/shared/ml_outputs';
+
+async function fetchFromGitHub(filename: string): Promise<any[]> {
   try {
-    // Primary path: Local golden-betopia ML outputs (Windows absolute path)
-    const localPath = 'C:\\Users\\Danny\\Documents\\GitHub\\golden-betopia\\shared\\ml_outputs\\predictions.json';
+    const url = `${GITHUB_RAW_BASE}/${filename}`;
+    console.log(`📡 Fetching ${filename} from GitHub:`, url);
     
-    // Fallback path: Relative path for deployment
-    const relativePath = process.env.ML_MODEL_PATH || '../../shared/ml_outputs/predictions.json';
+    const response = await fetch(url);
     
-    let fullPath = localPath;
-    
-    // Try local path first, fallback to relative
-    try {
-      await fs.access(localPath);
-      console.log('✅ Reading ML predictions from local golden-betopia:', localPath);
-    } catch {
-      fullPath = path.resolve(process.cwd(), relativePath);
-      console.log('⚠️ Local path not found, using relative path:', fullPath);
+    if (!response.ok) {
+      throw new Error(`GitHub fetch failed: ${response.status} ${response.statusText}`);
     }
     
-    const data = await fs.readFile(fullPath, 'utf-8');
-    const predictions = JSON.parse(data);
+    const data = await response.json();
+    console.log(`✅ Loaded ${data.length} items from ${filename}`);
+    return data;
+  } catch (error) {
+    console.error(`❌ Error fetching ${filename} from GitHub:`, error);
+    return [];
+  }
+}
+
+export async function loadMLPredictions(): Promise<MLPrediction[]> {
+  try {
+    const predictions = await fetchFromGitHub('predictions.json');
     
-    console.log(`📊 Loaded ${predictions.length} ML predictions`);
+    if (predictions.length === 0) {
+      console.log('⚠️ No predictions found, returning mock data');
+      return generateMockPredictions();
+    }
+    
     return predictions;
   } catch (error) {
     console.error('❌ Error loading ML predictions:', error);
-    console.log('🔄 Returning mock data for development');
     return generateMockPredictions();
   }
 }
 
 export async function loadGoldenBets(): Promise<GoldenBet[]> {
   try {
-    const localPath = 'C:\\Users\\Danny\\Documents\\GitHub\\golden-betopia\\shared\\ml_outputs\\golden_bets.json';
-    const relativePath = '../../shared/ml_outputs/golden_bets.json';
+    const goldenBets = await fetchFromGitHub('golden_bets.json');
     
-    let fullPath = localPath;
-    
-    try {
-      await fs.access(localPath);
-      console.log('✅ Reading Golden Bets from local golden-betopia:', localPath);
-    } catch {
-      fullPath = path.resolve(process.cwd(), relativePath);
-      console.log('⚠️ Local path not found, using relative path:', fullPath);
+    if (goldenBets.length === 0) {
+      console.log('⚠️ No golden bets available yet');
     }
     
-    const data = await fs.readFile(fullPath, 'utf-8');
-    const goldenBets = JSON.parse(data);
-    
-    console.log(`⭐ Loaded ${goldenBets.length} Golden Bets`);
     return goldenBets;
   } catch (error) {
     console.error('❌ Error loading Golden Bets:', error);
@@ -82,23 +76,12 @@ export async function loadGoldenBets(): Promise<GoldenBet[]> {
 
 export async function loadValueBets(): Promise<ValueBet[]> {
   try {
-    const localPath = 'C:\\Users\\Danny\\Documents\\GitHub\\golden-betopia\\shared\\ml_outputs\\value_bets.json';
-    const relativePath = '../../shared/ml_outputs/value_bets.json';
+    const valueBets = await fetchFromGitHub('value_bets.json');
     
-    let fullPath = localPath;
-    
-    try {
-      await fs.access(localPath);
-      console.log('✅ Reading Value Bets from local golden-betopia:', localPath);
-    } catch {
-      fullPath = path.resolve(process.cwd(), relativePath);
-      console.log('⚠️ Local path not found, using relative path:', fullPath);
+    if (valueBets.length === 0) {
+      console.log('⚠️ No value bets available yet');
     }
     
-    const data = await fs.readFile(fullPath, 'utf-8');
-    const valueBets = JSON.parse(data);
-    
-    console.log(`💎 Loaded ${valueBets.length} Value Bets`);
     return valueBets;
   } catch (error) {
     console.error('❌ Error loading Value Bets:', error);
