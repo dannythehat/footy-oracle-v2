@@ -1,0 +1,50 @@
+{
+  "generated_at": "2025-11-26T10:56:03.906614",
+  "version": "v27",
+  "predictions": [
+    {
+      "match_id": "12345",
+      "home_team": "Arsenal",
+      "away_team": "Chelsea",
+      "kickoff": "2025-11-27T15:00:03.906614",
+      "league": "Premier League",
+      "predicted_outcome": "home_win",
+      "probabilities": {
+        "home_win": 0.65,
+        "draw": 0.2,
+        "away_win": 0.15
+      },
+      "confidence": 0.82,
+      "over_2_5_goals": {
+        "probability": 0.72,
+        "prediction": true
+      },
+      "btts": {
+        "probability": 0.68,
+        "prediction": true
+      }
+    },
+    {
+      "match_id": "12346",
+      "home_team": "Manchester United",
+      "away_team": "Liverpool",
+      "kickoff": "2025-11-27T17:30:03.906614",
+      "league": "Premier League",
+      "predicted_outcome": "away_win",
+      "probabilities": {
+        "home_win": 0.25,
+        "draw": 0.3,
+        "away_win": 0.45
+      },
+      "confidence": 0.75,
+      "over_2_5_goals": {
+        "probability": 0.81,
+        "prediction": true
+      },
+      "btts": {
+        "probability": 0.79,
+        "prediction": true
+      }
+    }
+  ]
+}
