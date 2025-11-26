@@ -1,13 +1,13 @@
 {
-  "generated_at": "2025-11-26T10:56:03.906614",
+  "generated_at": "2025-11-26T11:12:31.733084",
   "version": "v27",
   "value_bets": [
     {
       "match_id": "12346",
       "home_team": "Manchester United",
       "away_team": "Liverpool",
-      "kickoff": "2025-11-27T17:30:03.906614",
-      "league": "Premier League",
+      "kickoff": "2025-11-27T17:30:31.733084",
+      "league": "Premier_League",
       "bet_type": "over_2.5_goals",
       "model_probability": 0.81,
       "bookmaker_odds": 2.1,

@@ -1,0 +1,24 @@
+{
+  "date": "2025-11-26",
+  "fixture_id": 12347,
+  "league": "Premier_League",
+  "home": "Manchester City",
+  "away": "Tottenham",
+  "legs": [
+    {
+      "market": "over25",
+      "prob": 0.85
+    },
+    {
+      "market": "corners_over95",
+      "prob": 0.8
+    },
+    {
+      "market": "cards_over35",
+      "prob": 0.77
+    }
+  ],
+  "combined_probability": 0.445,
+  "combined_odds": 2.25,
+  "reasoning": "Premium betbuilder combining Over 2.5 Goals (85%), Over 9.5 Corners (80%), Over 3.5 Cards (77%). All legs show elite probability (≥75%) with strong historical correlations. Expected combined odds of 2.25x with 44% correlation-adjusted probability."
+}

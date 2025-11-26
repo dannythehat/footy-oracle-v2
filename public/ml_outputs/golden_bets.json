@@ -1,13 +1,13 @@
 {
-  "generated_at": "2025-11-26T10:56:03.906614",
+  "generated_at": "2025-11-26T11:12:31.733084",
   "version": "v27",
   "golden_bets": [
     {
       "match_id": "12345",
       "home_team": "Arsenal",
       "away_team": "Chelsea",
-      "kickoff": "2025-11-27T15:00:03.906614",
-      "league": "Premier League",
+      "kickoff": "2025-11-27T15:00:31.733084",
+      "league": "Premier_League",
       "bet_type": "home_win",
       "confidence": 0.89,
       "expected_value": 1.45,

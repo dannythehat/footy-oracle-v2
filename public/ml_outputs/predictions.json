@@ -1,50 +1,60 @@
 {
-  "generated_at": "2025-11-26T10:56:03.906614",
+  "generated_at": "2025-11-26T11:12:31.733084",
   "version": "v27",
   "predictions": [
     {
-      "match_id": "12345",
+      "fixture_id": 12345,
       "home_team": "Arsenal",
       "away_team": "Chelsea",
-      "kickoff": "2025-11-27T15:00:03.906614",
-      "league": "Premier League",
+      "kickoff": "2025-11-27T15:00:31.733084",
+      "league": "Premier_League",
       "predicted_outcome": "home_win",
       "probabilities": {
         "home_win": 0.65,
         "draw": 0.2,
-        "away_win": 0.15
+        "away_win": 0.15,
+        "over25": 0.82,
+        "btts": 0.78,
+        "corners_over95": 0.71,
+        "cards_over35": 0.76
       },
-      "confidence": 0.82,
-      "over_2_5_goals": {
-        "probability": 0.72,
-        "prediction": true
-      },
-      "btts": {
-        "probability": 0.68,
-        "prediction": true
-      }
+      "confidence": 0.82
     },
     {
-      "match_id": "12346",
+      "fixture_id": 12346,
       "home_team": "Manchester United",
       "away_team": "Liverpool",
-      "kickoff": "2025-11-27T17:30:03.906614",
-      "league": "Premier League",
+      "kickoff": "2025-11-27T17:30:31.733084",
+      "league": "Premier_League",
       "predicted_outcome": "away_win",
       "probabilities": {
         "home_win": 0.25,
         "draw": 0.3,
-        "away_win": 0.45
+        "away_win": 0.45,
+        "over25": 0.81,
+        "btts": 0.79,
+        "corners_over95": 0.68,
+        "cards_over35": 0.72
       },
-      "confidence": 0.75,
-      "over_2_5_goals": {
-        "probability": 0.81,
-        "prediction": true
+      "confidence": 0.75
+    },
+    {
+      "fixture_id": 12347,
+      "home_team": "Manchester City",
+      "away_team": "Tottenham",
+      "kickoff": "2025-11-27T20:00:31.733084",
+      "league": "Premier_League",
+      "predicted_outcome": "home_win",
+      "probabilities": {
+        "home_win": 0.7,
+        "draw": 0.18,
+        "away_win": 0.12,
+        "over25": 0.85,
+        "btts": 0.76,
+        "corners_over95": 0.8,
+        "cards_over35": 0.77
       },
-      "btts": {
-        "probability": 0.79,
-        "prediction": true
-      }
+      "confidence": 0.88
     }
   ]
 }
