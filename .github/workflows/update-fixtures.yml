@@ -30,53 +30,10 @@ jobs:
         run: |
           if [ -z "$API_FOOTBALL_KEY" ]; then
             echo "❌ CRITICAL ERROR: API_FOOTBALL_KEY secret is NOT set in GitHub!"
-            echo "Go to: Settings → Secrets and variables → Actions → Repository secrets"
-            echo "Add secret: API_FOOTBALL_KEY = 630aac264ef27676e498d4f4edc212e0"
             exit 1
           else
             echo "✅ API_FOOTBALL_KEY secret exists (length: ${#API_FOOTBALL_KEY})"
-            echo "First 8 chars: ${API_FOOTBALL_KEY:0:8}..."
           fi
-      
-      - name: 🧪 Test API Connection
-        env:
-          API_FOOTBALL_KEY: ${{ secrets.API_FOOTBALL_KEY }}
-        run: |
-          python -c "
-          import os
-          import requests
-          import json
-          
-          API_KEY = os.environ['API_FOOTBALL_KEY']
-          
-          print('🔍 Testing API connection...')
-          print(f'API Key (first 8): {API_KEY[:8]}...')
-          print(f'API Key length: {len(API_KEY)}')
-          
-          headers = {'x-apisports-key': API_KEY}
-          url = 'https://v3.football.api-sports.io/status'
-          
-          print(f'\\nURL: {url}')
-          print(f'Headers: {headers}')
-          
-          try:
-              response = requests.get(url, headers=headers, timeout=10)
-              print(f'\\n✅ Status Code: {response.status_code}')
-              print(f'Response Headers: {dict(response.headers)}')
-              print(f'\\nResponse Body:')
-              print(json.dumps(response.json(), indent=2))
-              
-              if response.status_code != 200:
-                  print(f'\\n❌ API ERROR!')
-                  exit(1)
-              else:
-                  print(f'\\n✅ API connection successful!')
-          except Exception as e:
-              print(f'\\n❌ EXCEPTION: {str(e)}')
-              import traceback
-              traceback.print_exc()
-              exit(1)
-          "
       
       - name: 📊 Fetch today's fixtures
         env:
@@ -93,35 +50,50 @@ jobs:
           today = datetime.now().strftime('%Y-%m-%d')
           tomorrow = (datetime.now() + timedelta(days=1)).strftime('%Y-%m-%d')
           
-          headers = {'x-apisports-key': API_KEY}
+          # Try all possible header formats
+          header_formats = [
+              {'x-apisports-key': API_KEY},
+              {'x-rapidapi-key': API_KEY, 'x-rapidapi-host': 'v3.football.api-sports.io'},
+              {'x-api-key': API_KEY}
+          ]
           
           all_fixtures = []
+          success = False
           
-          # Fetch today's fixtures
-          print(f'📅 Fetching fixtures for {today}...')
-          url = f'https://v3.football.api-sports.io/fixtures?date={today}'
-          response = requests.get(url, headers=headers)
+          for idx, headers in enumerate(header_formats):
+              print(f'\\n🔍 Trying header format {idx + 1}: {list(headers.keys())}')
+              
+              url = f'https://v3.football.api-sports.io/fixtures?date={today}'
+              
+              try:
+                  response = requests.get(url, headers=headers, timeout=10)
+                  print(f'Status: {response.status_code}')
+                  
+                  if response.status_code == 200:
+                      data = response.json()
+                      if 'response' in data:
+                          today_fixtures = data['response']
+                          print(f'✅ SUCCESS! Found {len(today_fixtures)} fixtures for today')
+                          all_fixtures.extend(today_fixtures)
+                          
+                          # Fetch tomorrow with same headers
+                          url2 = f'https://v3.football.api-sports.io/fixtures?date={tomorrow}'
+                          response2 = requests.get(url2, headers=headers, timeout=10)
+                          if response2.status_code == 200:
+                              tomorrow_fixtures = response2.json()['response']
+                              print(f'✅ Found {len(tomorrow_fixtures)} fixtures for tomorrow')
+                              all_fixtures.extend(tomorrow_fixtures)
+                          
+                          success = True
+                          break
+                  else:
+                      print(f'❌ Failed: {response.text[:200]}')
+              except Exception as e:
+                  print(f'❌ Exception: {str(e)}')
           
-          if response.status_code == 200:
-              today_fixtures = response.json()['response']
-              all_fixtures.extend(today_fixtures)
-              print(f'✅ Today: {len(today_fixtures)} fixtures')
-          else:
-              print(f'❌ Error: {response.status_code}')
-              print(f'Response: {response.text}')
-          
-          # Fetch tomorrow's fixtures
-          print(f'📅 Fetching fixtures for {tomorrow}...')
-          url = f'https://v3.football.api-sports.io/fixtures?date={tomorrow}'
-          response = requests.get(url, headers=headers)
-          
-          if response.status_code == 200:
-              tomorrow_fixtures = response.json()['response']
-              all_fixtures.extend(tomorrow_fixtures)
-              print(f'✅ Tomorrow: {len(tomorrow_fixtures)} fixtures')
-          else:
-              print(f'❌ Error: {response.status_code}')
-              print(f'Response: {response.text}')
+          if not success:
+              print('\\n❌ ALL HEADER FORMATS FAILED!')
+              exit(1)
           
           # Save fixtures
           os.makedirs('shared/fixtures', exist_ok=True)
@@ -140,9 +112,6 @@ jobs:
               json.dump(metadata, f, indent=2)
           
           print(f'\\n✅ Total: {len(all_fixtures)} fixtures saved')
-          
-          if len(all_fixtures) == 0:
-              print('⚠️  WARNING: No fixtures fetched')
           "
       
       - name: 📊 Fetch live matches
@@ -155,21 +124,29 @@ jobs:
           import json
           
           API_KEY = os.environ['API_FOOTBALL_KEY']
-          headers = {'x-apisports-key': API_KEY}
+          
+          # Try all possible header formats
+          header_formats = [
+              {'x-apisports-key': API_KEY},
+              {'x-rapidapi-key': API_KEY, 'x-rapidapi-host': 'v3.football.api-sports.io'},
+              {'x-api-key': API_KEY}
+          ]
           
           print('🔴 Fetching live matches...')
-          url = 'https://v3.football.api-sports.io/fixtures?live=all'
-          response = requests.get(url, headers=headers)
           
-          if response.status_code == 200:
-              live_matches = response.json()['response']
-              print(f'✅ Found {len(live_matches)} live matches')
+          for headers in header_formats:
+              url = 'https://v3.football.api-sports.io/fixtures?live=all'
+              response = requests.get(url, headers=headers, timeout=10)
               
-              with open('shared/fixtures/live.json', 'w') as f:
-                  json.dump(live_matches, f, indent=2)
+              if response.status_code == 200:
+                  live_matches = response.json()['response']
+                  print(f'✅ Found {len(live_matches)} live matches')
+                  
+                  with open('shared/fixtures/live.json', 'w') as f:
+                      json.dump(live_matches, f, indent=2)
+                  break
           else:
-              print(f'⚠️  API returned status {response.status_code}')
-              print(f'Response: {response.text}')
+              print('⚠️  Could not fetch live matches')
               with open('shared/fixtures/live.json', 'w') as f:
                   json.dump([], f)
           "
