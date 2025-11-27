@@ -24,6 +24,19 @@ jobs:
         run: |
           pip install requests python-dotenv
       
+      - name: 🔍 Validate API Key Secret
+        env:
+          API_FOOTBALL_KEY: ${{ secrets.API_FOOTBALL_KEY }}
+        run: |
+          if [ -z "$API_FOOTBALL_KEY" ]; then
+            echo "❌ CRITICAL ERROR: API_FOOTBALL_KEY secret is NOT set in GitHub!"
+            echo "Go to: Settings → Secrets and variables → Actions → Repository secrets"
+            echo "Add secret: API_FOOTBALL_KEY = 630aac264ef27676e498d4f4edc212e0"
+            exit 1
+          else
+            echo "✅ API_FOOTBALL_KEY secret exists (length: ${#API_FOOTBALL_KEY})"
+          fi
+      
       - name: 📊 Fetch today's fixtures
         env:
           API_FOOTBALL_KEY: ${{ secrets.API_FOOTBALL_KEY }}
@@ -34,65 +47,40 @@ jobs:
           from datetime import datetime, timedelta
           import json
           
-          API_KEY = os.environ.get('API_FOOTBALL_KEY')
-          if not API_KEY:
-              print('❌ ERROR: API_FOOTBALL_KEY not found in environment')
-              exit(1)
-          
-          print(f'✅ API Key loaded: {API_KEY[:8]}...{API_KEY[-4:]} (length: {len(API_KEY)})')
+          API_KEY = os.environ['API_FOOTBALL_KEY']
           
           today = datetime.now().strftime('%Y-%m-%d')
           tomorrow = (datetime.now() + timedelta(days=1)).strftime('%Y-%m-%d')
           
-          # Direct API-Sports.io headers (NOT RapidAPI)
-          headers = {
-              'x-apisports-key': API_KEY
-          }
+          headers = {'x-apisports-key': API_KEY}
           
           all_fixtures = []
           
           # Fetch today's fixtures
           print(f'📅 Fetching fixtures for {today}...')
-          try:
-              url = f'https://v3.football.api-sports.io/fixtures?date={today}'
-              print(f'URL: {url}')
-              response = requests.get(url, headers=headers, timeout=30)
-              print(f'Response status: {response.status_code}')
-              
-              if response.status_code == 200:
-                  data = response.json()
-                  print(f'Response keys: {list(data.keys())}')
-                  today_fixtures = data.get('response', [])
-                  all_fixtures.extend(today_fixtures)
-                  print(f'✅ Today: {len(today_fixtures)} fixtures')
-              else:
-                  print(f'❌ Error: {response.status_code}')
-                  print(f'Response: {response.text[:1000]}')
-          except Exception as e:
-              print(f'❌ Exception fetching today fixtures: {e}')
-              import traceback
-              traceback.print_exc()
+          url = f'https://v3.football.api-sports.io/fixtures?date={today}'
+          response = requests.get(url, headers=headers)
+          
+          if response.status_code == 200:
+              today_fixtures = response.json()['response']
+              all_fixtures.extend(today_fixtures)
+              print(f'✅ Today: {len(today_fixtures)} fixtures')
+          else:
+              print(f'❌ Error: {response.status_code}')
+              print(f'Response: {response.text}')
           
           # Fetch tomorrow's fixtures
-          print(f'\\n📅 Fetching fixtures for {tomorrow}...')
-          try:
-              url = f'https://v3.football.api-sports.io/fixtures?date={tomorrow}'
-              print(f'URL: {url}')
-              response = requests.get(url, headers=headers, timeout=30)
-              print(f'Response status: {response.status_code}')
-              
-              if response.status_code == 200:
-                  data = response.json()
-                  tomorrow_fixtures = data.get('response', [])
-                  all_fixtures.extend(tomorrow_fixtures)
-                  print(f'✅ Tomorrow: {len(tomorrow_fixtures)} fixtures')
-              else:
-                  print(f'❌ Error: {response.status_code}')
-                  print(f'Response: {response.text[:1000]}')
-          except Exception as e:
-              print(f'❌ Exception fetching tomorrow fixtures: {e}')
-              import traceback
-              traceback.print_exc()
+          print(f'📅 Fetching fixtures for {tomorrow}...')
+          url = f'https://v3.football.api-sports.io/fixtures?date={tomorrow}'
+          response = requests.get(url, headers=headers)
+          
+          if response.status_code == 200:
+              tomorrow_fixtures = response.json()['response']
+              all_fixtures.extend(tomorrow_fixtures)
+              print(f'✅ Tomorrow: {len(tomorrow_fixtures)} fixtures')
+          else:
+              print(f'❌ Error: {response.status_code}')
+              print(f'Response: {response.text}')
           
           # Save fixtures
           os.makedirs('shared/fixtures', exist_ok=True)
@@ -113,7 +101,7 @@ jobs:
           print(f'\\n✅ Total: {len(all_fixtures)} fixtures saved')
           
           if len(all_fixtures) == 0:
-              print('⚠️  WARNING: No fixtures fetched - check API key and quota')
+              print('⚠️  WARNING: No fixtures fetched')
           "
       
       - name: 📊 Fetch live matches
@@ -125,34 +113,22 @@ jobs:
           import requests
           import json
           
-          API_KEY = os.environ.get('API_FOOTBALL_KEY')
-          headers = {
-              'x-apisports-key': API_KEY
-          }
+          API_KEY = os.environ['API_FOOTBALL_KEY']
+          headers = {'x-apisports-key': API_KEY}
           
           print('🔴 Fetching live matches...')
-          try:
-              url = 'https://v3.football.api-sports.io/fixtures?live=all'
-              print(f'URL: {url}')
-              response = requests.get(url, headers=headers, timeout=30)
-              print(f'Response status: {response.status_code}')
+          url = 'https://v3.football.api-sports.io/fixtures?live=all'
+          response = requests.get(url, headers=headers)
+          
+          if response.status_code == 200:
+              live_matches = response.json()['response']
+              print(f'✅ Found {len(live_matches)} live matches')
               
-              if response.status_code == 200:
-                  data = response.json()
-                  live_matches = data.get('response', [])
-                  print(f'✅ Found {len(live_matches)} live matches')
-                  
-                  with open('shared/fixtures/live.json', 'w') as f:
-                      json.dump(live_matches, f, indent=2)
-              else:
-                  print(f'⚠️  API returned status {response.status_code}')
-                  print(f'Response: {response.text[:1000]}')
-                  with open('shared/fixtures/live.json', 'w') as f:
-                      json.dump([], f)
-          except Exception as e:
-              print(f'❌ Exception fetching live matches: {e}')
-              import traceback
-              traceback.print_exc()
+              with open('shared/fixtures/live.json', 'w') as f:
+                  json.dump(live_matches, f, indent=2)
+          else:
+              print(f'⚠️  API returned status {response.status_code}')
+              print(f'Response: {response.text}')
               with open('shared/fixtures/live.json', 'w') as f:
                   json.dump([], f)
           "
