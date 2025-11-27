@@ -35,7 +35,48 @@ jobs:
             exit 1
           else
             echo "✅ API_FOOTBALL_KEY secret exists (length: ${#API_FOOTBALL_KEY})"
+            echo "First 8 chars: ${API_FOOTBALL_KEY:0:8}..."
           fi
+      
+      - name: 🧪 Test API Connection
+        env:
+          API_FOOTBALL_KEY: ${{ secrets.API_FOOTBALL_KEY }}
+        run: |
+          python -c "
+          import os
+          import requests
+          import json
+          
+          API_KEY = os.environ['API_FOOTBALL_KEY']
+          
+          print('🔍 Testing API connection...')
+          print(f'API Key (first 8): {API_KEY[:8]}...')
+          print(f'API Key length: {len(API_KEY)}')
+          
+          headers = {'x-apisports-key': API_KEY}
+          url = 'https://v3.football.api-sports.io/status'
+          
+          print(f'\\nURL: {url}')
+          print(f'Headers: {headers}')
+          
+          try:
+              response = requests.get(url, headers=headers, timeout=10)
+              print(f'\\n✅ Status Code: {response.status_code}')
+              print(f'Response Headers: {dict(response.headers)}')
+              print(f'\\nResponse Body:')
+              print(json.dumps(response.json(), indent=2))
+              
+              if response.status_code != 200:
+                  print(f'\\n❌ API ERROR!')
+                  exit(1)
+              else:
+                  print(f'\\n✅ API connection successful!')
+          except Exception as e:
+              print(f'\\n❌ EXCEPTION: {str(e)}')
+              import traceback
+              traceback.print_exc()
+              exit(1)
+          "
       
       - name: 📊 Fetch today's fixtures
         env:
