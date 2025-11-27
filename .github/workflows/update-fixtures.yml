@@ -38,7 +38,7 @@ jobs:
           today = datetime.now().strftime('%Y-%m-%d')
           tomorrow = (datetime.now() + timedelta(days=1)).strftime('%Y-%m-%d')
           
-          headers = {'x-apisports-key': API_KEY}
+          headers = {'x-rapidapi-key': API_KEY}
           
           all_fixtures = []
           
@@ -95,7 +95,7 @@ jobs:
           import json
           
           API_KEY = os.environ['API_FOOTBALL_KEY']
-          headers = {'x-apisports-key': API_KEY}
+          headers = {'x-rapidapi-key': API_KEY}
           
           print('🔴 Fetching live matches...')
           response = requests.get(
