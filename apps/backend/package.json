@@ -14,6 +14,7 @@
     "test:api": "tsx test-api-integration.ts api",
     "test:db": "tsx test-api-integration.ts db",
     "test:all": "tsx test-api-integration.ts all",
+    "test:flashscore": "tsx test-flashscore-setup.ts",
     "seed:historical": "tsx src/scripts/seedHistoricalPredictions.ts"
   },
   "dependencies": {
