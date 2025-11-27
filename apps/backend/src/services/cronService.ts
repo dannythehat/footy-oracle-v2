@@ -4,6 +4,7 @@ import { fetchFixtures, fetchOdds } from './apiFootballService.js';
 import { generateBulkReasoning } from './aiService.js';
 import { bettingInsightsService } from './bettingInsightsService.js';
 import { settlePendingPredictions } from './resultSettlementService.js';
+import { syncFeaturedSelections } from './pnlTrackingService.js';
 import { Prediction } from '../models/Prediction.js';
 import { Fixture } from '../models/Fixture.js';
 
@@ -28,10 +29,26 @@ export function startCronJobs() {
     await settleResults();
   });
 
+  // P&L sync job (runs daily at 7am, after predictions update)
+  cron.schedule('0 7 * * *', async () => {
+    console.log('📊 Starting P&L sync...');
+    await syncPnL();
+  });
+
   console.log(`✅ Cron jobs scheduled:`);
   console.log(`   - Daily predictions: ${schedule}`);
   console.log(`   - AI betting insights: 0 5 * * * (5am daily)`);
   console.log(`   - Result settlement: 0 */2 * * * (every 2 hours)`);
+  console.log(`   - P&L sync: 0 7 * * * (7am daily)`);
+}
+
+async function syncPnL() {
+  try {
+    await syncFeaturedSelections();
+    console.log('✅ P&L sync completed - all featured selections tracked');
+  } catch (error) {
+    console.error('❌ Error syncing P&L:', error);
+  }
 }
 
 async function generateBettingInsights() {
@@ -56,6 +73,9 @@ async function settleResults() {
       
       console.log(`   - Wins: ${wins}, Losses: ${losses}`);
       console.log(`   - Total P&L: £${totalProfit.toFixed(2)}`);
+      
+      // Trigger P&L sync after settlements
+      await syncPnL();
     }
   } catch (error) {
     console.error('❌ Error settling results:', error);
@@ -134,6 +154,9 @@ async function updateDailyPredictions() {
     }
     
     console.log('✅ Daily predictions updated successfully');
+    
+    // Sync P&L after updating predictions
+    await syncPnL();
   } catch (error) {
     console.error('❌ Error updating daily predictions:', error);
   }
@@ -155,4 +178,4 @@ function getOddsForMarket(odds: any, market: string): number {
 }
 
 // Export for manual trigger
-export { updateDailyPredictions, generateBettingInsights, settleResults };
+export { updateDailyPredictions, generateBettingInsights, settleResults, syncPnL };
