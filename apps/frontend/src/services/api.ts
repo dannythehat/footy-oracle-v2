@@ -63,6 +63,11 @@ export const valueBetsApi = {
 
 // Bet Builder API
 export const betBuilderApi = {
+  getOfTheDay: async () => {
+    const response = await apiClient.get('/api/bet-builders/of-the-day');
+    return response.data;
+  },
+  
   getToday: async () => {
     const response = await apiClient.get('/api/bet-builders/today');
     return response.data;
