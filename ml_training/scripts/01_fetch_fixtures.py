@@ -48,8 +48,7 @@ def fetch_fixtures(date: str):
     fixtures = []
     
     headers = {
-        'x-rapidapi-key': API_KEY,
-        'x-rapidapi-host': 'v3.football.api-sports.io'
+        'x-apisports-key': API_KEY
     }
     
     for league_id in LEAGUES:
@@ -77,8 +76,7 @@ def fetch_fixtures(date: str):
 def fetch_fixture_statistics(fixture_id: int):
     """Fetch detailed statistics for a fixture"""
     headers = {
-        'x-rapidapi-key': API_KEY,
-        'x-rapidapi-host': 'v3.football.api-sports.io'
+        'x-apisports-key': API_KEY
     }
     
     try:
