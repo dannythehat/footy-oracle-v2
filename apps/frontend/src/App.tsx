@@ -1,5 +1,5 @@
 import { BrowserRouter, Routes, Route, Link } from 'react-router-dom';
-import HomePage from './pages/HomePage';
+import HomePage from './pages/HomePageWithBetBuilder';
 import HistoricalResults from './pages/HistoricalResults';
 import './index.css';
 
@@ -8,24 +8,21 @@ function App() {
     <BrowserRouter>
       <div className="min-h-screen bg-black">
         {/* Navigation */}
-        <nav className="border-b border-purple-900/50 bg-gradient-to-r from-black via-purple-950/20 to-black">
-          <div className="max-w-7xl mx-auto px-4 py-3">
-            <div className="flex items-center gap-6">
-              <Link to="/" className="text-xl font-bold bg-gradient-to-r from-purple-400 via-purple-300 to-purple-400 bg-clip-text text-transparent">
-                ⚡ THE FOOTY ORACLE
-              </Link>
-              <div className="flex gap-4">
+        <nav className="bg-gradient-to-r from-purple-900 via-purple-800 to-indigo-900 border-b border-purple-700">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="flex justify-between h-16">
+              <div className="flex space-x-8">
                 <Link 
                   to="/" 
-                  className="text-sm text-purple-300 hover:text-purple-200 font-semibold transition-colors"
+                  className="inline-flex items-center px-1 pt-1 text-white hover:text-purple-300 transition-colors"
                 >
-                  Home
+                  🔮 The Footy Oracle
                 </Link>
                 <Link 
                   to="/history" 
-                  className="text-sm text-purple-300 hover:text-purple-200 font-semibold transition-colors"
+                  className="inline-flex items-center px-1 pt-1 text-purple-200 hover:text-white transition-colors"
                 >
-                  History
+                  📊 Historical Results
                 </Link>
               </div>
             </div>
