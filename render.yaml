@@ -1,0 +1,27 @@
+services:
+  # Backend API Service
+  - type: web
+    name: footy-oracle-backend
+    runtime: node
+    region: frankfurt
+    plan: free
+    buildCommand: cd apps/backend && npm install && npm run build
+    startCommand: cd apps/backend && npm start
+    healthCheckPath: /health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 3001
+      - key: MONGODB_URI
+        sync: false
+      - key: CORS_ORIGIN
+        value: https://footy-oracle-v2.vercel.app
+      - key: FLASHSCORE_API_KEY
+        sync: false
+      - key: OPENAI_API_KEY
+        sync: false
+      - key: API_FOOTBALL_KEY
+        sync: false
+    autoDeploy: true
+    branch: main
