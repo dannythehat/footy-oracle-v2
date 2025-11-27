@@ -1,12 +1,42 @@
-"scripts": {
-  "dev": "tsx watch src/server.ts",
-  "start": "tsx src/server.ts",
-  "lint": "eslint src --ext .ts",
-  "test": "jest",
-  "test:fixtures": "tsx test-fixtures.ts",
-  "test:api": "tsx test-api-integration.ts api",
-  "test:db": "tsx test-api-integration.ts db",
-  "test:all": "tsx test-api-integration.ts all",
-  "test:flashscore": "echo 'flashscore removed'",
-  "seed:historical": "tsx src/scripts/seedHistoricalPredictions.ts"
+{
+  "name": "footy-oracle-backend",
+  "version": "1.0.0",
+  "description": "Backend API for Footy Oracle - AI-powered sports betting platform",
+  "type": "module",
+  "main": "src/server.ts",
+  "scripts": {
+    "dev": "tsx watch src/server.ts",
+    "start": "tsx src/server.ts",
+    "lint": "eslint src --ext .ts",
+    "test": "jest",
+    "test:fixtures": "tsx test-fixtures.ts",
+    "test:api": "tsx test-api-integration.ts api",
+    "test:db": "tsx test-api-integration.ts db",
+    "test:all": "tsx test-api-integration.ts all",
+    "test:flashscore": "echo 'flashscore removed'",
+    "seed:historical": "tsx src/scripts/seedHistoricalPredictions.ts"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "cors": "^2.8.5",
+    "dotenv": "^16.3.1",
+    "axios": "^1.6.2",
+    "node-cron": "^3.0.3",
+    "openai": "^4.20.1",
+    "mongoose": "^8.0.3"
+  },
+  "devDependencies": {
+    "tsx": "^4.7.0",
+    "eslint": "^8.56.0",
+    "@typescript-eslint/eslint-plugin": "^6.15.0",
+    "@typescript-eslint/parser": "^6.15.0",
+    "@types/express": "^4.17.21",
+    "@types/cors": "^2.8.17",
+    "@types/node": "^20.10.5",
+    "@types/node-cron": "^3.0.11",
+    "typescript": "^5.3.3"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
 }
