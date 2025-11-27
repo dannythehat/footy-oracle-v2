@@ -21,8 +21,6 @@ services:
         sync: false
       - key: CORS_ORIGIN
         value: https://footy-oracle-v2.vercel.app
-      - key: FLASHSCORE_API_KEY
-        sync: false
       - key: OPENAI_API_KEY
         sync: false
       - key: API_FOOTBALL_KEY
