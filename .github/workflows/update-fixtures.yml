@@ -34,37 +34,64 @@ jobs:
           from datetime import datetime, timedelta
           import json
           
-          API_KEY = os.environ['API_FOOTBALL_KEY']
+          API_KEY = os.environ.get('API_FOOTBALL_KEY')
+          if not API_KEY:
+              print('❌ ERROR: API_FOOTBALL_KEY not found in environment')
+              exit(1)
+          
+          print(f'✅ API Key loaded (length: {len(API_KEY)})')
+          
           today = datetime.now().strftime('%Y-%m-%d')
           tomorrow = (datetime.now() + timedelta(days=1)).strftime('%Y-%m-%d')
           
-          headers = {'x-rapidapi-key': API_KEY}
+          headers = {
+              'x-rapidapi-key': API_KEY,
+              'x-rapidapi-host': 'v3.football.api-sports.io'
+          }
           
           all_fixtures = []
           
           # Fetch today's fixtures
           print(f'📅 Fetching fixtures for {today}...')
-          response = requests.get(
-              f'https://v3.football.api-sports.io/fixtures?date={today}',
-              headers=headers
-          )
-          
-          if response.status_code == 200:
-              today_fixtures = response.json()['response']
-              all_fixtures.extend(today_fixtures)
-              print(f'✅ Today: {len(today_fixtures)} fixtures')
+          try:
+              response = requests.get(
+                  f'https://v3.football.api-sports.io/fixtures?date={today}',
+                  headers=headers,
+                  timeout=30
+              )
+              print(f'Response status: {response.status_code}')
+              
+              if response.status_code == 200:
+                  data = response.json()
+                  today_fixtures = data.get('response', [])
+                  all_fixtures.extend(today_fixtures)
+                  print(f'✅ Today: {len(today_fixtures)} fixtures')
+              else:
+                  print(f'❌ Error: {response.status_code}')
+                  print(f'Response: {response.text[:500]}')
+          except Exception as e:
+              print(f'❌ Exception fetching today fixtures: {e}')
           
           # Fetch tomorrow's fixtures
           print(f'📅 Fetching fixtures for {tomorrow}...')
-          response = requests.get(
-              f'https://v3.football.api-sports.io/fixtures?date={tomorrow}',
-              headers=headers
-          )
-          
-          if response.status_code == 200:
-              tomorrow_fixtures = response.json()['response']
-              all_fixtures.extend(tomorrow_fixtures)
-              print(f'✅ Tomorrow: {len(tomorrow_fixtures)} fixtures')
+          try:
+              response = requests.get(
+                  f'https://v3.football.api-sports.io/fixtures?date={tomorrow}',
+                  headers=headers,
+                  timeout=30
+              )
+              print(f'Response status: {response.status_code}')
+              
+              if response.status_code == 200:
+                  data = response.json()
+                  tomorrow_fixtures = data.get('response', [])
+                  all_fixtures.extend(tomorrow_fixtures)
+                  print(f'✅ Tomorrow: {len(tomorrow_fixtures)} fixtures')
+              else:
+                  print(f'❌ Error: {response.status_code}')
+                  print(f'Response: {response.text[:500]}')
+          except Exception as e:
+              print(f'❌ Exception fetching tomorrow fixtures: {e}')
           
           # Save fixtures
           os.makedirs('shared/fixtures', exist_ok=True)
@@ -75,14 +102,17 @@ jobs:
           metadata = {
               'updated_at': datetime.now().isoformat(),
               'total_fixtures': len(all_fixtures),
-              'today_count': len(today_fixtures),
-              'tomorrow_count': len(tomorrow_fixtures)
+              'today_count': len([f for f in all_fixtures if f.get('fixture', {}).get('date', '').startswith(today)]),
+              'tomorrow_count': len([f for f in all_fixtures if f.get('fixture', {}).get('date', '').startswith(tomorrow)])
           }
           
           with open('shared/fixtures/metadata.json', 'w') as f:
               json.dump(metadata, f, indent=2)
           
           print(f'\\n✅ Total: {len(all_fixtures)} fixtures saved')
+          
+          if len(all_fixtures) == 0:
+              print('⚠️  WARNING: No fixtures fetched - check API key and quota')
           "
       
       - name: 📊 Fetch live matches
@@ -94,23 +124,34 @@ jobs:
           import requests
           import json
           
-          API_KEY = os.environ['API_FOOTBALL_KEY']
-          headers = {'x-rapidapi-key': API_KEY}
+          API_KEY = os.environ.get('API_FOOTBALL_KEY')
+          headers = {
+              'x-rapidapi-key': API_KEY,
+              'x-rapidapi-host': 'v3.football.api-sports.io'
+          }
           
           print('🔴 Fetching live matches...')
-          response = requests.get(
-              'https://v3.football.api-sports.io/fixtures?live=all',
-              headers=headers
-          )
-          
-          if response.status_code == 200:
-              live_matches = response.json()['response']
-              print(f'✅ Found {len(live_matches)} live matches')
+          try:
+              response = requests.get(
+                  'https://v3.football.api-sports.io/fixtures?live=all',
+                  headers=headers,
+                  timeout=30
+              )
               
-              with open('shared/fixtures/live.json', 'w') as f:
-                  json.dump(live_matches, f, indent=2)
-          else:
-              print(f'⚠️  No live matches or API error')
+              if response.status_code == 200:
+                  data = response.json()
+                  live_matches = data.get('response', [])
+                  print(f'✅ Found {len(live_matches)} live matches')
+                  
+                  with open('shared/fixtures/live.json', 'w') as f:
+                      json.dump(live_matches, f, indent=2)
+              else:
+                  print(f'⚠️  API returned status {response.status_code}')
+                  print(f'Response: {response.text[:500]}')
+                  with open('shared/fixtures/live.json', 'w') as f:
+                      json.dump([], f)
+          except Exception as e:
+              print(f'❌ Exception fetching live matches: {e}')
               with open('shared/fixtures/live.json', 'w') as f:
                   json.dump([], f)
           "
