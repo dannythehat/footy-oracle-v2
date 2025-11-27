@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { BetBuilderCard } from '../components/BetBuilderCard';
+import BetBuilderCard from '../components/BetBuilderCard';
 import { betBuilderApi } from '../services/api';
 
 interface BetBuilderStats {
@@ -9,334 +9,240 @@ interface BetBuilderStats {
   pending: number;
   settled: number;
   winRate: number;
-  totalProfit: number;
-  avgConfidence: number;
   avgOdds: number;
+  totalProfit: number;
 }
 
-interface FilterOptions {
-  startDate: string;
-  endDate: string;
-  result: 'all' | 'win' | 'loss' | 'pending';
-  minConfidence: number;
-  sortBy: 'date' | 'confidence' | 'odds' | 'profit';
-  sortOrder: 'asc' | 'desc';
+interface MarketPrediction {
+  market: string;
+  marketName: string;
+  confidence: number;
+  probability: number;
+  estimatedOdds: number;
 }
 
-export const BetBuilderHistory: React.FC = () => {
-  const [betBuilders, setBetBuilders] = useState<any[]>([]);
+interface BetBuilder {
+  _id: string;
+  fixtureId: number;
+  date: string;
+  homeTeam: string;
+  awayTeam: string;
+  league: string;
+  kickoff: string;
+  markets: MarketPrediction[];
+  combinedOdds: number;
+  combinedConfidence: number;
+  convergenceScore: number;
+  status?: 'pending' | 'won' | 'lost';
+  result?: {
+    settled: boolean;
+    won: boolean;
+    profit: number;
+  };
+}
+
+const BetBuilderHistory: React.FC = () => {
+  const [betBuilders, setBetBuilders] = useState<BetBuilder[]>([]);
   const [stats, setStats] = useState<BetBuilderStats | null>(null);
   const [loading, setLoading] = useState(true);
-  const [page, setPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
-  
-  const [filters, setFilters] = useState<FilterOptions>({
-    startDate: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-    endDate: new Date().toISOString().split('T')[0],
-    result: 'all',
-    minConfidence: 0,
-    sortBy: 'date',
-    sortOrder: 'desc',
-  });
-
-  const [showFilters, setShowFilters] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [filter, setFilter] = useState<'all' | 'pending' | 'won' | 'lost'>('all');
+  const [sortBy, setSortBy] = useState<'date' | 'odds' | 'confidence'>('date');
 
   useEffect(() => {
-    fetchData();
-  }, [page, filters]);
+    fetchBetBuilders();
+    fetchStats();
+  }, [filter, sortBy]);
 
-  const fetchData = async () => {
-    setLoading(true);
+  const fetchBetBuilders = async () => {
     try {
-      // Fetch bet builders
-      const response = await betBuilderApi.getHistorical({
-        startDate: filters.startDate,
-        endDate: filters.endDate,
-        page,
-        limit: 10,
-      });
-
-      let builders = response.data.data || [];
-
-      // Apply client-side filters
-      if (filters.result !== 'all') {
-        builders = builders.filter((b: any) => b.result === filters.result);
-      }
-      if (filters.minConfidence > 0) {
-        builders = builders.filter((b: any) => b.combinedConfidence >= filters.minConfidence);
-      }
-
-      // Apply sorting
-      builders.sort((a: any, b: any) => {
-        let aVal, bVal;
-        switch (filters.sortBy) {
-          case 'date':
-            aVal = new Date(a.date).getTime();
-            bVal = new Date(b.date).getTime();
-            break;
-          case 'confidence':
-            aVal = a.combinedConfidence;
-            bVal = b.combinedConfidence;
-            break;
-          case 'odds':
-            aVal = a.estimatedCombinedOdds;
-            bVal = b.estimatedCombinedOdds;
-            break;
-          case 'profit':
-            aVal = a.profit || 0;
-            bVal = b.profit || 0;
-            break;
-          default:
-            aVal = 0;
-            bVal = 0;
-        }
-        return filters.sortOrder === 'asc' ? aVal - bVal : bVal - aVal;
-      });
-
-      setBetBuilders(builders);
-      setTotalPages(response.data.pagination?.pages || 1);
-
-      // Fetch stats
-      const statsResponse = await betBuilderApi.getStats({
-        startDate: filters.startDate,
-        endDate: filters.endDate,
-      });
-      setStats(statsResponse.data.data);
-    } catch (error) {
-      console.error('Error fetching bet builder history:', error);
+      setLoading(true);
+      const data = await betBuilderApi.getHistory(filter, sortBy);
+      setBetBuilders(data);
+      setError(null);
+    } catch (err) {
+      setError('Failed to load bet builder history');
+      console.error('Error fetching bet builders:', err);
     } finally {
       setLoading(false);
     }
   };
 
-  const handleExport = () => {
-    const csv = [
-      ['Date', 'Home Team', 'Away Team', 'League', 'Markets', 'Combined Confidence', 'Combined Odds', 'Result', 'Profit'].join(','),
-      ...betBuilders.map(bb => [
-        new Date(bb.date).toLocaleDateString(),
-        bb.homeTeam,
-        bb.awayTeam,
-        bb.league,
-        bb.markets.length,
-        bb.combinedConfidence,
-        bb.estimatedCombinedOdds,
-        bb.result || 'pending',
-        bb.profit || 0,
-      ].join(',')),
-    ].join('\n');
-
-    const blob = new Blob([csv], { type: 'text/csv' });
-    const url = window.URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `bet-builders-${filters.startDate}-to-${filters.endDate}.csv`;
-    a.click();
+  const fetchStats = async () => {
+    try {
+      const data = await betBuilderApi.getStats();
+      setStats(data);
+    } catch (err) {
+      console.error('Error fetching stats:', err);
+    }
   };
 
-  const resetFilters = () => {
-    setFilters({
-      startDate: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-      endDate: new Date().toISOString().split('T')[0],
-      result: 'all',
-      minConfidence: 0,
-      sortBy: 'date',
-      sortOrder: 'desc',
-    });
-    setPage(1);
+  const getStatusColor = (status?: string) => {
+    switch (status) {
+      case 'won': return 'text-green-400';
+      case 'lost': return 'text-red-400';
+      default: return 'text-yellow-400';
+    }
+  };
+
+  const getStatusBadge = (status?: string) => {
+    switch (status) {
+      case 'won': return '✅ Won';
+      case 'lost': return '❌ Lost';
+      default: return '⏳ Pending';
+    }
   };
 
   return (
-    <div className="min-h-screen bg-black text-white p-6">
-      {/* Header */}
-      <div className="max-w-7xl mx-auto mb-8">
-        <div className="flex items-center justify-between mb-4">
-          <div className="flex items-center gap-3">
-            <div className="text-4xl">🧠</div>
-            <div>
-              <h1 className="text-3xl font-bold bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">
-                Bet Builder History
-              </h1>
-              <p className="text-gray-400 text-sm">Multi-market convergence results & analytics</p>
+    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-purple-900 to-gray-900 py-8 px-4">
+      <div className="max-w-7xl mx-auto">
+        {/* Header */}
+        <div className="text-center mb-8">
+          <h1 className="text-4xl font-bold text-white mb-2">
+            🧠 Bet Builder History
+          </h1>
+          <p className="text-purple-300">
+            Track your multi-market convergence predictions
+          </p>
+        </div>
+
+        {/* Stats Overview */}
+        {stats && (
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+            <div className="bg-gradient-to-br from-purple-900/50 to-indigo-900/50 rounded-xl p-6 border border-purple-500/30">
+              <div className="text-purple-300 text-sm mb-1">Total Bets</div>
+              <div className="text-3xl font-bold text-white">{stats.total}</div>
+            </div>
+            <div className="bg-gradient-to-br from-green-900/50 to-emerald-900/50 rounded-xl p-6 border border-green-500/30">
+              <div className="text-green-300 text-sm mb-1">Win Rate</div>
+              <div className="text-3xl font-bold text-white">{stats.winRate.toFixed(1)}%</div>
+            </div>
+            <div className="bg-gradient-to-br from-blue-900/50 to-cyan-900/50 rounded-xl p-6 border border-blue-500/30">
+              <div className="text-blue-300 text-sm mb-1">Avg Odds</div>
+              <div className="text-3xl font-bold text-white">{stats.avgOdds.toFixed(2)}</div>
+            </div>
+            <div className="bg-gradient-to-br from-yellow-900/50 to-orange-900/50 rounded-xl p-6 border border-yellow-500/30">
+              <div className="text-yellow-300 text-sm mb-1">Total Profit</div>
+              <div className={`text-3xl font-bold ${stats.totalProfit >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                {stats.totalProfit >= 0 ? '+' : ''}{stats.totalProfit.toFixed(2)}u
+              </div>
             </div>
           </div>
-          <div className="flex gap-3">
-            <button
-              onClick={() => setShowFilters(!showFilters)}
-              className="px-4 py-2 bg-purple-600 hover:bg-purple-700 rounded-lg transition-colors flex items-center gap-2"
-            >
-              <span>🔍</span>
-              <span>{showFilters ? 'Hide' : 'Show'} Filters</span>
-            </button>
-            <button
-              onClick={handleExport}
-              className="px-4 py-2 bg-green-600 hover:bg-green-700 rounded-lg transition-colors flex items-center gap-2"
-            >
-              <span>📥</span>
-              <span>Export CSV</span>
-            </button>
+        )}
+
+        {/* Filters */}
+        <div className="bg-gradient-to-r from-purple-900/50 to-indigo-900/50 rounded-xl p-6 border border-purple-500/30 mb-8">
+          <div className="flex flex-col md:flex-row gap-4">
+            {/* Status Filter */}
+            <div className="flex-1">
+              <label className="text-purple-300 text-sm mb-2 block">Filter by Status</label>
+              <div className="flex gap-2">
+                {(['all', 'pending', 'won', 'lost'] as const).map((status) => (
+                  <button
+                    key={status}
+                    onClick={() => setFilter(status)}
+                    className={`px-4 py-2 rounded-lg font-medium transition-all ${
+                      filter === status
+                        ? 'bg-purple-600 text-white'
+                        : 'bg-purple-900/50 text-purple-300 hover:bg-purple-800/50'
+                    }`}
+                  >
+                    {status.charAt(0).toUpperCase() + status.slice(1)}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Sort By */}
+            <div className="flex-1">
+              <label className="text-purple-300 text-sm mb-2 block">Sort By</label>
+              <select
+                value={sortBy}
+                onChange={(e) => setSortBy(e.target.value as any)}
+                className="w-full px-4 py-2 rounded-lg bg-purple-900/50 text-white border border-purple-500/30 focus:outline-none focus:border-purple-500"
+              >
+                <option value="date">Date (Newest First)</option>
+                <option value="odds">Odds (Highest First)</option>
+                <option value="confidence">Confidence (Highest First)</option>
+              </select>
+            </div>
           </div>
         </div>
 
-        {/* Statistics Dashboard */}
-        {stats && (
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-            <div className="bg-gradient-to-br from-purple-900/50 to-purple-800/30 p-4 rounded-xl border border-purple-500/30">
-              <div className="text-gray-400 text-sm mb-1">Total Bet Builders</div>
-              <div className="text-3xl font-bold">{stats.total}</div>
-            </div>
-            <div className="bg-gradient-to-br from-green-900/50 to-green-800/30 p-4 rounded-xl border border-green-500/30">
-              <div className="text-gray-400 text-sm mb-1">Win Rate</div>
-              <div className="text-3xl font-bold text-green-400">{stats.winRate.toFixed(1)}%</div>
-              <div className="text-xs text-gray-400 mt-1">{stats.wins}W / {stats.losses}L</div>
-            </div>
-            <div className="bg-gradient-to-br from-yellow-900/50 to-yellow-800/30 p-4 rounded-xl border border-yellow-500/30">
-              <div className="text-gray-400 text-sm mb-1">Total Profit</div>
-              <div className={`text-3xl font-bold ${stats.totalProfit >= 0 ? 'text-green-400' : 'text-red-400'}`}>
-                €{stats.totalProfit.toFixed(2)}
-              </div>
-            </div>
-            <div className="bg-gradient-to-br from-pink-900/50 to-pink-800/30 p-4 rounded-xl border border-pink-500/30">
-              <div className="text-gray-400 text-sm mb-1">Avg Confidence</div>
-              <div className="text-3xl font-bold text-pink-400">{stats.avgConfidence}%</div>
-              <div className="text-xs text-gray-400 mt-1">Avg Odds: {stats.avgOdds.toFixed(2)}x</div>
-            </div>
-          </div>
-        )}
-
-        {/* Filters Panel */}
-        {showFilters && (
-          <div className="bg-gray-900/50 border border-gray-700 rounded-xl p-6 mb-6">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-              <div>
-                <label className="block text-sm text-gray-400 mb-2">Start Date</label>
-                <input
-                  type="date"
-                  value={filters.startDate}
-                  onChange={(e) => setFilters({ ...filters, startDate: e.target.value })}
-                  className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-white"
-                />
-              </div>
-              <div>
-                <label className="block text-sm text-gray-400 mb-2">End Date</label>
-                <input
-                  type="date"
-                  value={filters.endDate}
-                  onChange={(e) => setFilters({ ...filters, endDate: e.target.value })}
-                  className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-white"
-                />
-              </div>
-              <div>
-                <label className="block text-sm text-gray-400 mb-2">Result</label>
-                <select
-                  value={filters.result}
-                  onChange={(e) => setFilters({ ...filters, result: e.target.value as any })}
-                  className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-white"
-                >
-                  <option value="all">All Results</option>
-                  <option value="win">Wins Only</option>
-                  <option value="loss">Losses Only</option>
-                  <option value="pending">Pending Only</option>
-                </select>
-              </div>
-            </div>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div>
-                <label className="block text-sm text-gray-400 mb-2">Min Confidence (%)</label>
-                <input
-                  type="number"
-                  min="0"
-                  max="100"
-                  value={filters.minConfidence}
-                  onChange={(e) => setFilters({ ...filters, minConfidence: parseInt(e.target.value) || 0 })}
-                  className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-white"
-                />
-              </div>
-              <div>
-                <label className="block text-sm text-gray-400 mb-2">Sort By</label>
-                <select
-                  value={filters.sortBy}
-                  onChange={(e) => setFilters({ ...filters, sortBy: e.target.value as any })}
-                  className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-white"
-                >
-                  <option value="date">Date</option>
-                  <option value="confidence">Confidence</option>
-                  <option value="odds">Odds</option>
-                  <option value="profit">Profit</option>
-                </select>
-              </div>
-              <div>
-                <label className="block text-sm text-gray-400 mb-2">Sort Order</label>
-                <select
-                  value={filters.sortOrder}
-                  onChange={(e) => setFilters({ ...filters, sortOrder: e.target.value as any })}
-                  className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-white"
-                >
-                  <option value="desc">Descending</option>
-                  <option value="asc">Ascending</option>
-                </select>
-              </div>
-            </div>
-            <div className="mt-4 flex justify-end">
-              <button
-                onClick={resetFilters}
-                className="px-4 py-2 bg-gray-700 hover:bg-gray-600 rounded-lg transition-colors"
-              >
-                Reset Filters
-              </button>
-            </div>
-          </div>
-        )}
-      </div>
-
-      {/* Bet Builder Cards */}
-      <div className="max-w-7xl mx-auto">
+        {/* Bet Builders List */}
         {loading ? (
           <div className="text-center py-12">
-            <div className="inline-block animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-purple-500"></div>
-            <p className="text-gray-400 mt-4">Loading bet builders...</p>
+            <div className="inline-block animate-spin rounded-full h-12 w-12 border-4 border-purple-500 border-t-transparent"></div>
+            <p className="text-purple-300 mt-4">Loading bet builders...</p>
           </div>
-        ) : betBuilders.length === 0 ? (
-          <div className="text-center py-12">
-            <div className="text-6xl mb-4">🧠</div>
-            <p className="text-xl text-gray-400">No bet builders found for selected filters</p>
+        ) : error ? (
+          <div className="bg-red-900/20 border border-red-500/30 rounded-xl p-6 text-center">
+            <p className="text-red-400">{error}</p>
             <button
-              onClick={resetFilters}
-              className="mt-4 px-6 py-2 bg-purple-600 hover:bg-purple-700 rounded-lg transition-colors"
+              onClick={fetchBetBuilders}
+              className="mt-4 px-6 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors"
             >
-              Reset Filters
+              Try Again
             </button>
           </div>
+        ) : betBuilders.length === 0 ? (
+          <div className="bg-purple-900/20 border border-purple-500/30 rounded-xl p-12 text-center">
+            <div className="text-6xl mb-4">🧠</div>
+            <h3 className="text-2xl font-bold text-white mb-2">No Bet Builders Found</h3>
+            <p className="text-purple-300">
+              {filter === 'all' 
+                ? 'No bet builders have been generated yet. Check back tomorrow!'
+                : `No ${filter} bet builders found. Try a different filter.`}
+            </p>
+          </div>
         ) : (
-          <>
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-              {betBuilders.map((betBuilder) => (
-                <BetBuilderCard key={betBuilder._id} betBuilder={betBuilder} />
-              ))}
-            </div>
+          <div className="space-y-6">
+            {betBuilders.map((betBuilder) => (
+              <div key={betBuilder._id} className="relative">
+                {/* Status Badge */}
+                {betBuilder.status && (
+                  <div className="absolute top-4 right-4 z-10">
+                    <span className={`px-4 py-2 rounded-full text-sm font-bold ${getStatusColor(betBuilder.status)} bg-black/50 backdrop-blur-sm`}>
+                      {getStatusBadge(betBuilder.status)}
+                    </span>
+                  </div>
+                )}
+                
+                {/* Bet Builder Card */}
+                <BetBuilderCard betBuilder={betBuilder} />
 
-            {/* Pagination */}
-            {totalPages > 1 && (
-              <div className="flex justify-center items-center gap-4 mt-8">
-                <button
-                  onClick={() => setPage(Math.max(1, page - 1))}
-                  disabled={page === 1}
-                  className="px-4 py-2 bg-gray-800 hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed rounded-lg transition-colors"
-                >
-                  Previous
-                </button>
-                <span className="text-gray-400">
-                  Page {page} of {totalPages}
-                </span>
-                <button
-                  onClick={() => setPage(Math.min(totalPages, page + 1))}
-                  disabled={page === totalPages}
-                  className="px-4 py-2 bg-gray-800 hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed rounded-lg transition-colors"
-                >
-                  Next
-                </button>
+                {/* Result Details */}
+                {betBuilder.result?.settled && (
+                  <div className={`mt-4 p-4 rounded-lg border ${
+                    betBuilder.result.won 
+                      ? 'bg-green-900/20 border-green-500/30' 
+                      : 'bg-red-900/20 border-red-500/30'
+                  }`}>
+                    <div className="flex items-center justify-between">
+                      <span className={`font-bold ${betBuilder.result.won ? 'text-green-400' : 'text-red-400'}`}>
+                        {betBuilder.result.won ? '✅ Bet Won!' : '❌ Bet Lost'}
+                      </span>
+                      <span className={`text-lg font-bold ${betBuilder.result.profit >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                        {betBuilder.result.profit >= 0 ? '+' : ''}{betBuilder.result.profit.toFixed(2)}u
+                      </span>
+                    </div>
+                  </div>
+                )}
               </div>
-            )}
-          </>
+            ))}
+          </div>
+        )}
+
+        {/* Load More */}
+        {!loading && betBuilders.length > 0 && betBuilders.length % 10 === 0 && (
+          <div className="text-center mt-8">
+            <button
+              onClick={fetchBetBuilders}
+              className="px-8 py-3 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white font-bold rounded-xl transition-all transform hover:scale-105"
+            >
+              Load More
+            </button>
+          </div>
         )}
       </div>
     </div>
