@@ -1,13 +1,17 @@
 services:
-  # Backend API Service
   - type: web
     name: footy-oracle-backend
     runtime: node
     region: frankfurt
     plan: free
-    buildCommand: cd apps/backend && npm install && npm run build
-    startCommand: cd apps/backend && npm start
+
+    rootDir: ./apps/backend
+
+    buildCommand: npm install && npm run build
+    startCommand: npm start
+
     healthCheckPath: /health
+
     envVars:
       - key: NODE_ENV
         value: production
@@ -23,5 +27,6 @@ services:
         sync: false
       - key: API_FOOTBALL_KEY
         sync: false
+
     autoDeploy: true
     branch: main
