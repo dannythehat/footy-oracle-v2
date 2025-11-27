@@ -7,6 +7,7 @@ import fixturesRouter from './routes/fixtures.js';
 import predictionsRouter from './routes/predictions.js';
 import statsRouter from './routes/stats.js';
 import bettingInsightsRouter from './routes/bettingInsights.js';
+import pnlRouter from './routes/pnl.js';
 
 dotenv.config();
 
@@ -63,6 +64,11 @@ app.use('/api/betting-insights', async (req, res, next) => {
   await ensureDbConnection();
   next();
 }, bettingInsightsRouter);
+
+app.use('/api/pnl', async (req, res, next) => {
+  await ensureDbConnection();
+  next();
+}, pnlRouter);
 
 // Error handling middleware
 app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
