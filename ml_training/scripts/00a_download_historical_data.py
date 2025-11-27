@@ -72,7 +72,7 @@ class HistoricalDataDownloader:
         try:
             response = requests.get(
                 f'{BASE_URL}/fixtures',
-                headers={'x-rapidapi-key': API_KEY},
+                headers={'x-apisports-key': API_KEY},
                 params={
                     'league': league_id,
                     'season': self.year,
@@ -102,7 +102,7 @@ class HistoricalDataDownloader:
         try:
             response = requests.get(
                 f'{BASE_URL}/fixtures/statistics',
-                headers={'x-rapidapi-key': API_KEY},
+                headers={'x-apisports-key': API_KEY},
                 params={'fixture': fixture_id},
                 timeout=30
             )
