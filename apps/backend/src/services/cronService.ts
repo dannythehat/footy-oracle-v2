@@ -5,6 +5,8 @@ import { generateBulkReasoning } from './aiService.js';
 import { bettingInsightsService } from './bettingInsightsService.js';
 import { settlePendingPredictions } from './resultSettlementService.js';
 import { syncFeaturedSelections } from './pnlTrackingService.js';
+import { findBetBuilders, saveBetBuilders } from './betBuilderService.js';
+import { getBetBuilderOfTheDay } from './betBuilderOfTheDayService.js';
 import { Prediction } from '../models/Prediction.js';
 import { Fixture } from '../models/Fixture.js';
 
@@ -23,6 +25,12 @@ export function startCronJobs() {
     await generateBettingInsights();
   });
 
+  // Bet Builder generation (8am daily - after predictions at 6am)
+  cron.schedule('0 8 * * *', async () => {
+    console.log('🧠 Starting Bet Builder generation...');
+    await generateBetBuilders();
+  });
+
   // Result settlement job (runs every 2 hours)
   cron.schedule('0 */2 * * *', async () => {
     console.log('⚖️  Starting result settlement...');
@@ -38,8 +46,80 @@ export function startCronJobs() {
   console.log(`✅ Cron jobs scheduled:`);
   console.log(`   - Daily predictions: ${schedule}`);
   console.log(`   - AI betting insights: 0 5 * * * (5am daily)`);
+  console.log(`   - Bet Builder generation: 0 8 * * * (8am daily)`);
   console.log(`   - Result settlement: 0 */2 * * * (every 2 hours)`);
   console.log(`   - P&L sync: 0 7 * * * (7am daily)`);
+}
+
+async function generateBetBuilders() {
+  try {
+    console.log('🤖 Loading ML predictions for Bet Builder analysis...');
+    const mlPredictions = await loadMLPredictions();
+    
+    if (!mlPredictions || mlPredictions.length === 0) {
+      console.log('⚠️  No ML predictions available for Bet Builder generation');
+      return;
+    }
+    
+    // Find bet builder candidates
+    console.log('🔍 Analyzing fixtures for multi-market convergence...');
+    const betBuilderCandidates = findBetBuilders(mlPredictions);
+    
+    if (betBuilderCandidates.length === 0) {
+      console.log('ℹ️  No bet builder opportunities found today');
+      return;
+    }
+    
+    console.log(`✅ Found ${betBuilderCandidates.length} bet builder opportunities`);
+    
+    // Generate AI reasoning for bet builders
+    console.log('🧠 Generating AI reasoning for bet builders...');
+    const reasoningPromises = betBuilderCandidates.map(async (candidate) => {
+      const reasonings = await generateBulkReasoning([
+        {
+          homeTeam: candidate.fixture.home_team,
+          awayTeam: candidate.fixture.away_team,
+          league: candidate.fixture.league,
+          market: 'Multi-Market Bet Builder',
+          prediction: candidate.markets.map(m => m.marketName).join(' + '),
+          odds: candidate.estimatedCombinedOdds,
+          confidence: candidate.combinedConfidence,
+        },
+      ]);
+      return { fixtureId: candidate.fixture.fixture_id, reasoning: reasonings[0] };
+    });
+    
+    const reasoningResults = await Promise.all(reasoningPromises);
+    const reasoningMap = new Map(
+      reasoningResults.map(r => [r.fixtureId, r.reasoning])
+    );
+    
+    // Save bet builders to database
+    console.log('💾 Saving bet builders to database...');
+    const savedBuilders = await saveBetBuilders(betBuilderCandidates, reasoningMap);
+    
+    console.log(`✅ Saved ${savedBuilders.length} bet builders`);
+    
+    // Select and log Bet Builder of the Day
+    console.log('🎯 Selecting Bet Builder of the Day...');
+    const { betBuilder, compositeScore } = await getBetBuilderOfTheDay();
+    
+    if (betBuilder) {
+      console.log(`🏆 BET BUILDER OF THE DAY:`);
+      console.log(`   ${betBuilder.homeTeam} vs ${betBuilder.awayTeam}`);
+      console.log(`   League: ${betBuilder.league}`);
+      console.log(`   Confidence: ${betBuilder.combinedConfidence}%`);
+      console.log(`   Odds: ${betBuilder.estimatedCombinedOdds.toFixed(2)}x`);
+      console.log(`   Composite Score: ${compositeScore?.toFixed(2)}`);
+      console.log(`   Markets: ${betBuilder.markets.map(m => m.marketName).join(', ')}`);
+    } else {
+      console.log('ℹ️  No Bet Builder of the Day selected');
+    }
+    
+    console.log('✅ Bet Builder generation completed');
+  } catch (error) {
+    console.error('❌ Error generating bet builders:', error);
+  }
 }
 
 async function syncPnL() {
@@ -178,4 +258,10 @@ function getOddsForMarket(odds: any, market: string): number {
 }
 
 // Export for manual trigger
-export { updateDailyPredictions, generateBettingInsights, settleResults, syncPnL };
+export { 
+  updateDailyPredictions, 
+  generateBettingInsights, 
+  settleResults, 
+  syncPnL,
+  generateBetBuilders 
+};
