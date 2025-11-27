@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { Star, TrendingUp, Calendar, Trophy, Target, Brain, Zap, ChevronRight, AlertCircle, Sparkles } from 'lucide-react';
+import { Star, TrendingUp, Calendar, Trophy, Target, Brain, Zap, ChevronRight, AlertCircle, Sparkles, Crown } from 'lucide-react';
 import FixturesModal from '../components/FixturesModal';
 import BetBuilderCard from '../components/BetBuilderCard';
+import BetBuilderOfTheDay from '../components/BetBuilderOfTheDay';
 import { goldenBetsApi, betBuilderApi } from '../services/api';
 
 interface GoldenBet {
@@ -41,15 +42,19 @@ interface BetBuilder {
   combinedConfidence: number;
   estimatedCombinedOdds: number;
   aiReasoning?: string;
+  enhancedReasoning?: string;
+  compositeScore?: number;
   result?: 'win' | 'loss' | 'pending';
   profit?: number;
 }
 
 const HomePage: React.FC = () => {
   const [goldenBets, setGoldenBets] = useState<GoldenBet[]>([]);
+  const [betBuilderOfTheDay, setBetBuilderOfTheDay] = useState<BetBuilder | null>(null);
   const [betBuilders, setBetBuilders] = useState<BetBuilder[]>([]);
   const [showFixturesModal, setShowFixturesModal] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [loadingBBOTD, setLoadingBBOTD] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -59,20 +64,24 @@ const HomePage: React.FC = () => {
   const fetchData = async () => {
     try {
       setLoading(true);
+      setLoadingBBOTD(true);
       setError(null);
       
-      const [betsResponse, buildersResponse] = await Promise.all([
+      const [betsResponse, bbotdResponse, buildersResponse] = await Promise.all([
         goldenBetsApi.getToday().catch(() => null),
+        betBuilderApi.getOfTheDay().catch(() => null),
         betBuilderApi.getToday().catch(() => null)
       ]);
 
       setGoldenBets(betsResponse?.data || []);
+      setBetBuilderOfTheDay(bbotdResponse?.data || null);
       setBetBuilders(buildersResponse?.data || []);
     } catch (err) {
       console.error('Error fetching data:', err);
       setError('Failed to load data');
     } finally {
       setLoading(false);
+      setLoadingBBOTD(false);
     }
   };
 
@@ -133,8 +142,23 @@ const HomePage: React.FC = () => {
         </div>
       </div>
 
-      {/* Key Features Section */}
       <div className="max-w-7xl mx-auto px-4 py-12">
+        {/* 👑 BET BUILDER OF THE DAY - PREMIUM FEATURE */}
+        <div className="mb-16">
+          <div className="flex items-center justify-center gap-3 mb-8">
+            <Crown className="w-8 h-8 text-yellow-400 animate-bounce" />
+            <h2 className="text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 via-yellow-300 to-orange-400">
+              BET BUILDER OF THE DAY
+            </h2>
+            <Crown className="w-8 h-8 text-yellow-400 animate-bounce" />
+          </div>
+          <p className="text-center text-gray-400 mb-8 max-w-2xl mx-auto">
+            Our ML algorithm selects the single best bet builder each day - the optimal balance between confidence and value
+          </p>
+          <BetBuilderOfTheDay betBuilder={betBuilderOfTheDay} loading={loadingBBOTD} />
+        </div>
+
+        {/* Key Features Section */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
           {/* Feature 1: Golden Bets */}
           <div className="bg-gradient-to-br from-purple-900/30 to-purple-800/10 border border-purple-500/30 rounded-xl p-6 hover:border-purple-500/50 transition-all">
@@ -286,16 +310,16 @@ const HomePage: React.FC = () => {
           )}
         </div>
 
-        {/* 🧠 BET BUILDER BRAIN SECTION */}
+        {/* 🧠 MORE BET BUILDERS SECTION */}
         {betBuilders.length > 0 && (
           <div className="mb-12">
             <div className="flex items-center justify-between mb-6">
               <div>
                 <h2 className="text-3xl font-bold mb-2 flex items-center gap-3">
                   <Brain className="w-8 h-8 text-purple-400" />
-                  Bet Builder Brain
+                  More Bet Builders
                 </h2>
-                <p className="text-gray-400">Multi-market convergence opportunities with 75%+ confidence</p>
+                <p className="text-gray-400">Additional multi-market convergence opportunities</p>
               </div>
               <div className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-purple-500/20 to-pink-500/20 border border-purple-500/30 rounded-lg">
                 <Zap className="w-5 h-5 text-purple-400" />
