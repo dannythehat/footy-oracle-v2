@@ -35,6 +35,100 @@ jobs:
             echo "✅ API_FOOTBALL_KEY secret exists (length: ${#API_FOOTBALL_KEY})"
           fi
       
+      - name: 🧪 Comprehensive API Test
+        env:
+          API_FOOTBALL_KEY: ${{ secrets.API_FOOTBALL_KEY }}
+        run: |
+          python -c "
+          import os
+          import requests
+          import json
+          
+          API_KEY = os.environ['API_FOOTBALL_KEY']
+          
+          print('🔍 Testing all possible API configurations...')
+          print(f'API Key: {API_KEY[:8]}...{API_KEY[-4:]}')
+          print(f'Key length: {len(API_KEY)}')
+          print()
+          
+          # Test configurations
+          configs = [
+              {
+                  'name': 'RapidAPI Format',
+                  'url': 'https://v3.football.api-sports.io/fixtures',
+                  'headers': {
+                      'x-rapidapi-key': API_KEY,
+                      'x-rapidapi-host': 'v3.football.api-sports.io'
+                  },
+                  'params': {'date': '2025-11-27'}
+              },
+              {
+                  'name': 'Direct API-Sports (x-apisports-key)',
+                  'url': 'https://v3.football.api-sports.io/fixtures',
+                  'headers': {
+                      'x-apisports-key': API_KEY
+                  },
+                  'params': {'date': '2025-11-27'}
+              },
+              {
+                  'name': 'Direct API-Sports (x-api-key)',
+                  'url': 'https://v3.football.api-sports.io/fixtures',
+                  'headers': {
+                      'x-api-key': API_KEY
+                  },
+                  'params': {'date': '2025-11-27'}
+              }
+          ]
+          
+          working_config = None
+          
+          for config in configs:
+              print(f'\\n📡 Testing: {config[\"name\"]}')
+              print(f'URL: {config[\"url\"]}')
+              print(f'Headers: {list(config[\"headers\"].keys())}')
+              
+              try:
+                  response = requests.get(
+                      config['url'],
+                      headers=config['headers'],
+                      params=config['params'],
+                      timeout=10
+                  )
+                  
+                  print(f'Status Code: {response.status_code}')
+                  
+                  if response.status_code == 200:
+                      data = response.json()
+                      fixtures = data.get('response', [])
+                      print(f'✅ SUCCESS! Found {len(fixtures)} fixtures')
+                      print(f'API Response Keys: {list(data.keys())}')
+                      if 'errors' in data and data['errors']:
+                          print(f'Errors: {data[\"errors\"]}')
+                      working_config = config
+                      break
+                  else:
+                      print(f'❌ Failed')
+                      print(f'Response: {response.text[:300]}')
+                      
+              except Exception as e:
+                  print(f'❌ Exception: {str(e)}')
+          
+          if not working_config:
+              print('\\n❌ ALL CONFIGURATIONS FAILED!')
+              print('\\nYour API key might be:')
+              print('1. Invalid or expired')
+              print('2. Not activated')
+              print('3. Rate limited')
+              print('4. From a different API provider')
+              exit(1)
+          else:
+              print(f'\\n✅ Working configuration: {working_config[\"name\"]}')
+              
+              # Save working config for next steps
+              with open('/tmp/api_config.json', 'w') as f:
+                  json.dump(working_config, f)
+          "
+      
       - name: 📊 Fetch today's fixtures
         env:
           API_FOOTBALL_KEY: ${{ secrets.API_FOOTBALL_KEY }}
@@ -47,14 +141,14 @@ jobs:
           
           API_KEY = os.environ['API_FOOTBALL_KEY']
           
+          # Load working config from test
+          with open('/tmp/api_config.json', 'r') as f:
+              config = json.load(f)
+          
+          headers = config['headers']
+          
           today = datetime.now().strftime('%Y-%m-%d')
           tomorrow = (datetime.now() + timedelta(days=1)).strftime('%Y-%m-%d')
-          
-          # Use RapidAPI format (matches backend apiFootballService.ts)
-          headers = {
-              'x-rapidapi-key': API_KEY,
-              'x-rapidapi-host': 'v3.football.api-sports.io'
-          }
           
           all_fixtures = []
           
@@ -63,8 +157,6 @@ jobs:
           url = f'https://v3.football.api-sports.io/fixtures?date={today}'
           response = requests.get(url, headers=headers, timeout=10)
           
-          print(f'Status: {response.status_code}')
-          
           if response.status_code == 200:
               data = response.json()
               today_fixtures = data.get('response', [])
@@ -72,7 +164,6 @@ jobs:
               print(f'✅ Today: {len(today_fixtures)} fixtures')
           else:
               print(f'❌ Error: {response.status_code}')
-              print(f'Response: {response.text[:500]}')
               exit(1)
           
           # Fetch tomorrow's fixtures
@@ -85,8 +176,6 @@ jobs:
               tomorrow_fixtures = data.get('response', [])
               all_fixtures.extend(tomorrow_fixtures)
               print(f'✅ Tomorrow: {len(tomorrow_fixtures)} fixtures')
-          else:
-              print(f'⚠️  Could not fetch tomorrow: {response.status_code}')
           
           # Save fixtures
           os.makedirs('shared/fixtures', exist_ok=True)
@@ -105,9 +194,6 @@ jobs:
               json.dump(metadata, f, indent=2)
           
           print(f'\\n✅ Total: {len(all_fixtures)} fixtures saved')
-          
-          if len(all_fixtures) == 0:
-              print('⚠️  WARNING: No fixtures fetched')
           "
       
       - name: 📊 Fetch live matches
@@ -121,11 +207,11 @@ jobs:
           
           API_KEY = os.environ['API_FOOTBALL_KEY']
           
-          # Use RapidAPI format (matches backend apiFootballService.ts)
-          headers = {
-              'x-rapidapi-key': API_KEY,
-              'x-rapidapi-host': 'v3.football.api-sports.io'
-          }
+          # Load working config from test
+          with open('/tmp/api_config.json', 'r') as f:
+              config = json.load(f)
+          
+          headers = config['headers']
           
           print('🔴 Fetching live matches...')
           url = 'https://v3.football.api-sports.io/fixtures?live=all'
@@ -139,8 +225,7 @@ jobs:
               with open('shared/fixtures/live.json', 'w') as f:
                   json.dump(live_matches, f, indent=2)
           else:
-              print(f'⚠️  API returned status {response.status_code}')
-              print(f'Response: {response.text[:500]}')
+              print(f'⚠️  Could not fetch live matches')
               with open('shared/fixtures/live.json', 'w') as f:
                   json.dump([], f)
           "
