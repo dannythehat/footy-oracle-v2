@@ -96,8 +96,11 @@ const FixtureSchema = new Schema<IFixture>({
   },
   status: { 
     type: String, 
-    enum: ['scheduled', 'live', 'finished', 'postponed'],
-    default: 'scheduled'
+    enum: [
+      "TBD", "NS", "1H", "HT", "2H", "ET", "BT", "P", "SUSP", "INT",
+      "FT", "AET", "PEN", "PST", "CANC", "ABD", "AWD", "WO", "LIVE"
+    ],
+    default: 'NS'
   },
   score: {
     home: Number,
