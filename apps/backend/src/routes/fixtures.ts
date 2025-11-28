@@ -30,7 +30,9 @@ function transformFixture(fixture: any) {
     league_id: fixture.leagueId,
     season: fixture.season,
     country: fixture.country,
-    status: fixture.status,
+    status: fixture.status || 'scheduled',
+    home_score: fixture.score?.home,
+    away_score: fixture.score?.away,
     predictions: {
       btts_yes: fixture.aiBets?.bts?.percentage || 0,
       over_2_5: fixture.aiBets?.over25?.percentage || 0,
@@ -154,8 +156,7 @@ router.get('/meta/leagues', async (req, res) => {
     
     res.json({
       success: true,
-      data: leagues,
-      count: leagues.length,
+      data: leagues.sort(),
     });
   } catch (error: any) {
     res.status(500).json({
@@ -165,38 +166,38 @@ router.get('/meta/leagues', async (req, res) => {
   }
 });
 
-// NEW: Get Head-to-Head data
-router.get('/:id/h2h', async (req: Request, res: Response) => {
+// Get H2H data for a fixture
+router.get('/:id/h2h', async (req, res) => {
   try {
     const { homeTeamId, awayTeamId, last } = req.query;
     
     if (!homeTeamId || !awayTeamId) {
       return res.status(400).json({
         success: false,
-        error: 'homeTeamId and awayTeamId are required'
+        error: 'homeTeamId and awayTeamId are required',
       });
     }
-
+    
     const h2hData = await fetchH2H(
       Number(homeTeamId),
       Number(awayTeamId),
-      last ? Number(last) : 10
+      Number(last) || 10
     );
-
+    
     res.json({
       success: true,
-      data: h2hData
+      data: h2hData,
     });
   } catch (error: any) {
     res.status(500).json({
       success: false,
-      error: error.message
+      error: error.message,
     });
   }
 });
 
-// NEW: Get team statistics
-router.get('/team/:teamId/stats', async (req: Request, res: Response) => {
+// Get team statistics
+router.get('/team/:teamId/stats', async (req, res) => {
   try {
     const { teamId } = req.params;
     const { leagueId, season } = req.query;
@@ -204,202 +205,251 @@ router.get('/team/:teamId/stats', async (req: Request, res: Response) => {
     if (!leagueId || !season) {
       return res.status(400).json({
         success: false,
-        error: 'leagueId and season are required'
+        error: 'leagueId and season are required',
       });
     }
-
+    
     const stats = await fetchTeamStats(
       Number(teamId),
       Number(leagueId),
       Number(season)
     );
-
+    
     res.json({
       success: true,
-      data: stats
+      data: stats,
     });
   } catch (error: any) {
     res.status(500).json({
       success: false,
-      error: error.message
+      error: error.message,
     });
   }
 });
 
-// NEW: Get complete fixture statistics (H2H + both teams)
-router.get('/:id/stats', async (req: Request, res: Response) => {
+// Get complete fixture statistics (H2H + both teams)
+router.get('/:id/stats', async (req, res) => {
   try {
-    const { id } = req.params;
     const { homeTeamId, awayTeamId, leagueId, season } = req.query;
     
     if (!homeTeamId || !awayTeamId || !leagueId || !season) {
       return res.status(400).json({
         success: false,
-        error: 'homeTeamId, awayTeamId, leagueId, and season are required'
+        error: 'homeTeamId, awayTeamId, leagueId, and season are required',
       });
     }
-
+    
     const stats = await fetchFixtureStats(
-      Number(id),
+      Number(req.params.id),
       Number(homeTeamId),
       Number(awayTeamId),
       Number(leagueId),
       Number(season)
     );
-
+    
     res.json({
       success: true,
-      data: stats
+      data: stats,
     });
   } catch (error: any) {
     res.status(500).json({
       success: false,
-      error: error.message
+      error: error.message,
     });
   }
 });
 
-// NEW: Get team's last fixtures
-router.get('/team/:teamId/last-fixtures', async (req: Request, res: Response) => {
+// Get team's last fixtures
+router.get('/team/:teamId/last-fixtures', async (req, res) => {
   try {
     const { teamId } = req.params;
     const { last } = req.query;
-
+    
     const fixtures = await fetchTeamLastFixtures(
       Number(teamId),
-      last ? Number(last) : 5
+      Number(last) || 5
     );
-
+    
     res.json({
       success: true,
       data: fixtures,
-      count: fixtures.length
     });
   } catch (error: any) {
     res.status(500).json({
       success: false,
-      error: error.message
+      error: error.message,
     });
   }
 });
 
-// AI-POWERED ENDPOINTS
-
-/**
- * POST /api/fixtures/analyze
- * Analyze a single fixture with AI
- */
-router.post('/analyze', async (req: Request, res: Response) => {
+// Analyze a single fixture
+router.post('/:id/analyze', async (req, res) => {
   try {
-    const fixture: FixtureInput = req.body;
+    const fixture = await Fixture.findOne({ fixtureId: Number(req.params.id) });
     
-    if (!fixture.homeTeam || !fixture.awayTeam) {
-      return res.status(400).json({
+    if (!fixture) {
+      return res.status(404).json({
         success: false,
-        error: 'homeTeam and awayTeam are required'
+        error: 'Fixture not found',
       });
     }
-
-    const analysis = await analyzeFixture(fixture);
-
+    
+    const fixtureInput: FixtureInput = {
+      id: fixture.fixtureId,
+      homeTeam: fixture.homeTeam,
+      awayTeam: fixture.awayTeam,
+      league: fixture.league,
+      date: fixture.date.toISOString(),
+      odds: {
+        homeWin: fixture.odds?.homeWin || 0,
+        draw: fixture.odds?.draw || 0,
+        awayWin: fixture.odds?.awayWin || 0,
+        btts: fixture.odds?.btts || 0,
+        over25: fixture.odds?.over25 || 0,
+        under25: fixture.odds?.under25 || 0,
+      },
+    };
+    
+    const analysis = await analyzeFixture(fixtureInput);
+    
     res.json({
       success: true,
-      data: analysis
+      data: analysis,
     });
   } catch (error: any) {
     res.status(500).json({
       success: false,
-      error: error.message
+      error: error.message,
     });
   }
 });
 
-/**
- * POST /api/fixtures/analyze-bulk
- * Analyze multiple fixtures with AI
- */
-router.post('/analyze-bulk', async (req: Request, res: Response) => {
+// Analyze multiple fixtures
+router.post('/analyze-bulk', async (req, res) => {
   try {
-    const fixtures: FixtureInput[] = req.body;
+    const { fixtureIds } = req.body;
     
-    if (!Array.isArray(fixtures) || fixtures.length === 0) {
+    if (!Array.isArray(fixtureIds) || fixtureIds.length === 0) {
       return res.status(400).json({
         success: false,
-        error: 'fixtures array is required'
+        error: 'fixtureIds array is required',
       });
     }
-
-    const analyses = await analyzeBulkFixtures(fixtures);
-
+    
+    const fixtures = await Fixture.find({ 
+      fixtureId: { $in: fixtureIds.map(Number) } 
+    });
+    
+    const fixtureInputs: FixtureInput[] = fixtures.map(fixture => ({
+      id: fixture.fixtureId,
+      homeTeam: fixture.homeTeam,
+      awayTeam: fixture.awayTeam,
+      league: fixture.league,
+      date: fixture.date.toISOString(),
+      odds: {
+        homeWin: fixture.odds?.homeWin || 0,
+        draw: fixture.odds?.draw || 0,
+        awayWin: fixture.odds?.awayWin || 0,
+        btts: fixture.odds?.btts || 0,
+        over25: fixture.odds?.over25 || 0,
+        under25: fixture.odds?.under25 || 0,
+      },
+    }));
+    
+    const analyses = await analyzeBulkFixtures(fixtureInputs);
+    
     res.json({
       success: true,
       data: analyses,
-      count: analyses.length
     });
   } catch (error: any) {
     res.status(500).json({
       success: false,
-      error: error.message
+      error: error.message,
     });
   }
 });
 
-/**
- * POST /api/fixtures/golden-bets
- * Find golden betting opportunities
- */
-router.post('/golden-bets', async (req: Request, res: Response) => {
+// Find golden bets
+router.get('/golden-bets/today', async (req, res) => {
   try {
-    const fixtures: FixtureInput[] = req.body;
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const tomorrow = new Date(today);
+    tomorrow.setDate(tomorrow.getDate() + 1);
     
-    if (!Array.isArray(fixtures) || fixtures.length === 0) {
-      return res.status(400).json({
-        success: false,
-        error: 'fixtures array is required'
-      });
-    }
-
-    const goldenBets = await findGoldenBets(fixtures);
-
+    const fixtures = await Fixture.find({
+      date: { $gte: today, $lt: tomorrow },
+    });
+    
+    const fixtureInputs: FixtureInput[] = fixtures.map(fixture => ({
+      id: fixture.fixtureId,
+      homeTeam: fixture.homeTeam,
+      awayTeam: fixture.awayTeam,
+      league: fixture.league,
+      date: fixture.date.toISOString(),
+      odds: {
+        homeWin: fixture.odds?.homeWin || 0,
+        draw: fixture.odds?.draw || 0,
+        awayWin: fixture.odds?.awayWin || 0,
+        btts: fixture.odds?.btts || 0,
+        over25: fixture.odds?.over25 || 0,
+        under25: fixture.odds?.under25 || 0,
+      },
+    }));
+    
+    const goldenBets = await findGoldenBets(fixtureInputs);
+    
     res.json({
       success: true,
       data: goldenBets,
-      count: goldenBets.length
     });
   } catch (error: any) {
     res.status(500).json({
       success: false,
-      error: error.message
+      error: error.message,
     });
   }
 });
 
-/**
- * POST /api/fixtures/value-bets
- * Find value betting opportunities
- */
-router.post('/value-bets', async (req: Request, res: Response) => {
+// Find value bets
+router.get('/value-bets/today', async (req, res) => {
   try {
-    const fixtures: FixtureInput[] = req.body;
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const tomorrow = new Date(today);
+    tomorrow.setDate(tomorrow.getDate() + 1);
     
-    if (!Array.isArray(fixtures) || fixtures.length === 0) {
-      return res.status(400).json({
-        success: false,
-        error: 'fixtures array is required'
-      });
-    }
-
-    const valueBets = await findValueBets(fixtures);
-
+    const fixtures = await Fixture.find({
+      date: { $gte: today, $lt: tomorrow },
+    });
+    
+    const fixtureInputs: FixtureInput[] = fixtures.map(fixture => ({
+      id: fixture.fixtureId,
+      homeTeam: fixture.homeTeam,
+      awayTeam: fixture.awayTeam,
+      league: fixture.league,
+      date: fixture.date.toISOString(),
+      odds: {
+        homeWin: fixture.odds?.homeWin || 0,
+        draw: fixture.odds?.draw || 0,
+        awayWin: fixture.odds?.awayWin || 0,
+        btts: fixture.odds?.btts || 0,
+        over25: fixture.odds?.over25 || 0,
+        under25: fixture.odds?.under25 || 0,
+      },
+    }));
+    
+    const valueBets = await findValueBets(fixtureInputs);
+    
     res.json({
       success: true,
       data: valueBets,
-      count: valueBets.length
     });
   } catch (error: any) {
     res.status(500).json({
       success: false,
-      error: error.message
+      error: error.message,
     });
   }
 });
