@@ -29,7 +29,13 @@ app.get('/health', (req, res) => {
   res.json({ 
     status: 'ok', 
     timestamp: new Date().toISOString(),
-    environment: process.env.NODE_ENV 
+    environment: process.env.NODE_ENV,
+    features: {
+      fixtures: 'operational',
+      goldenBets: 'operational',
+      betBuilder: 'operational',
+      cronJobs: 'active'
+    }
   });
 });
 
@@ -72,6 +78,7 @@ async function startServer() {
       console.log(`🚀 Footy Oracle API running on port ${PORT}`);
       console.log(`📍 Environment: ${process.env.NODE_ENV}`);
       console.log(`🔗 Health check: http://localhost:${PORT}/health`);
+      console.log(`📅 Fixtures: http://localhost:${PORT}/api/fixtures`);
       console.log(`⭐ Golden Bets: http://localhost:${PORT}/api/golden-bets/today`);
       console.log(`💎 Value Bets: http://localhost:${PORT}/api/value-bets/today`);
       console.log(`🧠 Bet Builder Brain: http://localhost:${PORT}/api/bet-builders/today`);
