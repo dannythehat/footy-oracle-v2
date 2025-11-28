@@ -13,8 +13,32 @@ import {
   fetchFixtureStats,
   fetchTeamLastFixtures
 } from '../services/apiFootballService';
+import { loadFixturesForDate } from '../cron/fixturesCron.js';
 
 const router = Router();
+
+// Manual fixtures loading endpoint
+router.post('/load', async (req, res) => {
+  try {
+    const { date } = req.body;
+    const targetDate = date || new Date().toISOString().split('T')[0];
+    
+    console.log(`📥 Manual fixtures load requested for ${targetDate}`);
+    const result = await loadFixturesForDate(targetDate);
+    
+    res.json({
+      success: true,
+      message: `Loaded fixtures for ${targetDate}`,
+      ...result
+    });
+  } catch (error: any) {
+    console.error('Error loading fixtures:', error);
+    res.status(500).json({
+      success: false,
+      error: error.message,
+    });
+  }
+});
 
 // Get fixtures by date
 router.get('/', async (req, res) => {
