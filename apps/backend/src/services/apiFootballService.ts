@@ -201,34 +201,32 @@ export async function fetchOdds(fixtureId: number): Promise<any> {
 
 /**
  * Fetch odds for a specific fixture (raw response)
- * This is the missing function that fixturesCron.ts imports
+ * This is the function that fixturesCron.ts imports
  * @param fixtureId - Fixture ID
  * @returns Raw odds response from API
  */
-export const fetchOddsForFixture = async (fixtureId: number) => {
+export async function fetchOddsForFixture(fixtureId: number): Promise<any> {
   try {
-    const response = await fetch(
-      `https://v3.football.api-sports.io/odds?fixture=${fixtureId}`,
-      {
-        headers: {
-          "x-apisports-key": process.env.API_FOOTBALL_KEY!,
-        },
+    console.log(`📊 Fetching raw odds for fixture ${fixtureId}...`);
+    
+    const response = await apiClient.get('/odds', {
+      params: { 
+        fixture: fixtureId
       }
-    );
+    });
 
-    const data = await response.json();
-
-    if (!data.response || data.response.length === 0) {
-      console.log(`No odds found for fixture ${fixtureId}`);
+    if (!response.data.response || response.data.response.length === 0) {
+      console.log(`⚠️  No odds found for fixture ${fixtureId}`);
       return null;
     }
 
-    return data.response;
-  } catch (error) {
-    console.error(`Error fetching odds for fixture ${fixtureId}:`, error);
+    console.log(`✅ Raw odds fetched for fixture ${fixtureId}`);
+    return response.data.response;
+  } catch (error: any) {
+    console.error(`❌ Error fetching raw odds for fixture ${fixtureId}:`, error.message);
     return null;
   }
-};
+}
 
 /**
  * Fetch fixtures with odds for a specific date
