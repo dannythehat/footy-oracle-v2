@@ -3,23 +3,61 @@ import { Fixture } from '../models/Fixture.js';
 import { fetchFixtures, fetchOddsForFixture } from '../services/apiFootballService.js';
 
 /**
- * Cron job to fetch and store today's fixtures
- * Runs daily at 2 AM UTC
+ * Cron job to fetch and store upcoming fixtures
+ * Runs every 2 hours to keep fixtures updated
  */
 export function startFixturesCron() {
-  // Run daily at 2 AM UTC
-  cron.schedule('0 2 * * *', async () => {
-    console.log('🔄 Running fixtures cron job...');
-    await loadTodaysFixtures();
+  // Run every 2 hours to keep fixtures fresh
+  cron.schedule('0 */2 * * *', async () => {
+    console.log('🔄 Running fixtures update cron (every 2 hours)...');
+    await loadUpcomingFixtures();
   });
 
-  // Also run on startup
-  console.log('🚀 Fixtures cron initialized - loading today\'s fixtures...');
-  loadTodaysFixtures().catch(console.error);
+  // Also run on startup to ensure fixtures are available immediately
+  console.log('🚀 Fixtures cron initialized - loading upcoming fixtures...');
+  loadUpcomingFixtures().catch(console.error);
 }
 
 /**
- * Load today's fixtures from API-Football and store in database
+ * Load upcoming fixtures (next 14 days) from API-Football and store in database
+ * This ensures fixtures are ALWAYS available and update regularly
+ */
+export async function loadUpcomingFixtures() {
+  try {
+    const today = new Date();
+    const endDate = new Date(today);
+    endDate.setDate(endDate.getDate() + 14); // Next 14 days
+    
+    console.log(`📅 Loading fixtures from ${today.toISOString().split('T')[0]} to ${endDate.toISOString().split('T')[0]}...`);
+
+    let totalSaved = 0;
+    let totalUpdated = 0;
+
+    // Loop through each date and fetch fixtures
+    for (let date = new Date(today); date <= endDate; date.setDate(date.getDate() + 1)) {
+      const dateStr = date.toISOString().split('T')[0];
+      
+      try {
+        const result = await loadFixturesForDate(dateStr);
+        totalSaved += result.new || 0;
+        totalUpdated += result.updated || 0;
+        
+        // Rate limiting: Wait 1 second between dates to avoid API limits
+        await new Promise(resolve => setTimeout(resolve, 1000));
+      } catch (error) {
+        console.error(`❌ Error loading fixtures for ${dateStr}:`, error);
+        // Continue with next date even if one fails
+      }
+    }
+
+    console.log(`✅ Fixtures update complete: ${totalSaved} new, ${totalUpdated} updated`);
+  } catch (error) {
+    console.error('❌ Error loading upcoming fixtures:', error);
+  }
+}
+
+/**
+ * Load today's fixtures (legacy function for backward compatibility)
  */
 export async function loadTodaysFixtures() {
   try {
@@ -105,6 +143,7 @@ export async function loadTodaysFixtures() {
 
 /**
  * Load fixtures for a specific date (manual trigger)
+ * Updates existing fixtures with latest data (scores, odds, status)
  */
 export async function loadFixturesForDate(date: string) {
   try {
@@ -114,7 +153,7 @@ export async function loadFixturesForDate(date: string) {
     
     if (!fixturesData || fixturesData.length === 0) {
       console.log(`ℹ️  No fixtures found for ${date}`);
-      return { success: true, count: 0 };
+      return { success: true, count: 0, new: 0, updated: 0 };
     }
 
     let savedCount = 0;
@@ -124,6 +163,7 @@ export async function loadFixturesForDate(date: string) {
       const existing = await Fixture.findOne({ fixtureId: fixtureData.fixtureId });
 
       if (existing) {
+        // Update existing fixture with latest data
         await Fixture.updateOne(
           { fixtureId: fixtureData.fixtureId },
           {
@@ -134,12 +174,14 @@ export async function loadFixturesForDate(date: string) {
               league: fixtureData.league,
               country: fixtureData.country,
               status: fixtureData.status,
+              odds: fixtureData.odds || existing.odds || {},
               updatedAt: new Date(),
             }
           }
         );
         updatedCount++;
       } else {
+        // Create new fixture
         await Fixture.create({
           fixtureId: fixtureData.fixtureId,
           date: new Date(fixtureData.date),
@@ -148,6 +190,7 @@ export async function loadFixturesForDate(date: string) {
           league: fixtureData.league,
           country: fixtureData.country,
           status: fixtureData.status,
+          odds: fixtureData.odds || {},
           createdAt: new Date(),
           updatedAt: new Date(),
         });
@@ -155,6 +198,7 @@ export async function loadFixturesForDate(date: string) {
       }
     }
 
+    console.log(`✅ ${date}: ${savedCount} new, ${updatedCount} updated`);
     return { success: true, count: savedCount + updatedCount, new: savedCount, updated: updatedCount };
   } catch (error) {
     console.error('❌ Error loading fixtures for date:', error);
