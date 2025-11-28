@@ -7,7 +7,7 @@ const apiClient = axios.create({
   headers: {
     'Content-Type': 'application/json',
   },
-  timeout: 10000,
+  timeout: 60000, // Increased to 60 seconds for Render cold starts
 });
 
 // Response interceptor for error handling
@@ -114,6 +114,7 @@ export const fixturesApi = {
   getByDate: async (date: string, league?: string, status?: string) => {
     const response = await apiClient.get('/api/fixtures', {
       params: { date, league, status },
+      timeout: 90000, // Extra time for fixtures - 90 seconds
     });
     return response.data;
   },
