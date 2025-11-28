@@ -9,9 +9,21 @@ import cors from 'cors';
 
 const app = express();
 
-// --------------------
-// 🔥 FINAL CORS CONFIG
-// --------------------
+// ------------------------------------
+// 🔥 DEBUG LOGGER — SHOWS WHO SETS CORS
+// ------------------------------------
+app.use((req, res, next) => {
+  const originalSetHeader = res.setHeader.bind(res);
+  res.setHeader = (key, value) => {
+    console.log("🔥 HEADER SET:", key, value);
+    originalSetHeader(key, value);
+  };
+  next();
+});
+
+// ------------------------------
+// 🔥 FINAL CORS CONFIG (CORRECT)
+// ------------------------------
 app.use(
   cors({
     origin: [
