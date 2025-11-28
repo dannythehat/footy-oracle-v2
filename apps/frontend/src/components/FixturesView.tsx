@@ -86,7 +86,7 @@ const FixturesView: React.FC<FixturesViewProps> = ({ onClose, embedded = false }
           const leagues = new Set<string>(
             response.data
               .map((f: Fixture) => f.league)
-              .filter((league): league is string => Boolean(league))
+              .filter((league: string | undefined): league is string => Boolean(league))
           );
           setExpandedLeagues(leagues);
         }
