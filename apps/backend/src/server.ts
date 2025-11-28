@@ -73,7 +73,7 @@ app.use('/api/fixtures', fixtures);
 import goldenBets from './routes/goldenBets.js';
 app.use('/api/golden-bets', goldenBets);
 
-import betBuilders from './routes/betBuilders.js';
+import betBuilders from './routes/betBuilder.js';
 app.use('/api/bet-builders', betBuilders);
 
 
