@@ -43,26 +43,26 @@ export async function loadTodaysFixtures() {
     for (const fixtureData of fixturesData) {
       try {
         // Check if fixture already exists
-        const existing = await Fixture.findOne({ fixture_id: fixtureData.fixtureId });
+        const existing = await Fixture.findOne({ fixtureId: fixtureData.fixtureId });
 
         if (existing) {
           // Update existing fixture
           await Fixture.updateOne(
-            { fixture_id: fixtureData.fixtureId },
+            { fixtureId: fixtureData.fixtureId },
             {
               $set: {
                 date: new Date(fixtureData.date),
-                home_team: fixtureData.homeTeam,
-                away_team: fixtureData.awayTeam,
-                home_team_id: fixtureData.homeTeamId,
-                away_team_id: fixtureData.awayTeamId,
+                homeTeam: fixtureData.homeTeam,
+                awayTeam: fixtureData.awayTeam,
+                homeTeamId: fixtureData.homeTeamId,
+                awayTeamId: fixtureData.awayTeamId,
                 league: fixtureData.league,
-                league_id: fixtureData.leagueId,
+                leagueId: fixtureData.leagueId,
                 country: fixtureData.country,
                 season: fixtureData.season,
                 status: fixtureData.status,
                 odds: fixtureData.odds || {},
-                updated_at: new Date(),
+                updatedAt: new Date(),
               }
             }
           );
@@ -70,26 +70,20 @@ export async function loadTodaysFixtures() {
         } else {
           // Create new fixture
           await Fixture.create({
-            fixture_id: fixtureData.fixtureId,
+            fixtureId: fixtureData.fixtureId,
             date: new Date(fixtureData.date),
-            home_team: fixtureData.homeTeam,
-            away_team: fixtureData.awayTeam,
-            home_team_id: fixtureData.homeTeamId,
-            away_team_id: fixtureData.awayTeamId,
+            homeTeam: fixtureData.homeTeam,
+            awayTeam: fixtureData.awayTeam,
+            homeTeamId: fixtureData.homeTeamId,
+            awayTeamId: fixtureData.awayTeamId,
             league: fixtureData.league,
-            league_id: fixtureData.leagueId,
+            leagueId: fixtureData.leagueId,
             country: fixtureData.country,
             season: fixtureData.season,
             status: fixtureData.status,
             odds: fixtureData.odds || {},
-            predictions: {
-              btts_yes: 0,
-              over_2_5: 0,
-              over_9_5_corners: 0,
-              over_3_5_cards: 0,
-            },
-            created_at: new Date(),
-            updated_at: new Date(),
+            createdAt: new Date(),
+            updatedAt: new Date(),
           });
           savedCount++;
         }
@@ -101,8 +95,8 @@ export async function loadTodaysFixtures() {
           
           if (odds) {
             await Fixture.updateOne(
-              { fixture_id: fixtureData.fixtureId },
-              { $set: { odds, updated_at: new Date() } }
+              { fixtureId: fixtureData.fixtureId },
+              { $set: { odds, updatedAt: new Date() } }
             );
           }
         }
@@ -135,49 +129,43 @@ export async function loadFixturesForDate(date: string) {
     let updatedCount = 0;
 
     for (const fixtureData of fixturesData) {
-      const existing = await Fixture.findOne({ fixture_id: fixtureData.fixtureId });
+      const existing = await Fixture.findOne({ fixtureId: fixtureData.fixtureId });
 
       if (existing) {
         await Fixture.updateOne(
-          { fixture_id: fixtureData.fixtureId },
+          { fixtureId: fixtureData.fixtureId },
           {
             $set: {
               date: new Date(fixtureData.date),
-              home_team: fixtureData.homeTeam,
-              away_team: fixtureData.awayTeam,
-              home_team_id: fixtureData.homeTeamId,
-              away_team_id: fixtureData.awayTeamId,
+              homeTeam: fixtureData.homeTeam,
+              awayTeam: fixtureData.awayTeam,
+              homeTeamId: fixtureData.homeTeamId,
+              awayTeamId: fixtureData.awayTeamId,
               league: fixtureData.league,
-              league_id: fixtureData.leagueId,
+              leagueId: fixtureData.leagueId,
               country: fixtureData.country,
               season: fixtureData.season,
               status: fixtureData.status,
-              updated_at: new Date(),
+              updatedAt: new Date(),
             }
           }
         );
         updatedCount++;
       } else {
         await Fixture.create({
-          fixture_id: fixtureData.fixtureId,
+          fixtureId: fixtureData.fixtureId,
           date: new Date(fixtureData.date),
-          home_team: fixtureData.homeTeam,
-          away_team: fixtureData.awayTeam,
-          home_team_id: fixtureData.homeTeamId,
-          away_team_id: fixtureData.awayTeamId,
+          homeTeam: fixtureData.homeTeam,
+          awayTeam: fixtureData.awayTeam,
+          homeTeamId: fixtureData.homeTeamId,
+          awayTeamId: fixtureData.awayTeamId,
           league: fixtureData.league,
-          league_id: fixtureData.leagueId,
+          leagueId: fixtureData.leagueId,
           country: fixtureData.country,
           season: fixtureData.season,
           status: fixtureData.status,
-          predictions: {
-            btts_yes: 0,
-            over_2_5: 0,
-            over_9_5_corners: 0,
-            over_3_5_cards: 0,
-          },
-          created_at: new Date(),
-          updated_at: new Date(),
+          createdAt: new Date(),
+          updatedAt: new Date(),
         });
         savedCount++;
       }
