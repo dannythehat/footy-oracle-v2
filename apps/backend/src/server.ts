@@ -64,17 +64,18 @@ app.get('/health', (_, res) => {
 // --------------------
 // ROUTES
 // --------------------
-import fixturesAdmin from './routes/fixturesAdmin';
+import fixturesAdmin from './routes/fixturesAdmin.js';
 app.use('/api/admin', fixturesAdmin);
 
-import fixtures from './routes/fixtures';
+import fixtures from './routes/fixtures.js';
 app.use('/api/fixtures', fixtures);
 
-import goldenBets from './routes/goldenBets';
+import goldenBets from './routes/goldenBets.js';
 app.use('/api/golden-bets', goldenBets);
 
-import betBuilders from './routes/betBuilders';
+import betBuilders from './routes/betBuilders.js';
 app.use('/api/bet-builders', betBuilders);
+
 
 // --------------------
 // START SERVER
