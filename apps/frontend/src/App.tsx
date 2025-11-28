@@ -25,6 +25,11 @@ function App() {
                   📊 Historical Results
                 </Link>
               </div>
+              <div className="flex items-center">
+                <span className="text-xs text-purple-300">
+                  ✅ Fixtures Live
+                </span>
+              </div>
             </div>
           </div>
         </nav>

@@ -31,14 +31,12 @@ interface BetBuilder {
   kickoff: string;
   markets: MarketPrediction[];
   combinedOdds: number;
+  estimatedCombinedOdds: number;
   combinedConfidence: number;
   convergenceScore: number;
   status?: 'pending' | 'won' | 'lost';
-  result?: {
-    settled: boolean;
-    won: boolean;
-    profit: number;
-  };
+  result?: 'win' | 'loss' | 'pending';
+  profit?: number;
 }
 
 const BetBuilderHistory: React.FC = () => {
@@ -57,7 +55,7 @@ const BetBuilderHistory: React.FC = () => {
   const fetchBetBuilders = async () => {
     try {
       setLoading(true);
-      const data = await betBuilderApi.getHistory(filter, sortBy);
+      const data = await betBuilderApi.getHistorical();
       setBetBuilders(data);
       setError(null);
     } catch (err) {
@@ -212,19 +210,21 @@ const BetBuilderHistory: React.FC = () => {
                 <BetBuilderCard betBuilder={betBuilder} />
 
                 {/* Result Details */}
-                {betBuilder.result?.settled && (
+                {betBuilder.result && betBuilder.result !== 'pending' && (
                   <div className={`mt-4 p-4 rounded-lg border ${
-                    betBuilder.result.won 
+                    betBuilder.result === 'win' 
                       ? 'bg-green-900/20 border-green-500/30' 
                       : 'bg-red-900/20 border-red-500/30'
                   }`}>
                     <div className="flex items-center justify-between">
-                      <span className={`font-bold ${betBuilder.result.won ? 'text-green-400' : 'text-red-400'}`}>
-                        {betBuilder.result.won ? '✅ Bet Won!' : '❌ Bet Lost'}
+                      <span className={`font-bold ${betBuilder.result === 'win' ? 'text-green-400' : 'text-red-400'}`}>
+                        {betBuilder.result === 'win' ? '✅ Bet Won!' : '❌ Bet Lost'}
                       </span>
-                      <span className={`text-lg font-bold ${betBuilder.result.profit >= 0 ? 'text-green-400' : 'text-red-400'}`}>
-                        {betBuilder.result.profit >= 0 ? '+' : ''}{betBuilder.result.profit.toFixed(2)}u
-                      </span>
+                      {betBuilder.profit !== undefined && (
+                        <span className={`text-lg font-bold ${betBuilder.profit >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                          {betBuilder.profit >= 0 ? '+' : ''}{betBuilder.profit.toFixed(2)}u
+                        </span>
+                      )}
                     </div>
                   </div>
                 )}

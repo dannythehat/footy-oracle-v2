@@ -200,6 +200,35 @@ export async function fetchOdds(fixtureId: number): Promise<any> {
 }
 
 /**
+ * Fetch odds for a specific fixture (raw response)
+ * This is the function that fixturesCron.ts imports
+ * @param fixtureId - Fixture ID
+ * @returns Raw odds response from API
+ */
+export async function fetchOddsForFixture(fixtureId: number): Promise<any> {
+  try {
+    console.log(`📊 Fetching raw odds for fixture ${fixtureId}...`);
+    
+    const response = await apiClient.get('/odds', {
+      params: { 
+        fixture: fixtureId
+      }
+    });
+
+    if (!response.data.response || response.data.response.length === 0) {
+      console.log(`⚠️  No odds found for fixture ${fixtureId}`);
+      return null;
+    }
+
+    console.log(`✅ Raw odds fetched for fixture ${fixtureId}`);
+    return response.data.response;
+  } catch (error: any) {
+    console.error(`❌ Error fetching raw odds for fixture ${fixtureId}:`, error.message);
+    return null;
+  }
+}
+
+/**
  * Fetch fixtures with odds for a specific date
  * This combines fetchFixtures and fetchOdds
  * @param date - Date in YYYY-MM-DD format

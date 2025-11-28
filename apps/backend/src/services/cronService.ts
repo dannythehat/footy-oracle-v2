@@ -7,12 +7,19 @@ import { settlePendingPredictions } from './resultSettlementService.js';
 import { syncFeaturedSelections } from './pnlTrackingService.js';
 import { findBetBuilders, saveBetBuilders } from './betBuilderService.js';
 import { getBetBuilderOfTheDay } from './betBuilderOfTheDayService.js';
+import { loadTodaysFixtures } from '../cron/fixturesCron.js';
 import { Prediction } from '../models/Prediction.js';
 import { Fixture } from '../models/Fixture.js';
 
 export function startCronJobs() {
   const schedule = process.env.PREDICTION_CRON_SCHEDULE || '0 6 * * *';
   
+  // Fixtures loading job (2am daily) - runs BEFORE predictions
+  cron.schedule('0 2 * * *', async () => {
+    console.log('📥 Starting fixtures loading...');
+    await loadTodaysFixtures();
+  });
+
   // Daily prediction update job (6am)
   cron.schedule(schedule, async () => {
     console.log('🔄 Starting daily prediction update...');
@@ -44,11 +51,16 @@ export function startCronJobs() {
   });
 
   console.log(`✅ Cron jobs scheduled:`);
+  console.log(`   - Fixtures loading: 0 2 * * * (2am daily)`);
   console.log(`   - Daily predictions: ${schedule}`);
   console.log(`   - AI betting insights: 0 5 * * * (5am daily)`);
   console.log(`   - Bet Builder generation: 0 8 * * * (8am daily)`);
   console.log(`   - Result settlement: 0 */2 * * * (every 2 hours)`);
   console.log(`   - P&L sync: 0 7 * * * (7am daily)`);
+
+  // Load fixtures on startup
+  console.log('🚀 Loading today\'s fixtures on startup...');
+  loadTodaysFixtures().catch(err => console.error('❌ Error loading fixtures on startup:', err));
 }
 
 async function generateBetBuilders() {
@@ -248,20 +260,17 @@ function getOddsForMarket(odds: any, market: string): number {
   switch (market.toLowerCase()) {
     case 'match winner':
       return odds.homeWin || odds.awayWin || 2.0;
+    case 'btts':
     case 'both teams to score':
       return odds.btts || 2.0;
-    case 'over/under 2.5':
-      return odds.over25 || odds.under25 || 2.0;
+    case 'over 2.5':
+    case 'over 2.5 goals':
+      return odds.over25 || 2.0;
+    case 'over 9.5 corners':
+      return odds.over95corners || 2.0;
+    case 'over 3.5 cards':
+      return odds.over35cards || 2.0;
     default:
       return 2.0;
   }
 }
-
-// Export for manual trigger
-export { 
-  updateDailyPredictions, 
-  generateBettingInsights, 
-  settleResults, 
-  syncPnL,
-  generateBetBuilders 
-};

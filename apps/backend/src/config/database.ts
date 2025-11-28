@@ -1,21 +1,16 @@
 import mongoose from 'mongoose';
+import dotenv from 'dotenv';
+dotenv.config();
 
-export async function connectDatabase(): Promise<void> {
-  const mongoUri = process.env.MONGODB_URI || 'mongodb://localhost:27017/footy-oracle';
-  
+const MONGODB_URI = process.env.MONGODB_URI!;
+
+console.log('?? DEBUG MONGODB_URI =', MONGODB_URI);
+
+export const connectDB = async () => {
   try {
-    await mongoose.connect(mongoUri);
+    await mongoose.connect(MONGODB_URI);
     console.log('MongoDB connected successfully');
   } catch (error) {
-    console.error('MongoDB connection error:', error);
-    throw error;
+    console.error('MongoDB error:', error);
   }
-}
-
-mongoose.connection.on('disconnected', () => {
-  console.log('MongoDB disconnected');
-});
-
-mongoose.connection.on('error', (error) => {
-  console.error('MongoDB error:', error);
-});
+};
