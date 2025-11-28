@@ -3,38 +3,40 @@ import { Fixture } from '../models/Fixture.js';
 import { fetchFixtures, fetchOddsForFixture } from '../services/apiFootballService.js';
 
 /**
- * Cron job to fetch and store upcoming fixtures
+ * Cron job to fetch and store fixtures
  * Runs every 2 hours to keep fixtures updated
  */
 export function startFixturesCron() {
   // Run every 2 hours to keep fixtures fresh
   cron.schedule('0 */2 * * *', async () => {
     console.log('🔄 Running fixtures update cron (every 2 hours)...');
-    await loadUpcomingFixtures();
+    await loadFixturesWindow();
   });
 
   // Also run on startup to ensure fixtures are available immediately
-  console.log('🚀 Fixtures cron initialized - loading upcoming fixtures...');
-  loadUpcomingFixtures().catch(console.error);
+  console.log('🚀 Fixtures cron initialized - loading fixtures window...');
+  loadFixturesWindow().catch(console.error);
 }
 
 /**
- * Load upcoming fixtures (next 14 days) from API-Football and store in database
- * This ensures fixtures are ALWAYS available and update regularly
+ * Load fixtures window: 7 days back + 7 days ahead (14-day rolling window)
+ * This provides context with recent results AND upcoming fixtures
  */
-export async function loadUpcomingFixtures() {
+export async function loadFixturesWindow() {
   try {
     const today = new Date();
+    const startDate = new Date(today);
+    startDate.setDate(startDate.getDate() - 7); // 7 days back
     const endDate = new Date(today);
-    endDate.setDate(endDate.getDate() + 14); // Next 14 days
+    endDate.setDate(endDate.getDate() + 7); // 7 days ahead
     
-    console.log(`📅 Loading fixtures from ${today.toISOString().split('T')[0]} to ${endDate.toISOString().split('T')[0]}...`);
+    console.log(`📅 Loading fixtures window: ${startDate.toISOString().split('T')[0]} to ${endDate.toISOString().split('T')[0]} (7 days back + 7 days ahead)...`);
 
     let totalSaved = 0;
     let totalUpdated = 0;
 
     // Loop through each date and fetch fixtures
-    for (let date = new Date(today); date <= endDate; date.setDate(date.getDate() + 1)) {
+    for (let date = new Date(startDate); date <= endDate; date.setDate(date.getDate() + 1)) {
       const dateStr = date.toISOString().split('T')[0];
       
       try {
@@ -50,10 +52,18 @@ export async function loadUpcomingFixtures() {
       }
     }
 
-    console.log(`✅ Fixtures update complete: ${totalSaved} new, ${totalUpdated} updated`);
+    console.log(`✅ Fixtures window update complete: ${totalSaved} new, ${totalUpdated} updated`);
   } catch (error) {
-    console.error('❌ Error loading upcoming fixtures:', error);
+    console.error('❌ Error loading fixtures window:', error);
   }
+}
+
+/**
+ * Load upcoming fixtures (legacy function - now uses window approach)
+ * @deprecated Use loadFixturesWindow() instead
+ */
+export async function loadUpcomingFixtures() {
+  return loadFixturesWindow();
 }
 
 /**
