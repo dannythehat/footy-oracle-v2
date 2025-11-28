@@ -46,7 +46,7 @@ export async function loadTodaysFixtures() {
         const existing = await Fixture.findOne({ fixtureId: fixtureData.fixtureId });
 
         if (existing) {
-          // Update existing fixture
+          // Update existing fixture - only fields that exist in model
           await Fixture.updateOne(
             { fixtureId: fixtureData.fixtureId },
             {
@@ -54,12 +54,8 @@ export async function loadTodaysFixtures() {
                 date: new Date(fixtureData.date),
                 homeTeam: fixtureData.homeTeam,
                 awayTeam: fixtureData.awayTeam,
-                homeTeamId: fixtureData.homeTeamId,
-                awayTeamId: fixtureData.awayTeamId,
                 league: fixtureData.league,
-                leagueId: fixtureData.leagueId,
                 country: fixtureData.country,
-                season: fixtureData.season,
                 status: fixtureData.status,
                 odds: fixtureData.odds || {},
                 updatedAt: new Date(),
@@ -68,18 +64,14 @@ export async function loadTodaysFixtures() {
           );
           updatedCount++;
         } else {
-          // Create new fixture
+          // Create new fixture - only fields that exist in model
           await Fixture.create({
             fixtureId: fixtureData.fixtureId,
             date: new Date(fixtureData.date),
             homeTeam: fixtureData.homeTeam,
             awayTeam: fixtureData.awayTeam,
-            homeTeamId: fixtureData.homeTeamId,
-            awayTeamId: fixtureData.awayTeamId,
             league: fixtureData.league,
-            leagueId: fixtureData.leagueId,
             country: fixtureData.country,
-            season: fixtureData.season,
             status: fixtureData.status,
             odds: fixtureData.odds || {},
             createdAt: new Date(),
@@ -139,12 +131,8 @@ export async function loadFixturesForDate(date: string) {
               date: new Date(fixtureData.date),
               homeTeam: fixtureData.homeTeam,
               awayTeam: fixtureData.awayTeam,
-              homeTeamId: fixtureData.homeTeamId,
-              awayTeamId: fixtureData.awayTeamId,
               league: fixtureData.league,
-              leagueId: fixtureData.leagueId,
               country: fixtureData.country,
-              season: fixtureData.season,
               status: fixtureData.status,
               updatedAt: new Date(),
             }
@@ -157,12 +145,8 @@ export async function loadFixturesForDate(date: string) {
           date: new Date(fixtureData.date),
           homeTeam: fixtureData.homeTeam,
           awayTeam: fixtureData.awayTeam,
-          homeTeamId: fixtureData.homeTeamId,
-          awayTeamId: fixtureData.awayTeamId,
           league: fixtureData.league,
-          leagueId: fixtureData.leagueId,
           country: fixtureData.country,
-          season: fixtureData.season,
           status: fixtureData.status,
           createdAt: new Date(),
           updatedAt: new Date(),
