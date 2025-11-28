@@ -18,6 +18,7 @@ import { loadFixturesForDate } from '../cron/fixturesCron.js';
 const router = Router();
 
 // Transform fixture from DB format (camelCase) to API format (snake_case)
+// CLEAN VERSION - Only fixture data, no betting predictions
 function transformFixture(fixture: any) {
   return {
     fixture_id: fixture.fixtureId?.toString() || fixture._id.toString(),
@@ -33,31 +34,6 @@ function transformFixture(fixture: any) {
     status: fixture.status || 'scheduled',
     home_score: fixture.score?.home,
     away_score: fixture.score?.away,
-    predictions: {
-      btts_yes: fixture.aiBets?.bts?.percentage || 0,
-      over_2_5: fixture.aiBets?.over25?.percentage || 0,
-      over_9_5_corners: fixture.aiBets?.over95corners?.percentage || 0,
-      over_3_5_cards: fixture.aiBets?.over35cards?.percentage || 0,
-    },
-    odds: {
-      btts_yes: fixture.odds?.btts || 0,
-      over_2_5: fixture.odds?.over25 || 0,
-      over_9_5_corners: fixture.odds?.over95corners || 0,
-      over_3_5_cards: fixture.odds?.over35cards || 0,
-    },
-    golden_bet: fixture.aiBets?.goldenBet ? {
-      market: fixture.aiBets.goldenBet.type,
-      selection: fixture.aiBets.goldenBet.type,
-      probability: fixture.aiBets.goldenBet.percentage,
-      markup_value: 0,
-      ai_explanation: fixture.aiBets.goldenBet.reasoning || '',
-    } : {
-      market: '',
-      selection: '',
-      probability: 0,
-      markup_value: 0,
-      ai_explanation: '',
-    },
   };
 }
 
