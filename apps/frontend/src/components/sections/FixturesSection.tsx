@@ -1,52 +1,60 @@
 import React, { useMemo, useState } from "react";
 import { CalendarDays, RefreshCcw, Radio, ChevronDown, ChevronUp } from "lucide-react";
-import { useFixtures } from "../../hooks/useFixtures";
+import { useFixtures, Fixture } from "../../hooks/useFixtures";
 
-const formatTime = (iso) => {
+const formatTime = (iso: string) => {
+  if (!iso) return "--:--";
   const d = new Date(iso);
+  if (isNaN(d.getTime())) return "--:--";
   return d.toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" });
 };
 
-const classifyStatus = (status) => {
+const classifyStatus = (status: string) => {
   if (!status) return "upcoming";
   const s = status.toLowerCase();
-  if (s.includes("live") || s.includes("inplay") || s.includes("1h") || s.includes("2h"))
-    return "live";
+  if (s.includes("live") || s.includes("1h") || s.includes("2h")) return "live";
   if (s.includes("ft")) return "finished";
   return "upcoming";
 };
+
+interface LeagueGroup {
+  league: string;
+  country: string;
+  fixtures: Fixture[];
+}
 
 export default function FixturesSection() {
   const [selectedDate, setSelectedDate] = useState(
     new Date().toISOString().split("T")[0]
   );
 
-  const { data: fixtures = [], isLoading } = useFixtures(selectedDate);
+  const { data: fixtures = [], isLoading, refetch } = useFixtures(selectedDate);
 
-  const leagues = useMemo(() => {
-    const map = {};
+  const leagues: LeagueGroup[] = useMemo(() => {
+    const map: Record<string, LeagueGroup> = {};
+
     fixtures.forEach((fx) => {
       const key = `${fx.league}__${fx.country}`;
-      if (!map[key]) map[key] = { league: fx.league, country: fx.country, fixtures: [] };
+      if (!map[key]) {
+        map[key] = {
+          league: fx.league,
+          country: fx.country,
+          fixtures: [],
+        };
+      }
       map[key].fixtures.push(fx);
     });
 
-    return Object.values(map).sort((a, b) =>
-      a.league.localeCompare(b.league)
-    );
+    return Object.values(map).sort((a, b) => a.league.localeCompare(b.league));
   }, [fixtures]);
 
   if (isLoading) {
-    return (
-      <div className="text-center py-16 text-purple-300">Loading fixtures...</div>
-    );
+    return <div className="text-center py-16 text-purple-300">Loading fixtures...</div>;
   }
 
   return (
     <div className="max-w-6xl mx-auto px-4 py-10">
-      <h1 className="text-3xl font-bold mb-6 text-purple-300">
-        Fixtures & Live Scores
-      </h1>
+      <h1 className="text-3xl font-bold mb-6 text-purple-300">Fixtures & Live Scores</h1>
 
       {/* DATE PICKER */}
       <div className="mb-6 flex items-center gap-3">
@@ -63,6 +71,14 @@ export default function FixturesSection() {
         >
           Today
         </button>
+
+        <button
+          onClick={() => refetch()}
+          className="bg-zinc-800 border border-zinc-700 px-3 py-2 rounded text-white"
+        >
+          <RefreshCcw className="w-4 h-4 inline-block mr-1" />
+          Refresh
+        </button>
       </div>
 
       {/* LEAGUE CARDS */}
@@ -75,12 +91,10 @@ export default function FixturesSection() {
             {/* LEAGUE HEADER */}
             <h2 className="text-xl font-semibold text-purple-300 mb-4 flex items-center justify-between">
               <span>{lg.league}</span>
-              <span className="text-sm text-purple-500">
-                {lg.fixtures.length} matches
-              </span>
+              <span className="text-sm text-purple-500">{lg.fixtures.length} matches</span>
             </h2>
 
-            {/* FIXTURES LIST */}
+            {/* FIXTURES */}
             <div className="divide-y divide-purple-950/40">
               {lg.fixtures.map((fx) => {
                 const statusType = classifyStatus(fx.status);
@@ -93,9 +107,7 @@ export default function FixturesSection() {
                     className="py-3 flex items-center justify-between"
                   >
                     <div className="flex items-center gap-3">
-                      <span className="text-xs text-purple-400">
-                        {formatTime(fx.kickoff)}
-                      </span>
+                      <span className="text-xs text-purple-400">{formatTime(fx.kickoff)}</span>
 
                       {isLive && (
                         <span className="text-xs text-red-400 font-bold">LIVE</span>
