@@ -31,6 +31,7 @@ interface BetBuilder {
   kickoff: string;
   markets: MarketPrediction[];
   combinedOdds: number;
+  estimatedCombinedOdds: number;
   combinedConfidence: number;
   convergenceScore: number;
   status?: 'pending' | 'won' | 'lost';
@@ -57,7 +58,7 @@ const BetBuilderHistory: React.FC = () => {
   const fetchBetBuilders = async () => {
     try {
       setLoading(true);
-      const data = await betBuilderApi.getHistory(filter, sortBy);
+      const data = await betBuilderApi.getHistorical();
       setBetBuilders(data);
       setError(null);
     } catch (err) {
