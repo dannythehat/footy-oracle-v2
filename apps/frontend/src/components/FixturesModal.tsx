@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { X, Search, Filter, ChevronDown, ChevronUp, Star, Calendar, AlertCircle, ChevronLeft, ChevronRight } from 'lucide-react';
-import { fixturesApi } from '../services/api';
+import { X, Search, Filter, ChevronDown, ChevronUp, Star, Calendar, AlertCircle, ChevronLeft, ChevronRight, Loader2 } from 'lucide-react';
+import axios from 'axios';
+
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
 
 interface Fixture {
   fixture_id: string;
@@ -47,6 +49,7 @@ const FixturesModal: React.FC<FixturesModalProps> = ({ onClose }) => {
   const [error, setError] = useState<string | null>(null);
   const [favoriteLeagues, setFavoriteLeagues] = useState<Set<string>>(new Set());
   const [showFavoritesOnly, setShowFavoritesOnly] = useState(false);
+  const [loadingMessage, setLoadingMessage] = useState('Loading fixtures...');
 
   // Generate date range: 7 days back, today, 7 days forward
   const generateDateRange = () => {
@@ -70,22 +73,48 @@ const FixturesModal: React.FC<FixturesModalProps> = ({ onClose }) => {
     try {
       setLoading(true);
       setError(null);
+      setLoadingMessage('Waking up server...');
       
       const dateStr = selectedDate.toISOString().split('T')[0];
       console.log('Fetching fixtures for date:', dateStr);
-      const response = await fixturesApi.getByDate(dateStr);
       
-      if (response && response.data) {
-        setFixtures(response.data);
+      // Show different messages during loading
+      const messageTimer = setTimeout(() => {
+        setLoadingMessage('Server is starting (this may take 30-60s)...');
+      }, 3000);
+
+      const messageTimer2 = setTimeout(() => {
+        setLoadingMessage('Almost there, loading fixtures...');
+      }, 15000);
+      
+      const response = await axios.get(`${API_BASE_URL}/api/fixtures`, {
+        params: { date: dateStr },
+        timeout: 120000, // 2 minutes for cold starts
+      });
+      
+      clearTimeout(messageTimer);
+      clearTimeout(messageTimer2);
+      
+      if (response.data && response.data.data) {
+        setFixtures(response.data.data);
       } else {
         setFixtures([]);
       }
     } catch (err: any) {
       console.error('Error fetching fixtures:', err);
-      setError(err.message || 'Failed to load fixtures. Please try again.');
+      
+      if (err.code === 'ECONNABORTED' || err.message.includes('timeout')) {
+        setError('Server is taking too long to respond. The backend may be sleeping (Render free tier). Please wait 30s and try again.');
+      } else if (err.response?.status === 404) {
+        setError('No fixtures found for this date.');
+        setFixtures([]);
+      } else {
+        setError(err.response?.data?.message || err.message || 'Failed to load fixtures. Please try again.');
+      }
       setFixtures([]);
     } finally {
       setLoading(false);
+      setLoadingMessage('Loading fixtures...');
     }
   };
 
@@ -268,14 +297,19 @@ const FixturesModal: React.FC<FixturesModalProps> = ({ onClose }) => {
         <div className="overflow-y-auto max-h-[calc(90vh-280px)]">
           {loading ? (
             <div className="text-center py-12">
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-500 mx-auto mb-4"></div>
-              <div className="text-gray-400">Loading fixtures...</div>
+              <Loader2 className="animate-spin h-12 w-12 text-purple-500 mx-auto mb-4" />
+              <div className="text-gray-400 mb-2">{loadingMessage}</div>
+              <div className="text-gray-500 text-sm">
+                {loadingMessage.includes('Server is starting') && (
+                  <span>Render free tier takes 30-60s to wake up</span>
+                )}
+              </div>
             </div>
           ) : error ? (
             <div className="text-center py-12 px-4">
               <AlertCircle className="w-16 h-16 text-red-400 mx-auto mb-4" />
               <h3 className="text-xl font-bold text-red-400 mb-2">Error Loading Fixtures</h3>
-              <p className="text-gray-400 mb-4">{error}</p>
+              <p className="text-gray-400 mb-4 max-w-md mx-auto">{error}</p>
               <button
                 onClick={fetchFixtures}
                 className="px-6 py-2 bg-purple-600 hover:bg-purple-700 rounded-lg font-semibold transition-all"
