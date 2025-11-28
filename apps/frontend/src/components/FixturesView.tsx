@@ -1,8 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { 
-  Calendar, ChevronLeft, ChevronRight, Clock, TrendingUp, 
-  Star, BarChart3, History, Users, AlertCircle, RefreshCw,
-  ChevronDown, ChevronUp, Trophy
+  Calendar, ChevronLeft, ChevronRight, Clock, RefreshCw,
+  ChevronDown, ChevronUp, Trophy, AlertCircle
 } from 'lucide-react';
 import { fixturesApi } from '../services/api';
 
@@ -20,25 +19,6 @@ interface Fixture {
   status?: string;
   home_score?: number;
   away_score?: number;
-  predictions: {
-    btts_yes: number;
-    over_2_5: number;
-    over_9_5_corners: number;
-    over_3_5_cards: number;
-  };
-  odds: {
-    btts_yes: number;
-    over_2_5: number;
-    over_9_5_corners: number;
-    over_3_5_cards: number;
-  };
-  golden_bet: {
-    market: string;
-    selection: string;
-    probability: number;
-    markup_value: number;
-    ai_explanation: string;
-  };
 }
 
 interface GroupedFixtures {
@@ -54,7 +34,6 @@ const FixturesView: React.FC<FixturesViewProps> = ({ onClose, embedded = false }
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [fixtures, setFixtures] = useState<Fixture[]>([]);
   const [expandedLeagues, setExpandedLeagues] = useState<Set<string>>(new Set());
-  const [expandedFixture, setExpandedFixture] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [autoRefresh, setAutoRefresh] = useState(true);
@@ -118,10 +97,6 @@ const FixturesView: React.FC<FixturesViewProps> = ({ onClose, embedded = false }
     setExpandedLeagues(newExpanded);
   };
 
-  const toggleFixture = (fixtureId: string) => {
-    setExpandedFixture(expandedFixture === fixtureId ? null : fixtureId);
-  };
-
   // Group fixtures by league
   const groupedFixtures: GroupedFixtures = fixtures.reduce((acc, fixture) => {
     const league = fixture.league || 'Unknown League';
@@ -177,34 +152,12 @@ const FixturesView: React.FC<FixturesViewProps> = ({ onClose, embedded = false }
   const getScoreDisplay = (fixture: Fixture) => {
     if (fixture.status && ['LIVE', '1H', 'HT', '2H', 'FT', 'AET', 'PEN'].includes(fixture.status)) {
       return (
-        <div className="text-lg font-bold">
+        <div className="text-lg font-bold text-white">
           {fixture.home_score ?? 0} - {fixture.away_score ?? 0}
         </div>
       );
     }
     return null;
-  };
-
-  const getMarketIcon = (market: string) => {
-    switch (market.toLowerCase()) {
-      case 'btts': return <Users className="w-4 h-4" />;
-      case 'goals': return <TrendingUp className="w-4 h-4" />;
-      case 'corners': return <BarChart3 className="w-4 h-4" />;
-      case 'cards': return <AlertCircle className="w-4 h-4" />;
-      default: return <Star className="w-4 h-4" />;
-    }
-  };
-
-  const getConfidenceColor = (probability: number) => {
-    if (probability >= 0.7) return 'text-green-400';
-    if (probability >= 0.6) return 'text-yellow-400';
-    return 'text-orange-400';
-  };
-
-  const getValueColor = (value: number) => {
-    if (value >= 15) return 'text-green-400';
-    if (value >= 10) return 'text-yellow-400';
-    return 'text-orange-400';
   };
 
   return (
@@ -331,145 +284,34 @@ const FixturesView: React.FC<FixturesViewProps> = ({ onClose, embedded = false }
                 {expandedLeagues.has(league) && (
                   <div className="border-t border-gray-700">
                     {leagueFixtures.map((fixture) => (
-                      <div key={fixture.fixture_id} className="border-b border-gray-700 last:border-b-0">
-                        {/* Fixture Header */}
-                        <button
-                          onClick={() => toggleFixture(fixture.fixture_id)}
-                          className="w-full px-6 py-4 hover:bg-gray-700/30 transition-colors"
-                        >
-                          <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-4 flex-1">
-                              <Clock className="w-4 h-4 text-gray-400" />
-                              <span className="text-sm text-gray-400 w-16">
-                                {formatTime(fixture.kickoff)}
-                              </span>
-                              
-                              <div className="flex-1 text-left">
-                                <div className="flex items-center justify-between mb-1">
-                                  <span className="text-white font-medium">{fixture.home_team}</span>
-                                  {getScoreDisplay(fixture)}
-                                </div>
-                                <div className="flex items-center justify-between">
-                                  <span className="text-white font-medium">{fixture.away_team}</span>
-                                </div>
-                              </div>
-
-                              <div className="flex items-center gap-2">
-                                {getStatusBadge(fixture.status)}
-                                {fixture.golden_bet && (
-                                  <Star className="w-5 h-5 text-yellow-400 fill-yellow-400" />
+                      <div 
+                        key={fixture.fixture_id} 
+                        className="px-6 py-4 border-b border-gray-700 last:border-b-0 hover:bg-gray-700/30 transition-colors"
+                      >
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-4 flex-1">
+                            <Clock className="w-4 h-4 text-gray-400" />
+                            <span className="text-sm text-gray-400 w-16">
+                              {formatTime(fixture.kickoff)}
+                            </span>
+                            
+                            <div className="flex-1">
+                              <div className="flex items-center justify-between mb-1">
+                                <span className="text-white font-medium">{fixture.home_team}</span>
+                                {getScoreDisplay(fixture) && (
+                                  <span className="mx-4">{getScoreDisplay(fixture)}</span>
                                 )}
                               </div>
-                            </div>
-                            
-                            {expandedFixture === fixture.fixture_id ? (
-                              <ChevronUp className="w-5 h-5 text-gray-400 ml-4" />
-                            ) : (
-                              <ChevronDown className="w-5 h-5 text-gray-400 ml-4" />
-                            )}
-                          </div>
-                        </button>
-
-                        {/* Fixture Details */}
-                        {expandedFixture === fixture.fixture_id && (
-                          <div className="px-6 py-4 bg-gray-900/50 space-y-4">
-                            {/* Golden Bet */}
-                            {fixture.golden_bet && (
-                              <div className="bg-gradient-to-r from-yellow-500/10 to-orange-500/10 border border-yellow-500/30 rounded-lg p-4">
-                                <div className="flex items-center gap-2 mb-3">
-                                  <Star className="w-5 h-5 text-yellow-400 fill-yellow-400" />
-                                  <h3 className="text-lg font-bold text-yellow-400">Golden Bet</h3>
-                                </div>
-                                
-                                <div className="grid grid-cols-2 gap-4 mb-3">
-                                  <div>
-                                    <p className="text-sm text-gray-400 mb-1">Market</p>
-                                    <div className="flex items-center gap-2">
-                                      {getMarketIcon(fixture.golden_bet.market)}
-                                      <p className="text-white font-semibold">{fixture.golden_bet.selection}</p>
-                                    </div>
-                                  </div>
-                                  
-                                  <div>
-                                    <p className="text-sm text-gray-400 mb-1">Confidence</p>
-                                    <p className={`text-lg font-bold ${getConfidenceColor(fixture.golden_bet.probability)}`}>
-                                      {(fixture.golden_bet.probability * 100).toFixed(1)}%
-                                    </p>
-                                  </div>
-                                  
-                                  <div>
-                                    <p className="text-sm text-gray-400 mb-1">Value</p>
-                                    <p className={`text-lg font-bold ${getValueColor(fixture.golden_bet.markup_value)}`}>
-                                      {fixture.golden_bet.markup_value.toFixed(1)}%
-                                    </p>
-                                  </div>
-                                </div>
-
-                                <div className="bg-gray-900/50 rounded p-3">
-                                  <p className="text-sm text-gray-300">{fixture.golden_bet.ai_explanation}</p>
-                                </div>
-                              </div>
-                            )}
-
-                            {/* Predictions */}
-                            <div>
-                              <h4 className="text-sm font-semibold text-gray-400 mb-3">AI Predictions</h4>
-                              <div className="grid grid-cols-2 gap-3">
-                                <div className="bg-gray-800 rounded-lg p-3">
-                                  <div className="flex items-center gap-2 mb-2">
-                                    <Users className="w-4 h-4 text-purple-400" />
-                                    <p className="text-sm text-gray-400">BTTS</p>
-                                  </div>
-                                  <p className="text-lg font-bold text-white">
-                                    {(fixture.predictions.btts_yes * 100).toFixed(1)}%
-                                  </p>
-                                  {fixture.odds.btts_yes && (
-                                    <p className="text-xs text-gray-500 mt-1">Odds: {fixture.odds.btts_yes.toFixed(2)}</p>
-                                  )}
-                                </div>
-
-                                <div className="bg-gray-800 rounded-lg p-3">
-                                  <div className="flex items-center gap-2 mb-2">
-                                    <TrendingUp className="w-4 h-4 text-green-400" />
-                                    <p className="text-sm text-gray-400">Over 2.5</p>
-                                  </div>
-                                  <p className="text-lg font-bold text-white">
-                                    {(fixture.predictions.over_2_5 * 100).toFixed(1)}%
-                                  </p>
-                                  {fixture.odds.over_2_5 && (
-                                    <p className="text-xs text-gray-500 mt-1">Odds: {fixture.odds.over_2_5.toFixed(2)}</p>
-                                  )}
-                                </div>
-
-                                <div className="bg-gray-800 rounded-lg p-3">
-                                  <div className="flex items-center gap-2 mb-2">
-                                    <BarChart3 className="w-4 h-4 text-blue-400" />
-                                    <p className="text-sm text-gray-400">Over 9.5 Corners</p>
-                                  </div>
-                                  <p className="text-lg font-bold text-white">
-                                    {(fixture.predictions.over_9_5_corners * 100).toFixed(1)}%
-                                  </p>
-                                  {fixture.odds.over_9_5_corners && (
-                                    <p className="text-xs text-gray-500 mt-1">Odds: {fixture.odds.over_9_5_corners.toFixed(2)}</p>
-                                  )}
-                                </div>
-
-                                <div className="bg-gray-800 rounded-lg p-3">
-                                  <div className="flex items-center gap-2 mb-2">
-                                    <AlertCircle className="w-4 h-4 text-yellow-400" />
-                                    <p className="text-sm text-gray-400">Over 3.5 Cards</p>
-                                  </div>
-                                  <p className="text-lg font-bold text-white">
-                                    {(fixture.predictions.over_3_5_cards * 100).toFixed(1)}%
-                                  </p>
-                                  {fixture.odds.over_3_5_cards && (
-                                    <p className="text-xs text-gray-500 mt-1">Odds: {fixture.odds.over_3_5_cards.toFixed(2)}</p>
-                                  )}
-                                </div>
+                              <div className="flex items-center justify-between">
+                                <span className="text-white font-medium">{fixture.away_team}</span>
                               </div>
                             </div>
+
+                            <div className="flex items-center gap-2">
+                              {getStatusBadge(fixture.status)}
+                            </div>
                           </div>
-                        )}
+                        </div>
                       </div>
                     ))}
                   </div>
