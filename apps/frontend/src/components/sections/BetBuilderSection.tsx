@@ -39,13 +39,13 @@ export default function BetBuilderSection() {
           {/* Odds + Confidence */}
           <div className="mt-4 flex items-center justify-between">
             <div className="text-blue-300 font-semibold text-lg">
-              Combined Odds: @{bet.combined_odds.toFixed(2)}
+              Combined Odds: @{bet.combined_odds?.toFixed(2) ?? 'N/A'}
             </div>
 
             <div className="text-zinc-300 text-sm">
               Confidence:{" "}
               <span className="text-blue-400 font-bold">
-                {(bet.confidence * 100).toFixed(0)}%
+                {bet.confidence ? (bet.confidence * 100).toFixed(0) : 'N/A'}%
               </span>
             </div>
           </div>
