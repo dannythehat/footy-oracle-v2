@@ -1,13 +1,16 @@
 import dotenv from 'dotenv';
 dotenv.config();
 
-console.log('?? DEBUG SERVER MONGODB_URI =', process.env.MONGODB_URI);
+console.log('🔍 DEBUG SERVER MONGODB_URI =', process.env.MONGODB_URI);
 
 import { connectDB } from './config/database';
 import express from 'express';
 import cors from 'cors';
+import { createServer } from 'http';
+import { wsService } from './services/websocket';
 
 const app = express();
+const httpServer = createServer(app);
 
 // ------------------------------------
 // 🔥 DEBUG LOGGER — SHOWS WHO SETS CORS
@@ -45,6 +48,11 @@ app.use(express.json());
 connectDB();
 
 // --------------------
+// WEBSOCKET
+// --------------------
+wsService.initialize(httpServer);
+
+// --------------------
 // HEALTH CHECK
 // --------------------
 app.get('/health', (_, res) => {
@@ -57,6 +65,7 @@ app.get('/health', (_, res) => {
       goldenBets: 'operational',
       betBuilder: 'operational',
       cronJobs: 'active',
+      websocket: 'operational',
     },
   });
 });
@@ -80,6 +89,7 @@ app.use('/api/bet-builders', betBuilders);
 // --------------------
 // START SERVER
 // --------------------
-app.listen(10000, () => {
-  console.log('Footy Oracle API running on port 10000');
+httpServer.listen(10000, () => {
+  console.log('⚽ Footy Oracle API running on port 10000');
+  console.log('🔌 WebSocket server ready at ws://localhost:10000/ws');
 });
