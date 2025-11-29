@@ -32,7 +32,7 @@ const fetchBetBuilder = async (): Promise<BetBuilder | null> => {
 };
 
 export const useBetBuilder = () =>
-  useQuery<BetBuilder | null>({
+  useQuery({
     queryKey: ["bet-builder-today"],
     queryFn: fetchBetBuilder,
     staleTime: 30000,
