@@ -115,6 +115,7 @@ export const fixturesApi = {
     const response = await apiClient.get('/api/fixtures', {
       params: { date, league, status },
     });
+    // Backend returns { success, data, count } - return the whole response
     return response.data;
   },
   
