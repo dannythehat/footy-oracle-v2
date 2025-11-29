@@ -35,7 +35,7 @@ const fetchValueBets = async (): Promise<ValueBet[]> => {
 };
 
 export const useValueBets = () =>
-  useQuery<ValueBet[]>({
+  useQuery({
     queryKey: ['value-bets-today'],
     queryFn: fetchValueBets,
     staleTime: 30000,
