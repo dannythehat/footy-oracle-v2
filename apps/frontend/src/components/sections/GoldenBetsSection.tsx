@@ -1,11 +1,10 @@
 import React from 'react';
 import { useGoldenBets } from '../../hooks/useGoldenBets';
-import { Trophy, TrendingUp, TrendingDown, CheckCircle, XCircle, Clock } from 'lucide-react';
+import { Trophy, TrendingUp, TrendingDown, CheckCircle, XCircle, Clock, Sparkles } from 'lucide-react';
 
 export default function GoldenBetsSection() {
   const { data: bets = [], isLoading } = useGoldenBets();
 
-  // Calculate P&L (mock data for now - replace with real API)
   const dailyPnL = 12.5;
   const weeklyPnL = 45.2;
   const monthlyPnL = -8.3;
@@ -32,17 +31,35 @@ export default function GoldenBetsSection() {
           {[1, 2, 3].map((i) => (
             <div
               key={i}
-              className="h-64 rounded-2xl bg-gradient-to-br from-yellow-950/20 to-black border border-yellow-500/20 animate-pulse"
-            />
+              className="relative h-64 rounded-2xl bg-gradient-to-br from-yellow-950/20 to-black border border-yellow-500/20 overflow-hidden"
+            >
+              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-yellow-500/5 to-transparent animate-shimmer" />
+              <div className="p-5 space-y-4">
+                <div className="h-6 bg-yellow-500/10 rounded animate-pulse" />
+                <div className="h-4 bg-yellow-500/10 rounded w-2/3 animate-pulse" />
+                <div className="h-20 bg-yellow-500/10 rounded animate-pulse" />
+                <div className="h-4 bg-yellow-500/10 rounded animate-pulse" />
+              </div>
+            </div>
           ))}
         </div>
       )}
 
       {/* Empty State */}
       {!isLoading && bets.length === 0 && (
-        <div className="text-center py-16 px-4 rounded-2xl bg-gradient-to-br from-yellow-950/10 to-black border border-yellow-500/20">
-          <Trophy className="w-12 h-12 text-yellow-500/30 mx-auto mb-3" />
-          <p className="text-zinc-500">No Golden Bets available today</p>
+        <div className="relative overflow-hidden text-center py-20 px-4 rounded-2xl bg-gradient-to-br from-yellow-950/10 to-black border border-yellow-500/20">
+          {/* Animated background glow */}
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-64 h-64 bg-yellow-500/5 rounded-full blur-3xl animate-pulse" />
+          
+          <div className="relative">
+            <div className="inline-flex items-center justify-center w-20 h-20 rounded-2xl bg-gradient-to-br from-yellow-500/20 to-yellow-600/20 border border-yellow-500/30 mb-4">
+              <Sparkles className="w-10 h-10 text-yellow-400 animate-pulse" />
+            </div>
+            <h3 className="text-xl font-bold text-yellow-300 mb-2">Golden Bets Coming Soon</h3>
+            <p className="text-zinc-500 max-w-md mx-auto">
+              Our AI is analyzing today's fixtures to find the most valuable betting opportunities. Check back soon!
+            </p>
+          </div>
         </div>
       )}
 
