@@ -6,19 +6,19 @@ import {
 import { fixturesApi } from '../services/api';
 
 interface Fixture {
-  fixture_id: string;
-  home_team: string;
-  away_team: string;
+  fixtureId: string;
+  homeTeam: string;
+  awayTeam: string;
   kickoff: string;
   league: string;
-  home_team_id?: number;
-  away_team_id?: number;
-  league_id?: number;
+  homeTeamId?: number;
+  awayTeamId?: number;
+  leagueId?: number;
   season?: number;
   country?: string;
   status?: string;
-  home_score?: number;
-  away_score?: number;
+  homeScore?: number;
+  awayScore?: number;
 }
 
 interface GroupedFixtures {
@@ -153,7 +153,7 @@ const FixturesView: React.FC<FixturesViewProps> = ({ onClose, embedded = false }
     if (fixture.status && ['LIVE', '1H', 'HT', '2H', 'FT', 'AET', 'PEN'].includes(fixture.status)) {
       return (
         <div className="text-lg font-bold text-white">
-          {fixture.home_score ?? 0} - {fixture.away_score ?? 0}
+          {fixture.homeScore ?? 0} - {fixture.awayScore ?? 0}
         </div>
       );
     }
@@ -285,7 +285,7 @@ const FixturesView: React.FC<FixturesViewProps> = ({ onClose, embedded = false }
                   <div className="border-t border-gray-700">
                     {leagueFixtures.map((fixture) => (
                       <div 
-                        key={fixture.fixture_id} 
+                        key={fixture.fixtureId} 
                         className="px-6 py-4 border-b border-gray-700 last:border-b-0 hover:bg-gray-700/30 transition-colors"
                       >
                         <div className="flex items-center justify-between">
@@ -297,13 +297,13 @@ const FixturesView: React.FC<FixturesViewProps> = ({ onClose, embedded = false }
                             
                             <div className="flex-1">
                               <div className="flex items-center justify-between mb-1">
-                                <span className="text-white font-medium">{fixture.home_team}</span>
+                                <span className="text-white font-medium">{fixture.homeTeam}</span>
                                 {getScoreDisplay(fixture) && (
                                   <span className="mx-4">{getScoreDisplay(fixture)}</span>
                                 )}
                               </div>
                               <div className="flex items-center justify-between">
-                                <span className="text-white font-medium">{fixture.away_team}</span>
+                                <span className="text-white font-medium">{fixture.awayTeam}</span>
                               </div>
                             </div>
 
