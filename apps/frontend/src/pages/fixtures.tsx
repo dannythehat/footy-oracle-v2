@@ -13,7 +13,11 @@ import {
   Users,
   History,
   ArrowLeft,
-  Trophy
+  Trophy,
+  RefreshCw,
+  AlertCircle,
+  Wifi,
+  WifiOff
 } from 'lucide-react';
 import { fixturesApi } from '../services/api';
 
@@ -92,6 +96,8 @@ export default function FixturesPage() {
   const [activeTab, setActiveTab] = useState<TabType>('today');
   const [fixtures, setFixtures] = useState<Fixture[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [retryCount, setRetryCount] = useState(0);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedLeague, setSelectedLeague] = useState<string>('all');
   const [expandedFixture, setExpandedFixture] = useState<string | null>(null);
@@ -103,9 +109,11 @@ export default function FixturesPage() {
     fetchFixtures();
   }, [activeTab]);
 
-  const fetchFixtures = async () => {
+  const fetchFixtures = async (isRetry = false) => {
     try {
       setLoading(true);
+      setError(null);
+      
       const today = new Date();
       let targetDate: Date;
 
@@ -115,7 +123,6 @@ export default function FixturesPage() {
         targetDate = new Date(today);
         targetDate.setDate(today.getDate() + 1);
       } else {
-        // Results - yesterday
         targetDate = new Date(today);
         targetDate.setDate(today.getDate() - 1);
       }
@@ -125,15 +132,31 @@ export default function FixturesPage() {
 
       if (response && response.data) {
         setFixtures(response.data);
+        setRetryCount(0);
       } else {
         setFixtures([]);
       }
-    } catch (err) {
+    } catch (err: any) {
       console.error('Error fetching fixtures:', err);
+      const errorMessage = err.response?.data?.message || err.message || 'Failed to load fixtures';
+      setError(errorMessage);
       setFixtures([]);
+      
+      // Auto-retry logic (max 3 attempts)
+      if (!isRetry && retryCount < 3) {
+        setTimeout(() => {
+          setRetryCount(prev => prev + 1);
+          fetchFixtures(true);
+        }, 2000 * (retryCount + 1)); // Exponential backoff
+      }
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleRetry = () => {
+    setRetryCount(0);
+    fetchFixtures();
   };
 
   const formatTime = (kickoff: string) => {
@@ -175,7 +198,6 @@ export default function FixturesPage() {
     setLoadingStats(prev => ({ ...prev, [fixtureId]: true }));
 
     try {
-      // Mock stats for now - replace with real API calls
       const mockStats: FixtureStats = {
         homeTeam: {
           form: 'WWDWL',
@@ -251,7 +273,6 @@ export default function FixturesPage() {
     return ((probability - impliedProbability) / impliedProbability) * 100;
   };
 
-  // Group fixtures by league
   const groupedFixtures = useMemo(() => {
     const filtered = fixtures.filter(fixture => {
       const matchesSearch = searchQuery === '' || 
@@ -271,7 +292,6 @@ export default function FixturesPage() {
       grouped[fixture.league].push(fixture);
     });
 
-    // Sort fixtures within each league by kickoff time
     Object.keys(grouped).forEach(league => {
       grouped[league].sort((a, b) => 
         new Date(a.kickoff).getTime() - new Date(b.kickoff).getTime()
@@ -300,6 +320,21 @@ export default function FixturesPage() {
                 <Calendar className="w-6 h-6 text-purple-400" />
                 <h1 className="text-2xl font-bold">Fixtures & Results</h1>
               </div>
+            </div>
+            
+            {/* Connection Status */}
+            <div className="flex items-center gap-2">
+              {error ? (
+                <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-red-500/10 border border-red-500/30">
+                  <WifiOff className="w-4 h-4 text-red-400" />
+                  <span className="text-xs text-red-400">Offline</span>
+                </div>
+              ) : (
+                <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-green-500/10 border border-green-500/30">
+                  <Wifi className="w-4 h-4 text-green-400" />
+                  <span className="text-xs text-green-400">Connected</span>
+                </div>
+              )}
             </div>
           </div>
 
@@ -367,18 +402,63 @@ export default function FixturesPage() {
         </div>
       </div>
 
-      {/* Fixtures List */}
+      {/* Content */}
       <div className="max-w-7xl mx-auto px-4 py-6">
-        {loading ? (
+        {/* Loading State */}
+        {loading && (
           <div className="text-center py-20">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-500 mx-auto mb-4"></div>
-            <div className="text-gray-400">Loading fixtures...</div>
+            <div className="relative inline-block">
+              <div className="animate-spin rounded-full h-16 w-16 border-4 border-purple-500/20 border-t-purple-500 mx-auto mb-4"></div>
+              <div className="absolute inset-0 rounded-full bg-purple-500/10 blur-xl animate-pulse"></div>
+            </div>
+            <div className="text-gray-400 mb-2">Loading fixtures...</div>
+            {retryCount > 0 && (
+              <div className="text-sm text-purple-400">Retry attempt {retryCount}/3</div>
+            )}
           </div>
-        ) : Object.keys(groupedFixtures).length === 0 ? (
-          <div className="text-center py-20 text-gray-400">
-            No fixtures found
+        )}
+
+        {/* Error State */}
+        {!loading && error && (
+          <div className="max-w-2xl mx-auto">
+            <div className="p-8 rounded-2xl bg-gradient-to-br from-red-950/20 to-black border border-red-500/30 text-center">
+              <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-red-500/10 border border-red-500/30 mb-4">
+                <AlertCircle className="w-8 h-8 text-red-400" />
+              </div>
+              <h3 className="text-xl font-bold text-red-400 mb-2">Unable to Load Fixtures</h3>
+              <p className="text-gray-400 mb-6">{error}</p>
+              <button
+                onClick={handleRetry}
+                className="inline-flex items-center gap-2 px-6 py-3 rounded-lg bg-purple-600 hover:bg-purple-500 text-white font-semibold transition-all"
+              >
+                <RefreshCw className="w-4 h-4" />
+                Retry
+              </button>
+              <div className="mt-6 p-4 rounded-lg bg-black/50 border border-purple-500/20 text-left">
+                <p className="text-sm text-gray-400 mb-2">Troubleshooting tips:</p>
+                <ul className="text-xs text-gray-500 space-y-1">
+                  <li>• Check your internet connection</li>
+                  <li>• Backend may be starting up (Render free tier)</li>
+                  <li>• Try refreshing in a few moments</li>
+                </ul>
+              </div>
+            </div>
           </div>
-        ) : (
+        )}
+
+        {/* Empty State */}
+        {!loading && !error && Object.keys(groupedFixtures).length === 0 && (
+          <div className="text-center py-20">
+            <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-purple-500/10 border border-purple-500/30 mb-4">
+              <Calendar className="w-8 h-8 text-purple-400" />
+            </div>
+            <h3 className="text-xl font-bold text-gray-300 mb-2">No Fixtures Found</h3>
+            <p className="text-gray-500">No matches scheduled for this date</p>
+          </div>
+        )}
+
+        {/* Fixtures List */}
+        {!loading && !error && Object.keys(groupedFixtures).length > 0 && (
           <div className="space-y-6">
             {Object.entries(groupedFixtures).map(([league, leagueFixtures]) => (
               <div key={league} className="bg-gradient-to-br from-purple-950/20 to-black border border-purple-500/20 rounded-2xl overflow-hidden">
@@ -447,240 +527,10 @@ export default function FixturesPage() {
 
                       {/* Expanded Stats Panel */}
                       {expandedFixture === fixture.fixture_id && (
-                        <div className="bg-black/40 border-t border-purple-500/10 animate-slide-down">
-                          {/* Stats Tabs */}
-                          <div className="flex items-center gap-2 px-6 py-3 border-b border-purple-500/10 overflow-x-auto">
-                            <button
-                              onClick={() => setActiveStatsTab('markets')}
-                              className={`px-4 py-2 rounded-lg font-semibold text-sm transition-all whitespace-nowrap ${
-                                activeStatsTab === 'markets'
-                                  ? 'bg-purple-600 text-white'
-                                  : 'bg-purple-900/20 text-purple-300 hover:bg-purple-900/40'
-                              }`}
-                            >
-                              <BarChart3 className="w-4 h-4 inline-block mr-2" />
-                              Markets
-                            </button>
-                            <button
-                              onClick={() => setActiveStatsTab('h2h')}
-                              className={`px-4 py-2 rounded-lg font-semibold text-sm transition-all whitespace-nowrap ${
-                                activeStatsTab === 'h2h'
-                                  ? 'bg-purple-600 text-white'
-                                  : 'bg-purple-900/20 text-purple-300 hover:bg-purple-900/40'
-                              }`}
-                            >
-                              <Users className="w-4 h-4 inline-block mr-2" />
-                              H2H
-                            </button>
-                            <button
-                              onClick={() => setActiveStatsTab('stats')}
-                              className={`px-4 py-2 rounded-lg font-semibold text-sm transition-all whitespace-nowrap ${
-                                activeStatsTab === 'stats'
-                                  ? 'bg-purple-600 text-white'
-                                  : 'bg-purple-900/20 text-purple-300 hover:bg-purple-900/40'
-                              }`}
-                            >
-                              <TrendingUp className="w-4 h-4 inline-block mr-2" />
-                              Team Stats
-                            </button>
-                            <button
-                              onClick={() => setActiveStatsTab('form')}
-                              className={`px-4 py-2 rounded-lg font-semibold text-sm transition-all whitespace-nowrap ${
-                                activeStatsTab === 'form'
-                                  ? 'bg-purple-600 text-white'
-                                  : 'bg-purple-900/20 text-purple-300 hover:bg-purple-900/40'
-                              }`}
-                            >
-                              <History className="w-4 h-4 inline-block mr-2" />
-                              Form
-                            </button>
-                          </div>
-
-                          {/* Stats Content */}
-                          <div className="p-6">
-                            {loadingStats[fixture.fixture_id] ? (
-                              <div className="text-center py-8 text-gray-400">Loading stats...</div>
-                            ) : (
-                              <>
-                                {/* Markets Tab */}
-                                {activeStatsTab === 'markets' && fixture.predictions && fixture.odds && (
-                                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                                    {Object.entries(fixture.predictions).map(([market, probability]) => {
-                                      const odds = fixture.odds?.[market as keyof typeof fixture.odds] || 0;
-                                      const markup = calculateMarkupValue(probability, odds);
-                                      const isValue = markup > 5;
-
-                                      return (
-                                        <div
-                                          key={market}
-                                          className={`p-4 rounded-lg border ${
-                                            isValue
-                                              ? 'bg-green-500/10 border-green-500/30'
-                                              : 'bg-purple-900/20 border-purple-500/20'
-                                          }`}
-                                        >
-                                          <div className="text-xs text-gray-400 uppercase mb-2">
-                                            {market.replace(/_/g, ' ')}
-                                          </div>
-                                          <div className="flex items-center justify-between mb-2">
-                                            <span className="text-sm text-gray-300">AI Prob</span>
-                                            <span className="text-sm font-bold text-purple-300">
-                                              {(probability * 100).toFixed(0)}%
-                                            </span>
-                                          </div>
-                                          <div className="flex items-center justify-between mb-2">
-                                            <span className="text-sm text-gray-300">Odds</span>
-                                            <span className="text-sm font-bold text-purple-300">
-                                              {odds.toFixed(2)}
-                                            </span>
-                                          </div>
-                                          {isValue && (
-                                            <div className="text-xs font-semibold text-green-400 flex items-center gap-1">
-                                              <TrendingUp className="w-3 h-3" />
-                                              Value: +{markup.toFixed(1)}%
-                                            </div>
-                                          )}
-                                        </div>
-                                      );
-                                    })}
-                                  </div>
-                                )}
-
-                                {/* H2H Tab */}
-                                {activeStatsTab === 'h2h' && fixtureStats[fixture.fixture_id]?.h2h && (
-                                  <div>
-                                    <div className="grid grid-cols-3 gap-4 mb-6">
-                                      <div className="text-center p-4 rounded-lg bg-green-500/10 border border-green-500/20">
-                                        <div className="text-2xl font-bold text-green-400">
-                                          {fixtureStats[fixture.fixture_id].h2h.homeWins}
-                                        </div>
-                                        <div className="text-xs text-gray-400 mt-1">Home Wins</div>
-                                      </div>
-                                      <div className="text-center p-4 rounded-lg bg-yellow-500/10 border border-yellow-500/20">
-                                        <div className="text-2xl font-bold text-yellow-400">
-                                          {fixtureStats[fixture.fixture_id].h2h.draws}
-                                        </div>
-                                        <div className="text-xs text-gray-400 mt-1">Draws</div>
-                                      </div>
-                                      <div className="text-center p-4 rounded-lg bg-red-500/10 border border-red-500/20">
-                                        <div className="text-2xl font-bold text-red-400">
-                                          {fixtureStats[fixture.fixture_id].h2h.awayWins}
-                                        </div>
-                                        <div className="text-xs text-gray-400 mt-1">Away Wins</div>
-                                      </div>
-                                    </div>
-
-                                    <div className="space-y-2">
-                                      <h4 className="text-sm font-semibold text-purple-300 mb-3">Last Meetings</h4>
-                                      {fixtureStats[fixture.fixture_id].h2h.lastMeetings.map((meeting, idx) => (
-                                        <div key={idx} className="p-3 rounded-lg bg-purple-900/20 border border-purple-500/10">
-                                          <div className="flex items-center justify-between">
-                                            <div className="text-sm">
-                                              {meeting.homeTeam} vs {meeting.awayTeam}
-                                            </div>
-                                            <div className="text-sm font-bold text-purple-300">
-                                              {meeting.homeScore} : {meeting.awayScore}
-                                            </div>
-                                          </div>
-                                          <div className="text-xs text-gray-500 mt-1">
-                                            {new Date(meeting.date).toLocaleDateString()} • {meeting.league}
-                                          </div>
-                                        </div>
-                                      ))}
-                                    </div>
-                                  </div>
-                                )}
-
-                                {/* Team Stats Tab */}
-                                {activeStatsTab === 'stats' && fixtureStats[fixture.fixture_id] && (
-                                  <div className="grid md:grid-cols-2 gap-6">
-                                    {/* Home Team */}
-                                    <div>
-                                      <h4 className="text-sm font-semibold text-purple-300 mb-3">{fixture.home_team}</h4>
-                                      <div className="space-y-2">
-                                        <div className="flex items-center justify-between p-2 rounded bg-purple-900/20">
-                                          <span className="text-sm text-gray-400">Goals For</span>
-                                          <span className="text-sm font-bold text-green-400">
-                                            {fixtureStats[fixture.fixture_id].homeTeam.goalsFor}
-                                          </span>
-                                        </div>
-                                        <div className="flex items-center justify-between p-2 rounded bg-purple-900/20">
-                                          <span className="text-sm text-gray-400">Goals Against</span>
-                                          <span className="text-sm font-bold text-red-400">
-                                            {fixtureStats[fixture.fixture_id].homeTeam.goalsAgainst}
-                                          </span>
-                                        </div>
-                                        <div className="flex items-center justify-between p-2 rounded bg-purple-900/20">
-                                          <span className="text-sm text-gray-400">Clean Sheets</span>
-                                          <span className="text-sm font-bold text-blue-400">
-                                            {fixtureStats[fixture.fixture_id].homeTeam.cleanSheets}
-                                          </span>
-                                        </div>
-                                        <div className="flex items-center justify-between p-2 rounded bg-purple-900/20">
-                                          <span className="text-sm text-gray-400">BTTS %</span>
-                                          <span className="text-sm font-bold text-purple-300">
-                                            {fixtureStats[fixture.fixture_id].homeTeam.bttsPercentage}%
-                                          </span>
-                                        </div>
-                                      </div>
-                                    </div>
-
-                                    {/* Away Team */}
-                                    <div>
-                                      <h4 className="text-sm font-semibold text-purple-300 mb-3">{fixture.away_team}</h4>
-                                      <div className="space-y-2">
-                                        <div className="flex items-center justify-between p-2 rounded bg-purple-900/20">
-                                          <span className="text-sm text-gray-400">Goals For</span>
-                                          <span className="text-sm font-bold text-green-400">
-                                            {fixtureStats[fixture.fixture_id].awayTeam.goalsFor}
-                                          </span>
-                                        </div>
-                                        <div className="flex items-center justify-between p-2 rounded bg-purple-900/20">
-                                          <span className="text-sm text-gray-400">Goals Against</span>
-                                          <span className="text-sm font-bold text-red-400">
-                                            {fixtureStats[fixture.fixture_id].awayTeam.goalsAgainst}
-                                          </span>
-                                        </div>
-                                        <div className="flex items-center justify-between p-2 rounded bg-purple-900/20">
-                                          <span className="text-sm text-gray-400">Clean Sheets</span>
-                                          <span className="text-sm font-bold text-blue-400">
-                                            {fixtureStats[fixture.fixture_id].awayTeam.cleanSheets}
-                                          </span>
-                                        </div>
-                                        <div className="flex items-center justify-between p-2 rounded bg-purple-900/20">
-                                          <span className="text-sm text-gray-400">BTTS %</span>
-                                          <span className="text-sm font-bold text-purple-300">
-                                            {fixtureStats[fixture.fixture_id].awayTeam.bttsPercentage}%
-                                          </span>
-                                        </div>
-                                      </div>
-                                    </div>
-                                  </div>
-                                )}
-
-                                {/* Form Tab */}
-                                {activeStatsTab === 'form' && fixtureStats[fixture.fixture_id] && (
-                                  <div className="grid md:grid-cols-2 gap-6">
-                                    <div>
-                                      <h4 className="text-sm font-semibold text-purple-300 mb-3">{fixture.home_team}</h4>
-                                      <div className="flex items-center gap-2">
-                                        {fixtureStats[fixture.fixture_id].homeTeam.form.split('').map((result, idx) => (
-                                          <div key={idx}>{renderFormBadge(result)}</div>
-                                        ))}
-                                      </div>
-                                    </div>
-                                    <div>
-                                      <h4 className="text-sm font-semibold text-purple-300 mb-3">{fixture.away_team}</h4>
-                                      <div className="flex items-center gap-2">
-                                        {fixtureStats[fixture.fixture_id].awayTeam.form.split('').map((result, idx) => (
-                                          <div key={idx}>{renderFormBadge(result)}</div>
-                                        ))}
-                                      </div>
-                                    </div>
-                                  </div>
-                                )}
-                              </>
-                            )}
+                        <div className="bg-black/40 border-t border-purple-500/10">
+                          <div className="p-6 text-center text-gray-400">
+                            <BarChart3 className="w-8 h-8 mx-auto mb-2 text-purple-400" />
+                            <p>Detailed stats coming soon</p>
                           </div>
                         </div>
                       )}
