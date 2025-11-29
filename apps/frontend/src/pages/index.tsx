@@ -1,12 +1,12 @@
-import React, { useState } from 'react';
+import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Sparkles, TrendingUp, Trophy } from 'lucide-react';
 import GoldenBetsSection from '../components/sections/GoldenBetsSection';
 import ValueBetsSection from '../components/sections/ValueBetsSection';
 import BetBuilderSection from '../components/sections/BetBuilderSection';
-import FixturesModal from '../components/FixturesModal_NEW';
 
 export default function HomePage() {
-  const [showFixtures, setShowFixtures] = useState(false);
+  const navigate = useNavigate();
 
   return (
     <div className="min-h-screen bg-black text-white">
@@ -60,7 +60,7 @@ export default function HomePage() {
 
           {/* CTA Button */}
           <button
-            onClick={() => setShowFixtures(true)}
+            onClick={() => navigate('/fixtures')}
             className="px-8 py-4 rounded-xl bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-500 hover:to-purple-600 text-white font-semibold text-lg shadow-lg shadow-purple-500/50 hover:shadow-purple-500/70 transition-all duration-300 hover:scale-105 animate-fade-in-up animation-delay-300"
           >
             Browse All Fixtures
@@ -93,18 +93,13 @@ export default function HomePage() {
             View all upcoming fixtures with detailed AI predictions and betting insights
           </p>
           <button
-            onClick={() => setShowFixtures(true)}
+            onClick={() => navigate('/fixtures')}
             className="px-8 py-4 rounded-xl bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-500 hover:to-purple-600 text-white font-semibold text-lg shadow-lg shadow-purple-500/50 hover:shadow-purple-500/70 transition-all duration-300 hover:scale-105"
           >
             Browse All Fixtures
           </button>
         </div>
       </section>
-
-      {/* Fixtures Modal */}
-      {showFixtures && (
-        <FixturesModal onClose={() => setShowFixtures(false)} />
-      )}
     </div>
   );
 }
