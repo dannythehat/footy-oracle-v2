@@ -7,103 +7,102 @@ on:
 
 jobs:
   generate-predictions:
-    runs-on: ubuntu-latest
+    runs-on: self-hosted  # Run on your local Windows machine
     
     steps:
       - name: 📥 Checkout footy-oracle-v2
         uses: actions/checkout@v4
         with:
           token: ${{ secrets.PAT_TOKEN }}
-          path: footy-oracle-v2
+          path: footy-oracle-v2-repo
       
-      - name: 📥 Checkout football-betting-ai-system
-        uses: actions/checkout@v4
-        with:
-          repository: dannythehat/football-betting-ai-system
-          token: ${{ secrets.PAT_TOKEN }}
-          path: football-betting-ai-system
-      
-      - name: 🐍 Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.10'
-          cache: 'pip'
-      
-      - name: 📦 Install dependencies
+      - name: 🤖 Run Daily ML Predictions (Local Machine)
+        shell: powershell
         run: |
-          cd football-betting-ai-system
-          pip install pandas numpy scikit-learn joblib requests
+          Write-Host "🚀 Starting ML predictions on local machine..."
+          Write-Host "📁 Working directory: $(Get-Location)"
+          
+          # Navigate to your local ML system
+          cd C:\Users\Danny\football-betting-ai-system\betopia_v2\scripts
+          
+          # Run the PowerShell script
+          .\run_daily_v26.ps1
+          
+          Write-Host "✅ ML predictions completed"
       
-      - name: 🤖 Run Daily Predictions (Real ML Models)
+      - name: 📤 Copy ML outputs to repo
+        shell: powershell
         run: |
-          cd football-betting-ai-system
-          python footy_oracle_v2/scripts/run_daily_predictions.py
+          Write-Host "📤 Copying ML outputs to GitHub repo..."
           
-          echo "📊 Prediction Summary:"
-          if [ -f "shared/ml_outputs/golden_bets.json" ]; then
-            echo "✅ Golden Bets generated"
-          fi
-          if [ -f "shared/ml_outputs/value_bets.json" ]; then
-            echo "✅ Value Bets generated"
-          fi
-          if [ -f "shared/ml_outputs/predictions.json" ]; then
-            echo "✅ Predictions generated"
-          fi
+          # Source: Your local ML outputs
+          $source = "C:\Users\Danny\Documents\GitHub\golden-footy_oracle\shared\ml_outputs\*"
+          
+          # Destination: Checked out repo
+          $dest = "footy-oracle-v2-repo\shared\ml_outputs"
+          
+          # Create destination directory
+          New-Item -ItemType Directory -Force -Path $dest | Out-Null
+          
+          # Copy all JSON files
+          Copy-Item -Path $source -Destination $dest -Force
+          
+          Write-Host "✅ Files copied:"
+          Get-ChildItem $dest | Format-Table Name, Length, LastWriteTime
       
-      - name: 📤 Copy outputs to footy-oracle-v2
+      - name: 💾 Commit and push predictions
+        shell: powershell
         run: |
-          # Create shared/ml_outputs directory
-          mkdir -p footy-oracle-v2/shared/ml_outputs
+          cd footy-oracle-v2-repo
           
-          # Copy prediction files from football-betting-ai-system to footy-oracle-v2
-          cp football-betting-ai-system/shared/ml_outputs/*.json footy-oracle-v2/shared/ml_outputs/ || true
-          
-          # Add timestamp
-          echo "{\"generated_at\": \"$(date -u +%Y-%m-%dT%H:%M:%SZ)\", \"version\": \"v27\", \"timezone\": \"Sofia/Bulgaria (UTC+2)\"}" > footy-oracle-v2/shared/ml_outputs/metadata.json
-          
-          echo "✅ Outputs copied to footy-oracle-v2/shared/ml_outputs/"
-          ls -lh footy-oracle-v2/shared/ml_outputs/
-      
-      - name: 💾 Commit and push to footy-oracle-v2
-        run: |
-          cd footy-oracle-v2
           git config user.name "Golden Betopia Bot"
           git config user.email "bot@golden-betopia.com"
           
           git add shared/ml_outputs/*
           
-          if git diff --staged --quiet; then
-            echo "📭 No changes to commit"
-          else
-            git commit -m "🤖 Daily ML predictions - $(date +%Y-%m-%d) 8AM Sofia time"
+          $changes = git diff --staged --quiet
+          if ($LASTEXITCODE -ne 0) {
+            $date = Get-Date -Format "yyyy-MM-dd HH:mm"
+            git commit -m "🤖 Daily ML predictions - $date Sofia time"
             git push
-            echo "✅ Predictions pushed to repository"
-          fi
+            Write-Host "✅ Predictions pushed to GitHub"
+          } else {
+            Write-Host "📭 No changes to commit"
+          }
       
       - name: 📊 Pipeline Summary
         if: always()
+        shell: powershell
         run: |
-          echo "## 🚀 ML Pipeline Summary" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "**Date:** $(date +%Y-%m-%d)" >> $GITHUB_STEP_SUMMARY
-          echo "**Time:** 8:00 AM Sofia, Bulgaria ($(date +%H:%M:%S) UTC)" >> $GITHUB_STEP_SUMMARY
-          echo "**Version:** v27" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
+          $summary = @"
+          ## 🚀 ML Pipeline Summary
           
-          if [ -f "football-betting-ai-system/shared/ml_outputs/predictions.json" ]; then
-            echo "✅ **Predictions:** Generated successfully" >> $GITHUB_STEP_SUMMARY
-          else
-            echo "❌ **Predictions:** Failed to generate" >> $GITHUB_STEP_SUMMARY
-          fi
+          **Date:** $(Get-Date -Format "yyyy-MM-dd")
+          **Time:** $(Get-Date -Format "HH:mm:ss") Sofia, Bulgaria
+          **Machine:** $env:COMPUTERNAME
+          **Version:** v26
           
-          if [ -f "football-betting-ai-system/shared/ml_outputs/golden_bets.json" ]; then
-            echo "✅ **Golden Bets:** Generated successfully" >> $GITHUB_STEP_SUMMARY
-          else
-            echo "❌ **Golden Bets:** Failed to generate" >> $GITHUB_STEP_SUMMARY
-          fi
+          ### Generated Files:
+          "@
           
-          if [ -f "football-betting-ai-system/shared/ml_outputs/value_bets.json" ]; then
-            echo "✅ **Value Bets:** Generated successfully" >> $GITHUB_STEP_SUMMARY
-          else
-            echo "❌ **Value Bets:** Failed to generate" >> $GITHUB_STEP_SUMMARY
-          fi
+          $outputDir = "C:\Users\Danny\Documents\GitHub\golden-footy_oracle\shared\ml_outputs"
+          
+          if (Test-Path "$outputDir\predictions.json") {
+            $summary += "`n✅ **predictions.json** - Generated"
+          } else {
+            $summary += "`n❌ **predictions.json** - Missing"
+          }
+          
+          if (Test-Path "$outputDir\golden_bets.json") {
+            $summary += "`n✅ **golden_bets.json** - Generated"
+          } else {
+            $summary += "`n❌ **golden_bets.json** - Missing"
+          }
+          
+          if (Test-Path "$outputDir\value_bets.json") {
+            $summary += "`n✅ **value_bets.json** - Generated"
+          } else {
+            $summary += "`n❌ **value_bets.json** - Missing"
+          }
+          
+          $summary | Out-File -FilePath $env:GITHUB_STEP_SUMMARY -Encoding utf8
