@@ -49,7 +49,7 @@ export default function GoldenBetsSection() {
                 {bet.market.toUpperCase()} → {bet.selection}
               </span>
               <span className="text-sm text-yellow-400 font-bold">
-                @{bet.odds.toFixed(2)}
+                @{bet.odds?.toFixed(2) ?? 'N/A'}
               </span>
             </div>
 
@@ -57,7 +57,7 @@ export default function GoldenBetsSection() {
             <div className="mt-2 text-sm text-zinc-300">
               AI Probability:{' '}
               <span className="text-yellow-300 font-semibold">
-                {(bet.ai_probability * 100).toFixed(0)}%
+                {bet.ai_probability ? (bet.ai_probability * 100).toFixed(0) : 'N/A'}%
               </span>
             </div>
 
