@@ -42,10 +42,10 @@ export default function ValueBetsSection() {
 
             <div className="mt-3 flex items-center justify-between">
               <span className="text-sm font-semibold text-purple-300">
-                {bet.market.toUpperCase()} ? {bet.selection}
+                {bet.market.toUpperCase()} → {bet.selection}
               </span>
               <span className="text-sm text-purple-400 font-bold">
-                @{bet.odds.toFixed(2)}
+                @{bet.odds?.toFixed(2) ?? 'N/A'}
               </span>
             </div>
 
@@ -53,11 +53,11 @@ export default function ValueBetsSection() {
               Expected Value:{' '}
               <span
                 className={`font-semibold ${
-                  bet.value > 0 ? 'text-green-400' : 'text-red-400'
+                  (bet.value ?? 0) > 0 ? 'text-green-400' : 'text-red-400'
                 }`}
               >
-                {bet.value > 0 ? '+' : ''}
-                {bet.value.toFixed(1)}%
+                {(bet.value ?? 0) > 0 ? '+' : ''}
+                {bet.value?.toFixed(1) ?? 'N/A'}%
               </span>
             </div>
 
