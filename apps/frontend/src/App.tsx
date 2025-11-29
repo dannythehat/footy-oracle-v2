@@ -4,7 +4,7 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 // React Query Setup
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
-import HomePageWithBetBuilder from "./pages/HomePageWithBetBuilder";
+import HomePage from "./pages/index";
 import FixturesPage from "./pages/fixtures";
 import HistoricalResults from "./pages/HistoricalResults";
 import BetBuilderHistory from "./pages/BetBuilderHistory";
@@ -17,7 +17,7 @@ function App() {
     <QueryClientProvider client={queryClient}>
       <BrowserRouter>
         <Routes>
-          <Route path="/" element={<HomePageWithBetBuilder />} />
+          <Route path="/" element={<HomePage />} />
           <Route path="/fixtures" element={<FixturesPage />} />
           <Route path="/history" element={<HistoricalResults />} />
           <Route path="/betbuilder-history" element={<BetBuilderHistory />} />
