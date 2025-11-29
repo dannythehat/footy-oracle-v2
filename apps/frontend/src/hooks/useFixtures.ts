@@ -38,7 +38,7 @@ const fetchFixtures = async (date: string): Promise<Fixture[]> => {
 };
 
 export const useFixtures = (date: string) =>
-  useQuery<Fixture[]>({
+  useQuery({
     queryKey: ["fixtures", date],
     queryFn: () => fetchFixtures(date),
     staleTime: 30000,
