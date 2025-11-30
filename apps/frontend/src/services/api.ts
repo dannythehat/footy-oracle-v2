@@ -7,13 +7,22 @@ const apiClient = axios.create({
   headers: {
     'Content-Type': 'application/json',
   },
-  timeout: 10000,
+  timeout: 30000, // Increased to 30 seconds for Render cold starts
 });
 
-// Response interceptor for error handling
+// Response interceptor for error handling with retry logic
 apiClient.interceptors.response.use(
   (response) => response,
-  (error) => {
+  async (error) => {
+    const config = error.config;
+    
+    // Retry logic for timeout errors (Render cold start)
+    if (error.code === 'ECONNABORTED' && !config._retry) {
+      config._retry = true;
+      console.log('⏳ Request timed out, retrying (Render cold start)...');
+      return apiClient(config);
+    }
+    
     console.error('API Error:', error.response?.data || error.message);
     return Promise.reject(error);
   }
