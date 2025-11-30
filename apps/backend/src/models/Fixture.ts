@@ -18,8 +18,12 @@ export interface IFixture extends Document {
   date: Date;
   homeTeam: string;
   awayTeam: string;
+  homeTeamId: number;  // NEW: Required for H2H and stats
+  awayTeamId: number;  // NEW: Required for H2H and stats
   league: string;
+  leagueId: number;    // NEW: Required for stats and filtering
   country: string;
+  season: number;      // NEW: Required for stats queries
   odds: {
     homeWin?: number;
     draw?: number;
@@ -53,8 +57,12 @@ const FixtureSchema = new Schema<IFixture>({
   date: { type: Date, required: true },
   homeTeam: { type: String, required: true },
   awayTeam: { type: String, required: true },
+  homeTeamId: { type: Number, required: true },  // NEW
+  awayTeamId: { type: Number, required: true },  // NEW
   league: { type: String, required: true },
+  leagueId: { type: Number, required: true },    // NEW
   country: { type: String, required: true },
+  season: { type: Number, required: true },      // NEW
   odds: {
     homeWin: Number,
     draw: Number,
@@ -110,7 +118,10 @@ const FixtureSchema = new Schema<IFixture>({
 // Indexes
 FixtureSchema.index({ date: 1 });
 FixtureSchema.index({ league: 1 });
+FixtureSchema.index({ leagueId: 1 });  // NEW: For efficient filtering
 FixtureSchema.index({ status: 1 });
+FixtureSchema.index({ homeTeamId: 1 });  // NEW: For team queries
+FixtureSchema.index({ awayTeamId: 1 });  // NEW: For team queries
 FixtureSchema.index({ 'aiBets.generatedAt': 1 });
 
 export const Fixture = mongoose.model<IFixture>('Fixture', FixtureSchema);
