@@ -26,8 +26,12 @@ async function run() {
       date: new Date(f.fixture.timestamp * 1000),
       homeTeam: f.teams.home.name,
       awayTeam: f.teams.away.name,
+      homeTeamId: f.teams.home.id,      // NEW: Required for clean structure
+      awayTeamId: f.teams.away.id,      // NEW: Required for clean structure
       league: f.league.name,
+      leagueId: f.league.id,            // NEW: Required for clean structure
       country: f.league.country,
+      season: f.league.season,          // NEW: Required for clean structure
       status: f.fixture.status.short === 'FT' ? 'finished' : 
               f.fixture.status.short === 'NS' ? 'scheduled' : 'live',
       score: f.score.fulltime.home !== null ? {
