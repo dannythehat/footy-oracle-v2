@@ -40,6 +40,8 @@ router.get('/', async (req: Request, res: Response) => {
     if (league) query.league = league;
     if (status) query.status = status;
 
+    console.log(`📥 Fetching fixtures with query:`, JSON.stringify(query));
+
     // Fetch from DB with optimization
     // lean() returns plain JS objects (faster than Mongoose documents)
     // limit to 200 fixtures per day (reasonable max)
@@ -49,22 +51,45 @@ router.get('/', async (req: Request, res: Response) => {
       .lean()
       .maxTimeMS(5000); // 5 second query timeout
 
-    // Convert to clean frontend format
-    const normalized = fixtures.map((f: any) => ({
-      fixtureId: f.fixtureId ?? f.fixture_id,
-      kickoff: f.date ?? null,
-      homeTeam: f.homeTeam || f.home_team || f.teams?.home?.name || "Unknown Home",
-      awayTeam: f.awayTeam || f.away_team || f.teams?.away?.name || "Unknown Away",
-      league: typeof f.league === 'string'
-        ? f.league
-        : f.league?.name || "Unknown League",
-      country: typeof f.country === 'string'
-        ? f.country
-        : f.league?.country || "Unknown",
-      status: f.status || "scheduled",
-      homeScore: f.score?.home ?? null,
-      awayScore: f.score?.away ?? null,
-    }));
+    console.log(`✅ Found ${fixtures.length} fixtures in database`);
+
+    // Log first fixture for debugging
+    if (fixtures.length > 0) {
+      console.log('📊 Sample fixture from DB:', JSON.stringify(fixtures[0], null, 2));
+    }
+
+    // Convert to clean frontend format with proper null handling
+    const normalized = fixtures.map((f: any) => {
+      const fixture = {
+        fixtureId: f.fixtureId ?? f.fixture_id ?? null,
+        kickoff: f.date ? new Date(f.date).toISOString() : null,
+        homeTeam: f.homeTeam || f.home_team || f.teams?.home?.name || "Unknown Home",
+        awayTeam: f.awayTeam || f.away_team || f.teams?.away?.name || "Unknown Away",
+        homeTeamId: f.homeTeamId || f.home_team_id || f.teams?.home?.id || null,
+        awayTeamId: f.awayTeamId || f.away_team_id || f.teams?.away?.id || null,
+        league: typeof f.league === 'string'
+          ? f.league
+          : f.league?.name || "Unknown League",
+        leagueId: f.leagueId || f.league_id || f.league?.id || null,
+        country: typeof f.country === 'string'
+          ? f.country
+          : f.league?.country || "Unknown",
+        season: f.season || new Date().getFullYear(),
+        status: f.status || "NS",
+        homeScore: f.score?.home ?? null,
+        awayScore: f.score?.away ?? null,
+        odds: f.odds || null,
+      };
+
+      return fixture;
+    });
+
+    // Log first normalized fixture for debugging
+    if (normalized.length > 0) {
+      console.log('📤 Sample normalized fixture:', JSON.stringify(normalized[0], null, 2));
+    }
+
+    console.log(`✅ Returning ${normalized.length} normalized fixtures to frontend`);
 
     res.json({
       success: true,
@@ -74,6 +99,7 @@ router.get('/', async (req: Request, res: Response) => {
 
   } catch (error: any) {
     console.error('❌ Error fetching fixtures:', error);
+    console.error('Stack trace:', error.stack);
     res.status(500).json({
       success: false,
       error: error.message || 'Failed to fetch fixtures'
@@ -260,12 +286,11 @@ router.get('/team/:teamId/last-fixtures', async (req: Request, res: Response) =>
 
     res.json({
       success: true,
-      data: fixtures,
-      count: fixtures.length
+      data: fixtures
     });
 
   } catch (error: any) {
-    console.error('❌ Error fetching team fixtures:', error);
+    console.error('❌ Error fetching team last fixtures:', error);
     res.status(500).json({
       success: false,
       error: error.message
@@ -275,13 +300,14 @@ router.get('/team/:teamId/last-fixtures', async (req: Request, res: Response) =>
 
 
 /* ============================================================
-   📌 AI ANALYSIS - SINGLE FIXTURE
+   📌 ANALYZE FIXTURE (AI PREDICTIONS)
    ============================================================ */
 router.post('/:id/analyze', async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
+    
     const fixture = await Fixture.findOne({ fixtureId: Number(id) }).lean();
-
+    
     if (!fixture) {
       return res.status(404).json({
         success: false,
@@ -315,26 +341,22 @@ router.post('/:id/analyze', async (req: Request, res: Response) => {
 
 
 /* ============================================================
-   📌 AI ANALYSIS - BULK FIXTURES
+   📌 BULK ANALYZE FIXTURES
    ============================================================ */
 router.post('/analyze/bulk', async (req: Request, res: Response) => {
   try {
-    const { date } = req.body;
+    const { fixtureIds } = req.body;
 
-    if (!date) {
+    if (!fixtureIds || !Array.isArray(fixtureIds)) {
       return res.status(400).json({
         success: false,
-        error: 'Date is required'
+        error: 'fixtureIds array is required'
       });
     }
 
-    const targetDate = new Date(date);
-    const nextDate = new Date(targetDate);
-    nextDate.setDate(nextDate.getDate() + 1);
-
     const fixtures = await Fixture.find({
-      date: { $gte: targetDate, $lt: nextDate }
-    }).limit(50).lean();
+      fixtureId: { $in: fixtureIds.map(Number) }
+    }).lean();
 
     const fixtureInputs: FixtureInput[] = fixtures.map(f => ({
       id: f.fixtureId.toString(),
@@ -353,7 +375,7 @@ router.post('/analyze/bulk', async (req: Request, res: Response) => {
     });
 
   } catch (error: any) {
-    console.error('❌ Error analyzing fixtures:', error);
+    console.error('❌ Error bulk analyzing fixtures:', error);
     res.status(500).json({
       success: false,
       error: error.message
@@ -363,26 +385,17 @@ router.post('/analyze/bulk', async (req: Request, res: Response) => {
 
 
 /* ============================================================
-   📌 GOLDEN BETS FINDER
+   📌 FIND GOLDEN BETS
    ============================================================ */
-router.post('/golden-bets', async (req: Request, res: Response) => {
+router.get('/golden-bets/today', async (req: Request, res: Response) => {
   try {
-    const { date } = req.body;
-
-    if (!date) {
-      return res.status(400).json({
-        success: false,
-        error: 'Date is required'
-      });
-    }
-
-    const targetDate = new Date(date);
-    const nextDate = new Date(targetDate);
-    nextDate.setDate(nextDate.getDate() + 1);
+    const today = new Date();
+    const tomorrow = new Date(today);
+    tomorrow.setDate(tomorrow.getDate() + 1);
 
     const fixtures = await Fixture.find({
-      date: { $gte: targetDate, $lt: nextDate }
-    }).limit(50).lean();
+      date: { $gte: today, $lt: tomorrow }
+    }).lean();
 
     const fixtureInputs: FixtureInput[] = fixtures.map(f => ({
       id: f.fixtureId.toString(),
@@ -412,26 +425,17 @@ router.post('/golden-bets', async (req: Request, res: Response) => {
 
 
 /* ============================================================
-   📌 VALUE BETS FINDER
+   📌 FIND VALUE BETS
    ============================================================ */
-router.post('/value-bets', async (req: Request, res: Response) => {
+router.get('/value-bets/today', async (req: Request, res: Response) => {
   try {
-    const { date } = req.body;
-
-    if (!date) {
-      return res.status(400).json({
-        success: false,
-        error: 'Date is required'
-      });
-    }
-
-    const targetDate = new Date(date);
-    const nextDate = new Date(targetDate);
-    nextDate.setDate(nextDate.getDate() + 1);
+    const today = new Date();
+    const tomorrow = new Date(today);
+    tomorrow.setDate(tomorrow.getDate() + 1);
 
     const fixtures = await Fixture.find({
-      date: { $gte: targetDate, $lt: nextDate }
-    }).limit(50).lean();
+      date: { $gte: today, $lt: tomorrow }
+    }).lean();
 
     const fixtureInputs: FixtureInput[] = fixtures.map(f => ({
       id: f.fixtureId.toString(),
