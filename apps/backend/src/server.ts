@@ -8,6 +8,7 @@ import express from 'express';
 import cors from 'cors';
 import { createServer } from 'http';
 import { wsService } from './services/websocket';
+import { startFixturesCron } from './cron/fixturesCron';
 
 const app = express();
 const httpServer = createServer(app);
@@ -36,6 +37,11 @@ app.use(express.json());
 // DATABASE
 // --------------------
 connectDB();
+
+// --------------------
+// CRON JOBS - Initialize fixtures loading
+// --------------------
+startFixturesCron();
 
 // --------------------
 // WEBSOCKET
@@ -93,4 +99,5 @@ httpServer.listen(10000, () => {
   console.log('⚽ Footy Oracle API running on port 10000');
   console.log('🔌 WebSocket server ready at ws://localhost:10000/ws');
   console.log('🌐 CORS enabled for Vercel domain: footy-oracle-v2.vercel.app');
+  console.log('⏰ Fixtures cron job initialized - loading fixtures...');
 });
