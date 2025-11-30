@@ -12,27 +12,17 @@ import { wsService } from './services/websocket';
 const app = express();
 const httpServer = createServer(app);
 
-// ------------------------------------
-// 🔥 DEBUG LOGGER — SHOWS WHO SETS CORS
-// ------------------------------------
-app.use((req, res, next) => {
-  const originalSetHeader = res.setHeader.bind(res);
-  res.setHeader = (key, value) => {
-    console.log("🔥 HEADER SET:", key, value);
-    originalSetHeader(key, value);
-  };
-  next();
-});
-
 // ------------------------------
-// 🔥 FINAL CORS CONFIG (CORRECT)
+// 🔥 CORS CONFIG WITH VERCEL DOMAIN
 // ------------------------------
 app.use(
   cors({
     origin: [
       'http://localhost:3000',
       'http://127.0.0.1:3000',
-      'https://footy-oracle-v2.vercel.app'
+      'https://footy-oracle-v2.vercel.app',
+      'https://footy-oracle-v2-568z3e2jh-dannys-projects-83c67aed.vercel.app',
+      'https://footy-oracle-v2-9156zvba2-dannys-projects-83c67aed.vercel.app'
     ],
     methods: 'GET,POST,PUT,DELETE,OPTIONS',
     allowedHeaders: 'Content-Type, Authorization',
@@ -51,6 +41,16 @@ connectDB();
 // WEBSOCKET
 // --------------------
 wsService.initialize(httpServer);
+
+// --------------------
+// KEEP-ALIVE ENDPOINT (Prevents Render cold starts)
+// --------------------
+app.get('/ping', (_, res) => {
+  res.json({ 
+    status: 'alive', 
+    timestamp: new Date().toISOString() 
+  });
+});
 
 // --------------------
 // HEALTH CHECK
@@ -92,4 +92,5 @@ app.use('/api/bet-builders', betBuilders);
 httpServer.listen(10000, () => {
   console.log('⚽ Footy Oracle API running on port 10000');
   console.log('🔌 WebSocket server ready at ws://localhost:10000/ws');
+  console.log('🌐 CORS enabled for Vercel domain: footy-oracle-v2.vercel.app');
 });
