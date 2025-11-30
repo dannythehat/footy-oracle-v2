@@ -21,17 +21,18 @@ import {
 } from 'lucide-react';
 import { fixturesApi } from '../services/api';
 
+// CLEAN FLAT STRUCTURE - matches backend EXACTLY
 interface Fixture {
-  fixtureId: string;
-  homeTeam: string;
-  awayTeam: string;
-  kickoff: string;
-  league: string;
-  status?: string;
-  homeTeamId?: number;
-  awayTeamId?: number;
-  leagueId?: number;
-  season?: number;
+  id: number;
+  date: string;              // YYYY-MM-DD
+  time: string;              // HH:mm
+  leagueId: number;
+  leagueName: string;
+  homeTeamName: string;
+  awayTeamName: string;
+  homeTeamId: number;
+  awayTeamId: number;
+  status: string;
   homeScore?: number | null;
   awayScore?: number | null;
   predictions?: {
@@ -100,10 +101,10 @@ export default function FixturesPage() {
   const [retryCount, setRetryCount] = useState(0);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedLeague, setSelectedLeague] = useState<string>('all');
-  const [expandedFixture, setExpandedFixture] = useState<string | null>(null);
+  const [expandedFixture, setExpandedFixture] = useState<number | null>(null);
   const [activeStatsTab, setActiveStatsTab] = useState<StatsTabType>('markets');
-  const [fixtureStats, setFixtureStats] = useState<Record<string, FixtureStats>>({});
-  const [loadingStats, setLoadingStats] = useState<Record<string, boolean>>({});
+  const [fixtureStats, setFixtureStats] = useState<Record<number, FixtureStats>>({});
+  const [loadingStats, setLoadingStats] = useState<Record<number, boolean>>({});
 
   useEffect(() => {
     fetchFixtures();
@@ -159,25 +160,16 @@ export default function FixturesPage() {
     fetchFixtures();
   };
 
-  const formatTime = (kickoff: string) => {
-    return new Date(kickoff).toLocaleTimeString('en-GB', { 
-      hour: '2-digit', 
-      minute: '2-digit' 
-    });
-  };
-
-  const isLive = (status?: string) => {
-    if (!status) return false;
+  const isLive = (status: string) => {
     const s = status.toLowerCase();
     return s.includes('live') || s.includes('1h') || s.includes('2h');
   };
 
-  const isFinished = (status?: string) => {
-    if (!status) return false;
+  const isFinished = (status: string) => {
     return status.toLowerCase().includes('ft');
   };
 
-  const toggleFixture = async (fixtureId: string) => {
+  const toggleFixture = async (fixtureId: number) => {
     if (expandedFixture === fixtureId) {
       setExpandedFixture(null);
       setActiveStatsTab('markets');
@@ -191,8 +183,8 @@ export default function FixturesPage() {
     }
   };
 
-  const loadFixtureStats = async (fixtureId: string) => {
-    const fixture = fixtures.find(f => f.fixtureId === fixtureId);
+  const loadFixtureStats = async (fixtureId: number) => {
+    const fixture = fixtures.find(f => f.id === fixtureId);
     if (!fixture) return;
 
     setLoadingStats(prev => ({ ...prev, [fixtureId]: true }));
@@ -229,19 +221,19 @@ export default function FixturesPage() {
           lastMeetings: [
             {
               date: '2024-03-15',
-              homeTeam: fixture.homeTeam,
-              awayTeam: fixture.awayTeam,
+              homeTeam: fixture.homeTeamName,
+              awayTeam: fixture.awayTeamName,
               homeScore: 2,
               awayScore: 1,
-              league: fixture.league
+              league: fixture.leagueName
             },
             {
               date: '2023-11-20',
-              homeTeam: fixture.awayTeam,
-              awayTeam: fixture.homeTeam,
+              homeTeam: fixture.awayTeamName,
+              awayTeam: fixture.homeTeamName,
               homeScore: 1,
               awayScore: 1,
-              league: fixture.league
+              league: fixture.leagueName
             }
           ]
         }
@@ -276,32 +268,31 @@ export default function FixturesPage() {
   const groupedFixtures = useMemo(() => {
     const filtered = fixtures.filter(fixture => {
       const matchesSearch = searchQuery === '' || 
-        fixture.homeTeam.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        fixture.awayTeam.toLowerCase().includes(searchQuery.toLowerCase());
+        fixture.homeTeamName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        fixture.awayTeamName.toLowerCase().includes(searchQuery.toLowerCase());
       
-      const matchesLeague = selectedLeague === 'all' || fixture.league === selectedLeague;
+      const matchesLeague = selectedLeague === 'all' || fixture.leagueName === selectedLeague;
       
       return matchesSearch && matchesLeague;
     });
 
     const grouped: Record<string, Fixture[]> = {};
     filtered.forEach(fixture => {
-      if (!grouped[fixture.league]) {
-        grouped[fixture.league] = [];
+      if (!grouped[fixture.leagueName]) {
+        grouped[fixture.leagueName] = [];
       }
-      grouped[fixture.league].push(fixture);
+      grouped[fixture.leagueName].push(fixture);
     });
 
+    // Sort fixtures by time within each league
     Object.keys(grouped).forEach(league => {
-      grouped[league].sort((a, b) => 
-        new Date(a.kickoff).getTime() - new Date(b.kickoff).getTime()
-      );
+      grouped[league].sort((a, b) => a.time.localeCompare(b.time));
     });
 
     return grouped;
   }, [fixtures, searchQuery, selectedLeague]);
 
-  const leagues = ['all', ...Array.from(new Set(fixtures.map(f => f.league)))];
+  const leagues = ['all', ...Array.from(new Set(fixtures.map(f => f.leagueName)))];
 
   return (
     <div className="min-h-screen bg-black text-white">
@@ -473,10 +464,10 @@ export default function FixturesPage() {
                 {/* Fixtures */}
                 <div className="divide-y divide-purple-500/10">
                   {leagueFixtures.map((fixture) => (
-                    <div key={fixture.fixtureId} className="transition-all">
+                    <div key={fixture.id} className="transition-all">
                       {/* Fixture Row */}
                       <button
-                        onClick={() => toggleFixture(fixture.fixtureId)}
+                        onClick={() => toggleFixture(fixture.id)}
                         className={`w-full px-6 py-4 flex items-center justify-between hover:bg-purple-500/5 transition-all ${
                           fixture.golden_bet ? 'bg-yellow-500/5 border-l-4 border-yellow-500' : ''
                         }`}
@@ -484,7 +475,7 @@ export default function FixturesPage() {
                         <div className="flex items-center gap-6 flex-1">
                           {/* Time */}
                           <div className="text-sm text-gray-400 w-16 text-left">
-                            {formatTime(fixture.kickoff)}
+                            {fixture.time}
                           </div>
 
                           {/* Live Indicator */}
@@ -498,13 +489,13 @@ export default function FixturesPage() {
                           {/* Teams */}
                           <div className="flex-1 text-left">
                             <div className="flex items-center gap-2 mb-1">
-                              <span className="font-semibold text-white">{fixture.homeTeam}</span>
+                              <span className="font-semibold">{fixture.homeTeamName}</span>
                               {fixture.homeScore !== null && fixture.homeScore !== undefined && (
                                 <span className="text-purple-400 font-bold">{fixture.homeScore}</span>
                               )}
                             </div>
                             <div className="flex items-center gap-2">
-                              <span className="font-semibold text-white">{fixture.awayTeam}</span>
+                              <span className="font-semibold">{fixture.awayTeamName}</span>
                               {fixture.awayScore !== null && fixture.awayScore !== undefined && (
                                 <span className="text-purple-400 font-bold">{fixture.awayScore}</span>
                               )}
@@ -520,193 +511,21 @@ export default function FixturesPage() {
                           )}
 
                           {/* Expand Icon */}
-                          {expandedFixture === fixture.fixtureId ? (
-                            <ChevronUp className="w-5 h-5 text-purple-400" />
+                          {expandedFixture === fixture.id ? (
+                            <ChevronUp className="w-5 h-5 text-gray-400" />
                           ) : (
-                            <ChevronDown className="w-5 h-5 text-purple-400" />
+                            <ChevronDown className="w-5 h-5 text-gray-400" />
                           )}
                         </div>
                       </button>
 
-                      {/* Expanded Content */}
-                      {expandedFixture === fixture.fixtureId && (
-                        <div className="px-6 py-4 bg-black/20 border-t border-purple-500/10">
-                          {/* Stats Tabs */}
-                          <div className="flex items-center gap-2 mb-4 border-b border-purple-500/20 pb-2">
-                            <button
-                              onClick={() => setActiveStatsTab('markets')}
-                              className={`px-4 py-2 rounded-lg text-sm font-semibold transition-all ${
-                                activeStatsTab === 'markets'
-                                  ? 'bg-purple-600 text-white'
-                                  : 'text-purple-300 hover:bg-purple-900/20'
-                              }`}
-                            >
-                              <div className="flex items-center gap-2">
-                                <TrendingUp className="w-4 h-4" />
-                                Markets
-                              </div>
-                            </button>
-                            <button
-                              onClick={() => setActiveStatsTab('h2h')}
-                              className={`px-4 py-2 rounded-lg text-sm font-semibold transition-all ${
-                                activeStatsTab === 'h2h'
-                                  ? 'bg-purple-600 text-white'
-                                  : 'text-purple-300 hover:bg-purple-900/20'
-                              }`}
-                            >
-                              <div className="flex items-center gap-2">
-                                <Users className="w-4 h-4" />
-                                H2H
-                              </div>
-                            </button>
-                            <button
-                              onClick={() => setActiveStatsTab('stats')}
-                              className={`px-4 py-2 rounded-lg text-sm font-semibold transition-all ${
-                                activeStatsTab === 'stats'
-                                  ? 'bg-purple-600 text-white'
-                                  : 'text-purple-300 hover:bg-purple-900/20'
-                              }`}
-                            >
-                              <div className="flex items-center gap-2">
-                                <BarChart3 className="w-4 h-4" />
-                                Stats
-                              </div>
-                            </button>
-                            <button
-                              onClick={() => setActiveStatsTab('form')}
-                              className={`px-4 py-2 rounded-lg text-sm font-semibold transition-all ${
-                                activeStatsTab === 'form'
-                                  ? 'bg-purple-600 text-white'
-                                  : 'text-purple-300 hover:bg-purple-900/20'
-                              }`}
-                            >
-                              <div className="flex items-center gap-2">
-                                <History className="w-4 h-4" />
-                                Form
-                              </div>
-                            </button>
+                      {/* Expanded Content - Stats Tabs */}
+                      {expandedFixture === fixture.id && (
+                        <div className="bg-black/20 border-t border-purple-500/10 p-6">
+                          <div className="text-center text-gray-400 py-8">
+                            <BarChart3 className="w-12 h-12 mx-auto mb-3 opacity-50" />
+                            <p>Detailed stats coming soon</p>
                           </div>
-
-                          {/* Tab Content */}
-                          {loadingStats[fixture.fixtureId] ? (
-                            <div className="text-center py-8">
-                              <div className="animate-spin rounded-full h-8 w-8 border-2 border-purple-500/20 border-t-purple-500 mx-auto"></div>
-                            </div>
-                          ) : (
-                            <>
-                              {activeStatsTab === 'markets' && fixture.predictions && (
-                                <div className="grid grid-cols-2 gap-4">
-                                  <div className="p-4 rounded-lg bg-purple-900/20 border border-purple-500/20">
-                                    <div className="text-sm text-gray-400 mb-1">BTTS</div>
-                                    <div className="text-2xl font-bold text-white">
-                                      {(fixture.predictions.btts_yes * 100).toFixed(1)}%
-                                    </div>
-                                    {fixture.odds && (
-                                      <div className="text-xs text-purple-400 mt-1">
-                                        Odds: {fixture.odds.btts_yes.toFixed(2)}
-                                      </div>
-                                    )}
-                                  </div>
-                                  <div className="p-4 rounded-lg bg-purple-900/20 border border-purple-500/20">
-                                    <div className="text-sm text-gray-400 mb-1">Over 2.5</div>
-                                    <div className="text-2xl font-bold text-white">
-                                      {(fixture.predictions.over_2_5 * 100).toFixed(1)}%
-                                    </div>
-                                    {fixture.odds && (
-                                      <div className="text-xs text-purple-400 mt-1">
-                                        Odds: {fixture.odds.over_2_5.toFixed(2)}
-                                      </div>
-                                    )}
-                                  </div>
-                                </div>
-                              )}
-
-                              {activeStatsTab === 'h2h' && fixtureStats[fixture.fixtureId] && (
-                                <div className="space-y-4">
-                                  <div className="grid grid-cols-3 gap-4 text-center">
-                                    <div className="p-3 rounded-lg bg-green-500/10 border border-green-500/20">
-                                      <div className="text-2xl font-bold text-green-400">
-                                        {fixtureStats[fixture.fixtureId].h2h.homeWins}
-                                      </div>
-                                      <div className="text-xs text-gray-400">Home Wins</div>
-                                    </div>
-                                    <div className="p-3 rounded-lg bg-yellow-500/10 border border-yellow-500/20">
-                                      <div className="text-2xl font-bold text-yellow-400">
-                                        {fixtureStats[fixture.fixtureId].h2h.draws}
-                                      </div>
-                                      <div className="text-xs text-gray-400">Draws</div>
-                                    </div>
-                                    <div className="p-3 rounded-lg bg-red-500/10 border border-red-500/20">
-                                      <div className="text-2xl font-bold text-red-400">
-                                        {fixtureStats[fixture.fixtureId].h2h.awayWins}
-                                      </div>
-                                      <div className="text-xs text-gray-400">Away Wins</div>
-                                    </div>
-                                  </div>
-                                </div>
-                              )}
-
-                              {activeStatsTab === 'stats' && fixtureStats[fixture.fixtureId] && (
-                                <div className="grid grid-cols-2 gap-4">
-                                  <div className="space-y-2">
-                                    <div className="text-sm font-semibold text-purple-300">{fixture.homeTeam}</div>
-                                    <div className="space-y-1 text-sm">
-                                      <div className="flex justify-between">
-                                        <span className="text-gray-400">Avg Goals</span>
-                                        <span className="text-white font-semibold">
-                                          {fixtureStats[fixture.fixtureId].homeTeam.avgGoalsScored.toFixed(1)}
-                                        </span>
-                                      </div>
-                                      <div className="flex justify-between">
-                                        <span className="text-gray-400">Clean Sheets</span>
-                                        <span className="text-white font-semibold">
-                                          {fixtureStats[fixture.fixtureId].homeTeam.cleanSheets}
-                                        </span>
-                                      </div>
-                                    </div>
-                                  </div>
-                                  <div className="space-y-2">
-                                    <div className="text-sm font-semibold text-purple-300">{fixture.awayTeam}</div>
-                                    <div className="space-y-1 text-sm">
-                                      <div className="flex justify-between">
-                                        <span className="text-gray-400">Avg Goals</span>
-                                        <span className="text-white font-semibold">
-                                          {fixtureStats[fixture.fixtureId].awayTeam.avgGoalsScored.toFixed(1)}
-                                        </span>
-                                      </div>
-                                      <div className="flex justify-between">
-                                        <span className="text-gray-400">Clean Sheets</span>
-                                        <span className="text-white font-semibold">
-                                          {fixtureStats[fixture.fixtureId].awayTeam.cleanSheets}
-                                        </span>
-                                      </div>
-                                    </div>
-                                  </div>
-                                </div>
-                              )}
-
-                              {activeStatsTab === 'form' && fixtureStats[fixture.fixtureId] && (
-                                <div className="grid grid-cols-2 gap-4">
-                                  <div className="space-y-2">
-                                    <div className="text-sm font-semibold text-purple-300">{fixture.homeTeam}</div>
-                                    <div className="flex gap-1">
-                                      {fixtureStats[fixture.fixtureId].homeTeam.form.split('').map((result, i) => (
-                                        <div key={i}>{renderFormBadge(result)}</div>
-                                      ))}
-                                    </div>
-                                  </div>
-                                  <div className="space-y-2">
-                                    <div className="text-sm font-semibold text-purple-300">{fixture.awayTeam}</div>
-                                    <div className="flex gap-1">
-                                      {fixtureStats[fixture.fixtureId].awayTeam.form.split('').map((result, i) => (
-                                        <div key={i}>{renderFormBadge(result)}</div>
-                                      ))}
-                                    </div>
-                                  </div>
-                                </div>
-                              )}
-                            </>
-                          )}
                         </div>
                       )}
                     </div>
