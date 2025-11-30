@@ -84,6 +84,11 @@ export async function loadTodaysFixtures() {
 
     console.log(`✅ Found ${fixturesData.length} fixtures`);
 
+    // Log first fixture for debugging
+    if (fixturesData.length > 0) {
+      console.log('📊 Sample fixture from API:', JSON.stringify(fixturesData[0], null, 2));
+    }
+
     // Store each fixture in database
     let savedCount = 0;
     let updatedCount = 0;
@@ -95,6 +100,7 @@ export async function loadTodaysFixtures() {
 
         if (existing) {
           // Update existing fixture - only fields that exist in model
+          console.log(`🔄 Updating fixture ${fixtureData.fixtureId}: ${fixtureData.homeTeam} vs ${fixtureData.awayTeam}`);
           await Fixture.updateOne(
             { fixtureId: fixtureData.fixtureId },
             {
@@ -113,7 +119,8 @@ export async function loadTodaysFixtures() {
           updatedCount++;
         } else {
           // Create new fixture - only fields that exist in model
-          await Fixture.create({
+          console.log(`➕ Creating fixture ${fixtureData.fixtureId}: ${fixtureData.homeTeam} vs ${fixtureData.awayTeam}`);
+          const newFixture = await Fixture.create({
             fixtureId: fixtureData.fixtureId,
             date: new Date(fixtureData.date),
             homeTeam: fixtureData.homeTeam,
@@ -125,6 +132,7 @@ export async function loadTodaysFixtures() {
             createdAt: new Date(),
             updatedAt: new Date(),
           });
+          console.log(`✅ Created fixture in DB:`, JSON.stringify(newFixture.toObject(), null, 2));
           savedCount++;
         }
 
@@ -142,6 +150,7 @@ export async function loadTodaysFixtures() {
         }
       } catch (error) {
         console.error(`❌ Error processing fixture ${fixtureData.fixtureId}:`, error);
+        console.error('Fixture data:', JSON.stringify(fixtureData, null, 2));
       }
     }
 
@@ -166,45 +175,60 @@ export async function loadFixturesForDate(date: string) {
       return { success: true, count: 0, new: 0, updated: 0 };
     }
 
+    console.log(`✅ Fetched ${fixturesData.length} fixtures from API for ${date}`);
+
+    // Log first fixture for debugging
+    if (fixturesData.length > 0) {
+      console.log('📊 Sample fixture from API:', JSON.stringify(fixturesData[0], null, 2));
+    }
+
     let savedCount = 0;
     let updatedCount = 0;
 
     for (const fixtureData of fixturesData) {
-      const existing = await Fixture.findOne({ fixtureId: fixtureData.fixtureId });
+      try {
+        const existing = await Fixture.findOne({ fixtureId: fixtureData.fixtureId });
 
-      if (existing) {
-        // Update existing fixture with latest data
-        await Fixture.updateOne(
-          { fixtureId: fixtureData.fixtureId },
-          {
-            $set: {
-              date: new Date(fixtureData.date),
-              homeTeam: fixtureData.homeTeam,
-              awayTeam: fixtureData.awayTeam,
-              league: fixtureData.league,
-              country: fixtureData.country,
-              status: fixtureData.status,
-              odds: fixtureData.odds || existing.odds || {},
-              updatedAt: new Date(),
+        if (existing) {
+          // Update existing fixture with latest data
+          console.log(`🔄 Updating fixture ${fixtureData.fixtureId}: ${fixtureData.homeTeam} vs ${fixtureData.awayTeam}`);
+          await Fixture.updateOne(
+            { fixtureId: fixtureData.fixtureId },
+            {
+              $set: {
+                date: new Date(fixtureData.date),
+                homeTeam: fixtureData.homeTeam,
+                awayTeam: fixtureData.awayTeam,
+                league: fixtureData.league,
+                country: fixtureData.country,
+                status: fixtureData.status,
+                odds: fixtureData.odds || existing.odds || {},
+                updatedAt: new Date(),
+              }
             }
-          }
-        );
-        updatedCount++;
-      } else {
-        // Create new fixture
-        await Fixture.create({
-          fixtureId: fixtureData.fixtureId,
-          date: new Date(fixtureData.date),
-          homeTeam: fixtureData.homeTeam,
-          awayTeam: fixtureData.awayTeam,
-          league: fixtureData.league,
-          country: fixtureData.country,
-          status: fixtureData.status,
-          odds: fixtureData.odds || {},
-          createdAt: new Date(),
-          updatedAt: new Date(),
-        });
-        savedCount++;
+          );
+          updatedCount++;
+        } else {
+          // Create new fixture
+          console.log(`➕ Creating fixture ${fixtureData.fixtureId}: ${fixtureData.homeTeam} vs ${fixtureData.awayTeam}`);
+          const newFixture = await Fixture.create({
+            fixtureId: fixtureData.fixtureId,
+            date: new Date(fixtureData.date),
+            homeTeam: fixtureData.homeTeam,
+            awayTeam: fixtureData.awayTeam,
+            league: fixtureData.league,
+            country: fixtureData.country,
+            status: fixtureData.status,
+            odds: fixtureData.odds || {},
+            createdAt: new Date(),
+            updatedAt: new Date(),
+          });
+          console.log(`✅ Created fixture in DB with ID: ${newFixture.fixtureId}`);
+          savedCount++;
+        }
+      } catch (error) {
+        console.error(`❌ Error processing fixture ${fixtureData.fixtureId}:`, error);
+        console.error('Fixture data:', JSON.stringify(fixtureData, null, 2));
       }
     }
 
