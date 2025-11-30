@@ -18,10 +18,28 @@ import {
 
 const router = Router();
 
+/**
+ * Helper function to format Date to HH:mm string
+ */
+function formatTime(date: Date): string {
+  const hours = date.getHours().toString().padStart(2, '0');
+  const minutes = date.getMinutes().toString().padStart(2, '0');
+  return `${hours}:${minutes}`;
+}
+
+/**
+ * Helper function to format Date to YYYY-MM-DD string
+ */
+function formatDate(date: Date): string {
+  const year = date.getFullYear();
+  const month = (date.getMonth() + 1).toString().padStart(2, '0');
+  const day = date.getDate().toString().padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
+
 /* ============================================================
-   📌 FIXTURES LIST (FRONTEND USES THIS ONE)
-   Normalized format for React UI (no undefined, camelCase only)
-   OPTIMIZED: Uses lean() for faster queries, limits results
+   📌 FIXTURES LIST - CLEAN FLAT STRUCTURE
+   Returns EXACT structure frontend expects - NO nested objects
    ============================================================ */
 router.get('/', async (req: Request, res: Response) => {
   try {
@@ -41,35 +59,30 @@ router.get('/', async (req: Request, res: Response) => {
     if (status) query.status = status;
 
     // Fetch from DB with optimization
-    // lean() returns plain JS objects (faster than Mongoose documents)
-    // limit to 200 fixtures per day (reasonable max)
     const fixtures = await Fixture.find(query)
       .sort({ date: 1 })
       .limit(200)
       .lean()
-      .maxTimeMS(5000); // 5 second query timeout
+      .maxTimeMS(5000);
 
-    // Convert to clean frontend format
-    const normalized = fixtures.map((f: any) => ({
-      fixtureId: f.fixtureId ?? f.fixture_id,
-      kickoff: f.date ?? null,
-      homeTeam: f.homeTeam || f.home_team || f.teams?.home?.name || "Unknown Home",
-      awayTeam: f.awayTeam || f.away_team || f.teams?.away?.name || "Unknown Away",
-      league: typeof f.league === 'string'
-        ? f.league
-        : f.league?.name || "Unknown League",
-      country: typeof f.country === 'string'
-        ? f.country
-        : f.league?.country || "Unknown",
-      status: f.status || "scheduled",
-      homeScore: f.score?.home ?? null,
-      awayScore: f.score?.away ?? null,
+    // Convert to CLEAN FLAT structure - EXACTLY as specified
+    const cleanFixtures = fixtures.map((f: any) => ({
+      id: f.fixtureId,
+      date: formatDate(new Date(f.date)),
+      time: formatTime(new Date(f.date)),
+      leagueId: f.leagueId,
+      leagueName: f.league,
+      homeTeamName: f.homeTeam,
+      awayTeamName: f.awayTeam,
+      homeTeamId: f.homeTeamId,
+      awayTeamId: f.awayTeamId,
+      status: f.status,
     }));
 
     res.json({
       success: true,
-      data: normalized,
-      count: normalized.length,
+      data: cleanFixtures,
+      count: cleanFixtures.length,
     });
 
   } catch (error: any) {
@@ -83,7 +96,7 @@ router.get('/', async (req: Request, res: Response) => {
 
 
 /* ============================================================
-   📌 FIXTURE BY ID
+   📌 FIXTURE BY ID - CLEAN FLAT STRUCTURE
    ============================================================ */
 router.get('/:id', async (req, res) => {
   try {
@@ -98,9 +111,28 @@ router.get('/:id', async (req, res) => {
       });
     }
 
+    // Return CLEAN FLAT structure
+    const cleanFixture = {
+      id: fixture.fixtureId,
+      date: formatDate(new Date(fixture.date)),
+      time: formatTime(new Date(fixture.date)),
+      leagueId: fixture.leagueId,
+      leagueName: fixture.league,
+      homeTeamName: fixture.homeTeam,
+      awayTeamName: fixture.awayTeam,
+      homeTeamId: fixture.homeTeamId,
+      awayTeamId: fixture.awayTeamId,
+      status: fixture.status,
+      country: fixture.country,
+      season: fixture.season,
+      odds: fixture.odds,
+      score: fixture.score,
+      aiBets: fixture.aiBets,
+    };
+
     res.json({
       success: true,
-      data: fixture
+      data: cleanFixture
     });
   } catch (error: any) {
     console.error('❌ Error fetching fixture:', error);
@@ -248,7 +280,7 @@ router.get('/:id/stats', async (req: Request, res: Response) => {
 /* ============================================================
    📌 TEAM LAST FIXTURES
    ============================================================ */
-router.get('/team/:teamId/last-fixtures', async (req: Request, res: Response) => {
+router.get('/team/:teamId/last', async (req: Request, res: Response) => {
   try {
     const { teamId } = req.params;
     const { last } = req.query;
@@ -260,12 +292,11 @@ router.get('/team/:teamId/last-fixtures', async (req: Request, res: Response) =>
 
     res.json({
       success: true,
-      data: fixtures,
-      count: fixtures.length
+      data: fixtures
     });
 
   } catch (error: any) {
-    console.error('❌ Error fetching team fixtures:', error);
+    console.error('❌ Error fetching team last fixtures:', error);
     res.status(500).json({
       success: false,
       error: error.message
@@ -275,13 +306,14 @@ router.get('/team/:teamId/last-fixtures', async (req: Request, res: Response) =>
 
 
 /* ============================================================
-   📌 AI ANALYSIS - SINGLE FIXTURE
+   📌 ANALYZE FIXTURE (ML PREDICTIONS)
    ============================================================ */
 router.post('/:id/analyze', async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
+    
     const fixture = await Fixture.findOne({ fixtureId: Number(id) }).lean();
-
+    
     if (!fixture) {
       return res.status(404).json({
         success: false,
@@ -289,19 +321,21 @@ router.post('/:id/analyze', async (req: Request, res: Response) => {
       });
     }
 
+    // Convert to FixtureInput format for ML service
     const fixtureInput: FixtureInput = {
-      id: fixture.fixtureId.toString(),
+      id: fixture.fixtureId,
       homeTeam: fixture.homeTeam,
       awayTeam: fixture.awayTeam,
       league: fixture.league,
       date: fixture.date.toISOString(),
+      odds: fixture.odds
     };
 
-    const prediction = await analyzeFixture(fixtureInput);
+    const analysis = await analyzeFixture(fixtureInput);
 
     res.json({
       success: true,
-      data: prediction
+      data: analysis
     });
 
   } catch (error: any) {
@@ -315,7 +349,7 @@ router.post('/:id/analyze', async (req: Request, res: Response) => {
 
 
 /* ============================================================
-   📌 AI ANALYSIS - BULK FIXTURES
+   📌 BULK ANALYZE FIXTURES
    ============================================================ */
 router.post('/analyze/bulk', async (req: Request, res: Response) => {
   try {
@@ -334,26 +368,28 @@ router.post('/analyze/bulk', async (req: Request, res: Response) => {
 
     const fixtures = await Fixture.find({
       date: { $gte: targetDate, $lt: nextDate }
-    }).limit(50).lean();
+    }).lean();
 
+    // Convert to FixtureInput format
     const fixtureInputs: FixtureInput[] = fixtures.map(f => ({
-      id: f.fixtureId.toString(),
+      id: f.fixtureId,
       homeTeam: f.homeTeam,
       awayTeam: f.awayTeam,
       league: f.league,
       date: f.date.toISOString(),
+      odds: f.odds
     }));
 
-    const predictions = await analyzeBulkFixtures(fixtureInputs);
+    const analyses = await analyzeBulkFixtures(fixtureInputs);
 
     res.json({
       success: true,
-      data: predictions,
-      count: predictions.length
+      data: analyses,
+      count: analyses.length
     });
 
   } catch (error: any) {
-    console.error('❌ Error analyzing fixtures:', error);
+    console.error('❌ Error bulk analyzing fixtures:', error);
     res.status(500).json({
       success: false,
       error: error.message
@@ -363,37 +399,29 @@ router.post('/analyze/bulk', async (req: Request, res: Response) => {
 
 
 /* ============================================================
-   📌 GOLDEN BETS FINDER
+   📌 FIND GOLDEN BETS
    ============================================================ */
-router.post('/golden-bets', async (req: Request, res: Response) => {
+router.get('/golden-bets/today', async (req: Request, res: Response) => {
   try {
-    const { date } = req.body;
-
-    if (!date) {
-      return res.status(400).json({
-        success: false,
-        error: 'Date is required'
-      });
-    }
-
-    const targetDate = new Date(date);
-    const nextDate = new Date(targetDate);
-    nextDate.setDate(nextDate.getDate() + 1);
+    const today = new Date();
+    const tomorrow = new Date(today);
+    tomorrow.setDate(tomorrow.getDate() + 1);
 
     const fixtures = await Fixture.find({
-      date: { $gte: targetDate, $lt: nextDate }
-    }).limit(50).lean();
+      date: { $gte: today, $lt: tomorrow }
+    }).lean();
 
+    // Convert to FixtureInput format
     const fixtureInputs: FixtureInput[] = fixtures.map(f => ({
-      id: f.fixtureId.toString(),
+      id: f.fixtureId,
       homeTeam: f.homeTeam,
       awayTeam: f.awayTeam,
       league: f.league,
       date: f.date.toISOString(),
+      odds: f.odds
     }));
 
-    const predictions = await analyzeBulkFixtures(fixtureInputs);
-    const goldenBets = await findGoldenBets(predictions);
+    const goldenBets = await findGoldenBets(fixtureInputs);
 
     res.json({
       success: true,
@@ -412,37 +440,29 @@ router.post('/golden-bets', async (req: Request, res: Response) => {
 
 
 /* ============================================================
-   📌 VALUE BETS FINDER
+   📌 FIND VALUE BETS
    ============================================================ */
-router.post('/value-bets', async (req: Request, res: Response) => {
+router.get('/value-bets/today', async (req: Request, res: Response) => {
   try {
-    const { date } = req.body;
-
-    if (!date) {
-      return res.status(400).json({
-        success: false,
-        error: 'Date is required'
-      });
-    }
-
-    const targetDate = new Date(date);
-    const nextDate = new Date(targetDate);
-    nextDate.setDate(nextDate.getDate() + 1);
+    const today = new Date();
+    const tomorrow = new Date(today);
+    tomorrow.setDate(tomorrow.getDate() + 1);
 
     const fixtures = await Fixture.find({
-      date: { $gte: targetDate, $lt: nextDate }
-    }).limit(50).lean();
+      date: { $gte: today, $lt: tomorrow }
+    }).lean();
 
+    // Convert to FixtureInput format
     const fixtureInputs: FixtureInput[] = fixtures.map(f => ({
-      id: f.fixtureId.toString(),
+      id: f.fixtureId,
       homeTeam: f.homeTeam,
       awayTeam: f.awayTeam,
       league: f.league,
       date: f.date.toISOString(),
+      odds: f.odds
     }));
 
-    const predictions = await analyzeBulkFixtures(fixtureInputs);
-    const valueBets = await findValueBets(predictions);
+    const valueBets = await findValueBets(fixtureInputs);
 
     res.json({
       success: true,
