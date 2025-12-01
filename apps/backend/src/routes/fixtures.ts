@@ -38,8 +38,8 @@ function formatDate(date: Date): string {
 }
 
 /* ============================================================
-   📌 FIXTURES LIST - CLEAN FLAT STRUCTURE
-   Returns EXACT structure frontend expects - NO nested objects
+   📌 FIXTURES LIST - CLEAN FLAT STRUCTURE WITH ODDS & SCORES
+   Returns EXACT structure frontend expects with odds and predictions
    ============================================================ */
 router.get('/', async (req: Request, res: Response) => {
   try {
@@ -65,7 +65,7 @@ router.get('/', async (req: Request, res: Response) => {
       .lean()
       .maxTimeMS(5000);
 
-    // Convert to CLEAN FLAT structure - EXACTLY as specified
+    // Convert to CLEAN FLAT structure with odds, scores, and predictions
     const cleanFixtures = fixtures.map((f: any) => ({
       id: f.fixtureId,
       date: formatDate(new Date(f.date)),
@@ -77,6 +77,31 @@ router.get('/', async (req: Request, res: Response) => {
       homeTeamId: f.homeTeamId,
       awayTeamId: f.awayTeamId,
       status: f.status,
+      homeScore: f.score?.home ?? null,
+      awayScore: f.score?.away ?? null,
+      season: f.season,
+      country: f.country,
+      // Include odds if available
+      odds: f.odds ? {
+        btts: f.odds.btts,
+        btts_yes: f.odds.btts_yes,
+        over25: f.odds.over25,
+        over_2_5: f.odds.over_2_5,
+        over35cards: f.odds.over35cards,
+        over_3_5_cards: f.odds.over_3_5_cards,
+        over95corners: f.odds.over95corners,
+        over_9_5_corners: f.odds.over_9_5_corners,
+      } : undefined,
+      // Include AI predictions if available
+      aiBets: f.aiBets ? {
+        bts: f.aiBets.bts,
+        over25: f.aiBets.over25,
+        over35cards: f.aiBets.over35cards,
+        over95corners: f.aiBets.over95corners,
+        goldenBet: f.aiBets.goldenBet,
+      } : undefined,
+      // Include golden bet if available
+      golden_bet: f.golden_bet,
     }));
 
     res.json({
@@ -125,9 +150,12 @@ router.get('/:id', async (req, res) => {
       status: fixture.status,
       country: fixture.country,
       season: fixture.season,
+      homeScore: fixture.score?.home ?? null,
+      awayScore: fixture.score?.away ?? null,
       odds: fixture.odds,
       score: fixture.score,
       aiBets: fixture.aiBets,
+      golden_bet: fixture.golden_bet,
     };
 
     res.json({
