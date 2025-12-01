@@ -8,6 +8,7 @@ import { syncFeaturedSelections } from './pnlTrackingService.js';
 import { findBetBuilders, saveBetBuilders } from './betBuilderService.js';
 import { getBetBuilderOfTheDay } from './betBuilderOfTheDayService.js';
 import { loadTodaysFixtures } from '../cron/fixturesCron.js';
+import { updateLiveScores, updateRecentlyFinishedFixtures } from './liveScoresService.js';
 import { Prediction } from '../models/Prediction.js';
 import { Fixture } from '../models/Fixture.js';
 
@@ -50,6 +51,30 @@ export function startCronJobs() {
     await syncPnL();
   });
 
+  // 🔴 LIVE SCORES UPDATE - Every minute
+  cron.schedule('* * * * *', async () => {
+    try {
+      const result = await updateLiveScores();
+      if (result.total > 0) {
+        console.log(`🔴 Live scores updated: ${result.updated}/${result.total} fixtures`);
+      }
+    } catch (error) {
+      console.error('❌ Error updating live scores:', error);
+    }
+  });
+
+  // 🏁 RECENTLY FINISHED FIXTURES - Every 5 minutes
+  cron.schedule('*/5 * * * *', async () => {
+    try {
+      const result = await updateRecentlyFinishedFixtures();
+      if (result.total > 0) {
+        console.log(`🏁 Recently finished fixtures updated: ${result.updated}/${result.total}`);
+      }
+    } catch (error) {
+      console.error('❌ Error updating recently finished fixtures:', error);
+    }
+  });
+
   console.log(`✅ Cron jobs scheduled:`);
   console.log(`   - Fixtures loading: 0 2 * * * (2am daily)`);
   console.log(`   - Daily predictions: ${schedule}`);
@@ -57,10 +82,16 @@ export function startCronJobs() {
   console.log(`   - Bet Builder generation: 0 8 * * * (8am daily)`);
   console.log(`   - Result settlement: 0 */2 * * * (every 2 hours)`);
   console.log(`   - P&L sync: 0 7 * * * (7am daily)`);
+  console.log(`   - 🔴 Live scores: * * * * * (every minute)`);
+  console.log(`   - 🏁 Recently finished: */5 * * * * (every 5 minutes)`);
 
   // Load fixtures on startup
   console.log('🚀 Loading today\'s fixtures on startup...');
   loadTodaysFixtures().catch(err => console.error('❌ Error loading fixtures on startup:', err));
+  
+  // Start live scores update immediately
+  console.log('🔴 Starting live scores update...');
+  updateLiveScores().catch(err => console.error('❌ Error updating live scores on startup:', err));
 }
 
 async function generateBetBuilders() {
