@@ -4,13 +4,20 @@ import {
   ChevronDown, ChevronUp, Trophy, AlertCircle
 } from 'lucide-react';
 import { fixturesApi } from '../services/api';
+import MatchDetailDrawer from './fixtures/MatchDetailDrawer';
 
 interface Fixture {
   fixtureId: string;
+  id?: string;
   homeTeam: string;
   awayTeam: string;
-  kickoff: string;
+  homeTeamName?: string;
+  awayTeamName?: string;
+  kickoff?: string;
+  date?: string;
+  time?: string;
   league: string;
+  leagueName?: string;
   homeTeamId?: number;
   awayTeamId?: number;
   leagueId?: number;
@@ -19,6 +26,12 @@ interface Fixture {
   status?: string;
   homeScore?: number;
   awayScore?: number;
+  score?: {
+    home: number;
+    away: number;
+  };
+  odds?: any;
+  aiBets?: any;
 }
 
 interface GroupedFixtures {
@@ -37,6 +50,10 @@ const FixturesView: React.FC<FixturesViewProps> = ({ onClose, embedded = false }
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [autoRefresh, setAutoRefresh] = useState(true);
+  
+  // Match Detail Drawer State
+  const [selectedFixture, setSelectedFixture] = useState<Fixture | null>(null);
+  const [isMatchDetailOpen, setIsMatchDetailOpen] = useState(false);
 
   useEffect(() => {
     fetchFixtures();
@@ -64,7 +81,7 @@ const FixturesView: React.FC<FixturesViewProps> = ({ onClose, embedded = false }
         if (expandedLeagues.size === 0) {
           const leagues = new Set<string>(
             response.data
-              .map((f: Fixture) => f.league)
+              .map((f: Fixture) => f.league || f.leagueName)
               .filter((league: string | undefined): league is string => Boolean(league))
           );
           setExpandedLeagues(leagues);
@@ -97,9 +114,35 @@ const FixturesView: React.FC<FixturesViewProps> = ({ onClose, embedded = false }
     setExpandedLeagues(newExpanded);
   };
 
+  const handleFixtureClick = async (fixture: Fixture) => {
+    try {
+      // Fetch full fixture details including odds and aiBets
+      const response = await fixturesApi.getById(Number(fixture.id || fixture.fixtureId));
+      
+      if (response.success && response.data) {
+        setSelectedFixture(response.data);
+        setIsMatchDetailOpen(true);
+      } else {
+        // Fallback to basic fixture data
+        setSelectedFixture(fixture);
+        setIsMatchDetailOpen(true);
+      }
+    } catch (err) {
+      console.error('Error fetching fixture details:', err);
+      // Still open drawer with basic data
+      setSelectedFixture(fixture);
+      setIsMatchDetailOpen(true);
+    }
+  };
+
+  const closeMatchDetail = () => {
+    setIsMatchDetailOpen(false);
+    setTimeout(() => setSelectedFixture(null), 300); // Clear after animation
+  };
+
   // Group fixtures by league
   const groupedFixtures: GroupedFixtures = fixtures.reduce((acc, fixture) => {
-    const league = fixture.league || 'Unknown League';
+    const league = fixture.league || fixture.leagueName || 'Unknown League';
     if (!acc[league]) {
       acc[league] = [];
     }
@@ -116,8 +159,14 @@ const FixturesView: React.FC<FixturesViewProps> = ({ onClose, embedded = false }
     });
   };
 
-  const formatTime = (kickoff: string) => {
-    return new Date(kickoff).toLocaleTimeString('en-GB', { 
+  const formatTime = (fixture: Fixture) => {
+    // Use time if available, otherwise parse kickoff or date
+    if (fixture.time) return fixture.time;
+    
+    const dateStr = fixture.kickoff || fixture.date;
+    if (!dateStr) return 'TBD';
+    
+    return new Date(dateStr).toLocaleTimeString('en-GB', { 
       hour: '2-digit', 
       minute: '2-digit' 
     });
@@ -127,14 +176,18 @@ const FixturesView: React.FC<FixturesViewProps> = ({ onClose, embedded = false }
     if (!status) return null;
     
     const statusConfig: Record<string, { label: string; className: string }> = {
+      'scheduled': { label: 'Scheduled', className: 'bg-gray-500' },
       'NS': { label: 'Not Started', className: 'bg-gray-500' },
+      'live': { label: 'LIVE', className: 'bg-red-500 animate-pulse' },
       'LIVE': { label: 'LIVE', className: 'bg-red-500 animate-pulse' },
       '1H': { label: '1st Half', className: 'bg-green-500' },
       'HT': { label: 'Half Time', className: 'bg-yellow-500' },
       '2H': { label: '2nd Half', className: 'bg-green-500' },
+      'finished': { label: 'Full Time', className: 'bg-blue-500' },
       'FT': { label: 'Full Time', className: 'bg-blue-500' },
       'AET': { label: 'Extra Time', className: 'bg-purple-500' },
       'PEN': { label: 'Penalties', className: 'bg-purple-500' },
+      'postponed': { label: 'Postponed', className: 'bg-gray-500' },
       'PST': { label: 'Postponed', className: 'bg-gray-500' },
       'CANC': { label: 'Cancelled', className: 'bg-red-500' },
       'ABD': { label: 'Abandoned', className: 'bg-red-500' },
@@ -150,7 +203,17 @@ const FixturesView: React.FC<FixturesViewProps> = ({ onClose, embedded = false }
   };
 
   const getScoreDisplay = (fixture: Fixture) => {
-    if (fixture.status && ['LIVE', '1H', 'HT', '2H', 'FT', 'AET', 'PEN'].includes(fixture.status)) {
+    // Check for score object first
+    if (fixture.score) {
+      return (
+        <div className="text-lg font-bold text-white">
+          {fixture.score.home ?? 0} - {fixture.score.away ?? 0}
+        </div>
+      );
+    }
+    
+    // Fallback to individual score fields
+    if (fixture.status && ['live', 'LIVE', '1H', 'HT', '2H', 'finished', 'FT', 'AET', 'PEN'].includes(fixture.status)) {
       return (
         <div className="text-lg font-bold text-white">
           {fixture.homeScore ?? 0} - {fixture.awayScore ?? 0}
@@ -285,25 +348,30 @@ const FixturesView: React.FC<FixturesViewProps> = ({ onClose, embedded = false }
                   <div className="border-t border-gray-700">
                     {leagueFixtures.map((fixture) => (
                       <div 
-                        key={fixture.fixtureId} 
-                        className="px-6 py-4 border-b border-gray-700 last:border-b-0 hover:bg-gray-700/30 transition-colors"
+                        key={fixture.fixtureId || fixture.id} 
+                        onClick={() => handleFixtureClick(fixture)}
+                        className="px-6 py-4 border-b border-gray-700 last:border-b-0 hover:bg-gray-700/30 transition-colors cursor-pointer"
                       >
                         <div className="flex items-center justify-between">
                           <div className="flex items-center gap-4 flex-1">
                             <Clock className="w-4 h-4 text-gray-400" />
                             <span className="text-sm text-gray-400 w-16">
-                              {formatTime(fixture.kickoff)}
+                              {formatTime(fixture)}
                             </span>
                             
                             <div className="flex-1">
                               <div className="flex items-center justify-between mb-1">
-                                <span className="text-white font-medium">{fixture.homeTeam}</span>
+                                <span className="text-white font-medium">
+                                  {fixture.homeTeamName || fixture.homeTeam}
+                                </span>
                                 {getScoreDisplay(fixture) && (
                                   <span className="mx-4">{getScoreDisplay(fixture)}</span>
                                 )}
                               </div>
                               <div className="flex items-center justify-between">
-                                <span className="text-white font-medium">{fixture.awayTeam}</span>
+                                <span className="text-white font-medium">
+                                  {fixture.awayTeamName || fixture.awayTeam}
+                                </span>
                               </div>
                             </div>
 
@@ -321,6 +389,13 @@ const FixturesView: React.FC<FixturesViewProps> = ({ onClose, embedded = false }
           </div>
         )}
       </div>
+
+      {/* Match Detail Drawer */}
+      <MatchDetailDrawer
+        fixture={selectedFixture}
+        isOpen={isMatchDetailOpen}
+        onClose={closeMatchDetail}
+      />
     </div>
   );
 };
