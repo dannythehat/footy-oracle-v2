@@ -1,6 +1,7 @@
 import { Router, Request, Response } from 'express';
 import { Fixture } from '../models/Fixture.js';
 import axios from 'axios';
+import { getLeagueLogo } from '../config/leagues.js';
 
 import { 
   analyzeFixture, 
@@ -190,8 +191,8 @@ router.post('/refresh-scores', async (req: Request, res: Response) => {
 });
 
 /* ============================================================
-   📌 FIXTURES LIST - CLEAN FLAT STRUCTURE WITH ODDS & SCORES
-   Returns EXACT structure frontend expects with odds and predictions
+   📌 FIXTURES LIST - CLEAN FLAT STRUCTURE WITH ODDS & SCORES & LOGOS
+   Returns EXACT structure frontend expects with odds, predictions, and league logos
    ============================================================ */
 router.get('/', async (req: Request, res: Response) => {
   try {
@@ -217,7 +218,7 @@ router.get('/', async (req: Request, res: Response) => {
       .lean()
       .maxTimeMS(5000);
 
-    // Convert to CLEAN FLAT structure with odds, scores, and predictions
+    // Convert to CLEAN FLAT structure with odds, scores, predictions, and league logos
     const cleanFixtures = fixtures.map((f: any) => ({
       id: f.fixtureId,
       fixtureId: f.fixtureId,
@@ -226,6 +227,7 @@ router.get('/', async (req: Request, res: Response) => {
       leagueId: f.leagueId,
       league: f.league,
       leagueName: f.league,
+      leagueLogo: getLeagueLogo(f.leagueId), // Add league logo
       homeTeam: f.homeTeam,
       awayTeam: f.awayTeam,
       homeTeamName: f.homeTeam,
@@ -281,7 +283,7 @@ router.get('/', async (req: Request, res: Response) => {
 
 
 /* ============================================================
-   📌 FIXTURE BY ID - CLEAN FLAT STRUCTURE
+   📌 FIXTURE BY ID - CLEAN FLAT STRUCTURE WITH LOGO
    ============================================================ */
 router.get('/:id', async (req, res) => {
   try {
@@ -296,7 +298,7 @@ router.get('/:id', async (req, res) => {
       });
     }
 
-    // Return CLEAN FLAT structure
+    // Return CLEAN FLAT structure with league logo
     const cleanFixture = {
       id: fixture.fixtureId,
       fixtureId: fixture.fixtureId,
@@ -305,6 +307,7 @@ router.get('/:id', async (req, res) => {
       leagueId: fixture.leagueId,
       league: fixture.league,
       leagueName: fixture.league,
+      leagueLogo: getLeagueLogo(fixture.leagueId), // Add league logo
       homeTeam: fixture.homeTeam,
       awayTeam: fixture.awayTeam,
       homeTeamName: fixture.homeTeam,
@@ -498,32 +501,20 @@ router.get('/team/:teamId/last', async (req: Request, res: Response) => {
 
 
 /* ============================================================
-   📌 ANALYZE FIXTURE (ML PREDICTIONS)
+   📌 ANALYZE FIXTURE - AI Analysis
    ============================================================ */
-router.post('/:id/analyze', async (req: Request, res: Response) => {
+router.post('/analyze', async (req: Request, res: Response) => {
   try {
-    const { id } = req.params;
+    const fixtureData: FixtureInput = req.body;
     
-    const fixture = await Fixture.findOne({ fixtureId: Number(id) }).lean();
-    
-    if (!fixture) {
-      return res.status(404).json({
+    if (!fixtureData || !fixtureData.homeTeam || !fixtureData.awayTeam) {
+      return res.status(400).json({
         success: false,
-        error: 'Fixture not found'
+        error: 'Invalid fixture data'
       });
     }
 
-    // Convert to FixtureInput format for ML service
-    const fixtureInput: FixtureInput = {
-      id: fixture.fixtureId,
-      homeTeam: fixture.homeTeam,
-      awayTeam: fixture.awayTeam,
-      league: fixture.league,
-      date: fixture.date.toISOString(),
-      odds: fixture.odds
-    };
-
-    const analysis = await analyzeFixture(fixtureInput);
+    const analysis = await analyzeFixture(fixtureData);
 
     res.json({
       success: true,
@@ -541,38 +532,20 @@ router.post('/:id/analyze', async (req: Request, res: Response) => {
 
 
 /* ============================================================
-   📌 BULK ANALYZE FIXTURES
+   📌 ANALYZE BULK FIXTURES
    ============================================================ */
-router.post('/analyze/bulk', async (req: Request, res: Response) => {
+router.post('/analyze-bulk', async (req: Request, res: Response) => {
   try {
-    const { date } = req.body;
-
-    if (!date) {
+    const { fixtures } = req.body;
+    
+    if (!Array.isArray(fixtures) || fixtures.length === 0) {
       return res.status(400).json({
         success: false,
-        error: 'Date is required'
+        error: 'Invalid fixtures array'
       });
     }
 
-    const targetDate = new Date(date);
-    const nextDate = new Date(targetDate);
-    nextDate.setDate(nextDate.getDate() + 1);
-
-    const fixtures = await Fixture.find({
-      date: { $gte: targetDate, $lt: nextDate }
-    }).lean();
-
-    // Convert to FixtureInput format
-    const fixtureInputs: FixtureInput[] = fixtures.map(f => ({
-      id: f.fixtureId,
-      homeTeam: f.homeTeam,
-      awayTeam: f.awayTeam,
-      league: f.league,
-      date: f.date.toISOString(),
-      odds: f.odds
-    }));
-
-    const analyses = await analyzeBulkFixtures(fixtureInputs);
+    const analyses = await analyzeBulkFixtures(fixtures);
 
     res.json({
       success: true,
@@ -581,7 +554,7 @@ router.post('/analyze/bulk', async (req: Request, res: Response) => {
     });
 
   } catch (error: any) {
-    console.error('❌ Error bulk analyzing fixtures:', error);
+    console.error('❌ Error analyzing bulk fixtures:', error);
     res.status(500).json({
       success: false,
       error: error.message
@@ -593,27 +566,18 @@ router.post('/analyze/bulk', async (req: Request, res: Response) => {
 /* ============================================================
    📌 FIND GOLDEN BETS
    ============================================================ */
-router.get('/golden-bets/today', async (req: Request, res: Response) => {
+router.post('/golden-bets', async (req: Request, res: Response) => {
   try {
-    const today = new Date();
-    const tomorrow = new Date(today);
-    tomorrow.setDate(tomorrow.getDate() + 1);
+    const { fixtures, minConfidence = 80 } = req.body;
+    
+    if (!Array.isArray(fixtures) || fixtures.length === 0) {
+      return res.status(400).json({
+        success: false,
+        error: 'Invalid fixtures array'
+      });
+    }
 
-    const fixtures = await Fixture.find({
-      date: { $gte: today, $lt: tomorrow }
-    }).lean();
-
-    // Convert to FixtureInput format
-    const fixtureInputs: FixtureInput[] = fixtures.map(f => ({
-      id: f.fixtureId,
-      homeTeam: f.homeTeam,
-      awayTeam: f.awayTeam,
-      league: f.league,
-      date: f.date.toISOString(),
-      odds: f.odds
-    }));
-
-    const goldenBets = await findGoldenBets(fixtureInputs);
+    const goldenBets = await findGoldenBets(fixtures, minConfidence);
 
     res.json({
       success: true,
@@ -634,27 +598,18 @@ router.get('/golden-bets/today', async (req: Request, res: Response) => {
 /* ============================================================
    📌 FIND VALUE BETS
    ============================================================ */
-router.get('/value-bets/today', async (req: Request, res: Response) => {
+router.post('/value-bets', async (req: Request, res: Response) => {
   try {
-    const today = new Date();
-    const tomorrow = new Date(today);
-    tomorrow.setDate(tomorrow.getDate() + 1);
+    const { fixtures, minValue = 5 } = req.body;
+    
+    if (!Array.isArray(fixtures) || fixtures.length === 0) {
+      return res.status(400).json({
+        success: false,
+        error: 'Invalid fixtures array'
+      });
+    }
 
-    const fixtures = await Fixture.find({
-      date: { $gte: today, $lt: tomorrow }
-    }).lean();
-
-    // Convert to FixtureInput format
-    const fixtureInputs: FixtureInput[] = fixtures.map(f => ({
-      id: f.fixtureId,
-      homeTeam: f.homeTeam,
-      awayTeam: f.awayTeam,
-      league: f.league,
-      date: f.date.toISOString(),
-      odds: f.odds
-    }));
-
-    const valueBets = await findValueBets(fixtureInputs);
+    const valueBets = await findValueBets(fixtures, minValue);
 
     res.json({
       success: true,
