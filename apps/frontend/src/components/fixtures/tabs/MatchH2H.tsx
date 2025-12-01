@@ -32,22 +32,35 @@ const MatchH2H: React.FC<MatchH2HProps> = ({ fixture }) => {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    fetchH2H();
-  }, [fixture.id]);
+    if (fixture && (fixture.id || fixture.fixtureId) && fixture.homeTeamId && fixture.awayTeamId) {
+      fetchH2H();
+    } else {
+      setError('Missing required fixture data');
+      setLoading(false);
+    }
+  }, [fixture?.id, fixture?.fixtureId]);
 
   const fetchH2H = async () => {
     try {
       setLoading(true);
       setError(null);
 
+      const fixtureId = fixture.id || fixture.fixtureId;
+      const homeTeamId = fixture.homeTeamId;
+      const awayTeamId = fixture.awayTeamId;
+
+      if (!fixtureId || !homeTeamId || !awayTeamId) {
+        throw new Error('Missing required IDs for H2H data');
+      }
+
       const response = await fixturesApi.getH2H(
-        fixture.id || fixture.fixtureId,
-        fixture.homeTeamId,
-        fixture.awayTeamId,
+        Number(fixtureId),
+        Number(homeTeamId),
+        Number(awayTeamId),
         10
       );
 
-      if (response.success) {
+      if (response.success && response.data) {
         setH2hData(response.data);
       } else {
         setError('H2H data not available');
@@ -61,17 +74,21 @@ const MatchH2H: React.FC<MatchH2HProps> = ({ fixture }) => {
   };
 
   const formatDate = (dateStr: string) => {
-    const date = new Date(dateStr);
-    return date.toLocaleDateString('en-GB', {
-      day: 'numeric',
-      month: 'short',
-      year: 'numeric'
-    });
+    try {
+      const date = new Date(dateStr);
+      return date.toLocaleDateString('en-GB', {
+        day: 'numeric',
+        month: 'short',
+        year: 'numeric'
+      });
+    } catch {
+      return 'Unknown';
+    }
   };
 
   const getResultBadge = (match: H2HMatch, isHome: boolean) => {
-    const homeScore = match.score.home;
-    const awayScore = match.score.away;
+    const homeScore = match.score?.home ?? 0;
+    const awayScore = match.score?.away ?? 0;
 
     let result: 'W' | 'D' | 'L';
     if (homeScore > awayScore) {
@@ -118,7 +135,7 @@ const MatchH2H: React.FC<MatchH2HProps> = ({ fixture }) => {
                 H2H Data Not Available
               </div>
               <p className="text-xs text-gray-300">
-                No previous meetings found between these teams.
+                {error || 'No previous meetings found between these teams.'}
               </p>
             </div>
           </div>
@@ -139,15 +156,15 @@ const MatchH2H: React.FC<MatchH2HProps> = ({ fixture }) => {
       <div className="bg-gradient-to-br from-gray-800/60 to-gray-900/60 backdrop-blur-sm rounded-xl p-4 mb-6 border border-gray-700/60 shadow-xl">
         <div className="grid grid-cols-3 gap-4 mb-4">
           <div className="text-center bg-purple-900/30 rounded-lg p-3 border border-purple-500/30 shadow-lg">
-            <div className="text-2xl font-bold text-purple-400 drop-shadow-lg">{h2hData.stats.homeWins}</div>
+            <div className="text-2xl font-bold text-purple-400 drop-shadow-lg">{h2hData.stats.homeWins || 0}</div>
             <div className="text-xs text-gray-400 mt-1">Home Wins</div>
           </div>
           <div className="text-center bg-yellow-900/30 rounded-lg p-3 border border-yellow-500/30 shadow-lg">
-            <div className="text-2xl font-bold text-yellow-400 drop-shadow-lg">{h2hData.stats.draws}</div>
+            <div className="text-2xl font-bold text-yellow-400 drop-shadow-lg">{h2hData.stats.draws || 0}</div>
             <div className="text-xs text-gray-400 mt-1">Draws</div>
           </div>
           <div className="text-center bg-blue-900/30 rounded-lg p-3 border border-blue-500/30 shadow-lg">
-            <div className="text-2xl font-bold text-blue-400 drop-shadow-lg">{h2hData.stats.awayWins}</div>
+            <div className="text-2xl font-bold text-blue-400 drop-shadow-lg">{h2hData.stats.awayWins || 0}</div>
             <div className="text-xs text-gray-400 mt-1">Away Wins</div>
           </div>
         </div>
@@ -155,13 +172,13 @@ const MatchH2H: React.FC<MatchH2HProps> = ({ fixture }) => {
         <div className="grid grid-cols-2 gap-4 pt-4 border-t border-gray-700/50">
           <div className="text-center bg-gray-800/50 rounded-lg p-3 shadow-lg">
             <div className="text-lg font-bold text-white drop-shadow-lg">
-              {h2hData.stats.bttsCount}/{h2hData.stats.totalMatches}
+              {h2hData.stats.bttsCount || 0}/{h2hData.stats.totalMatches || 0}
             </div>
             <div className="text-xs text-gray-400 mt-1">BTTS</div>
           </div>
           <div className="text-center bg-gray-800/50 rounded-lg p-3 shadow-lg">
             <div className="text-lg font-bold text-white drop-shadow-lg">
-              {h2hData.stats.over25Count}/{h2hData.stats.totalMatches}
+              {h2hData.stats.over25Count || 0}/{h2hData.stats.totalMatches || 0}
             </div>
             <div className="text-xs text-gray-400 mt-1">Over 2.5 Goals</div>
           </div>
@@ -169,52 +186,58 @@ const MatchH2H: React.FC<MatchH2HProps> = ({ fixture }) => {
       </div>
 
       {/* Last Meetings - Enhanced */}
-      <div className="mb-4">
-        <h3 className="text-sm font-semibold text-gray-400 mb-3">Last {h2hData.matches.length} Meetings</h3>
-        <div className="space-y-3">
-          {h2hData.matches.map((match, index) => {
-            const isHomeTeamHome = match.homeTeam === (fixture.homeTeamName || fixture.homeTeam);
+      {h2hData.matches && h2hData.matches.length > 0 ? (
+        <div className="mb-4">
+          <h3 className="text-sm font-semibold text-gray-400 mb-3">Last {h2hData.matches.length} Meetings</h3>
+          <div className="space-y-3">
+            {h2hData.matches.map((match, index) => {
+              const isHomeTeamHome = match.homeTeam === (fixture.homeTeamName || fixture.homeTeam);
 
-            return (
-              <div
-                key={index}
-                className="bg-gradient-to-br from-gray-800/60 to-gray-900/60 backdrop-blur-sm rounded-lg p-3 border border-gray-700/60 shadow-lg hover:shadow-xl hover:-translate-y-0.5 transition-all duration-200 group"
-              >
-                {/* Hover glow effect */}
-                <div className="absolute inset-0 rounded-lg bg-gradient-to-br from-purple-500/0 to-purple-500/5 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+              return (
+                <div
+                  key={index}
+                  className="bg-gradient-to-br from-gray-800/60 to-gray-900/60 backdrop-blur-sm rounded-lg p-3 border border-gray-700/60 shadow-lg hover:shadow-xl hover:-translate-y-0.5 transition-all duration-200 group"
+                >
+                  {/* Hover glow effect */}
+                  <div className="absolute inset-0 rounded-lg bg-gradient-to-br from-purple-500/0 to-purple-500/5 opacity-0 group-hover:opacity-100 transition-opacity"></div>
 
-                <div className="flex items-center justify-between mb-2 relative z-10">
-                  <div className="flex items-center gap-2 text-xs text-gray-400">
-                    <Calendar className="w-3 h-3" />
-                    <span>{formatDate(match.date)}</span>
-                  </div>
-                  <div className="flex items-center gap-2 text-xs text-gray-400 bg-gray-800/50 px-2 py-1 rounded shadow-inner">
-                    <Trophy className="w-3 h-3" />
-                    <span>{match.league}</span>
-                  </div>
-                </div>
-
-                <div className="flex items-center justify-between relative z-10">
-                  <div className="flex-1">
-                    <div className="text-sm text-white font-medium drop-shadow-lg">{match.homeTeam}</div>
-                    <div className="text-sm text-white font-medium mt-1 drop-shadow-lg">{match.awayTeam}</div>
-                  </div>
-
-                  <div className="text-center px-4 bg-gray-900/50 rounded-lg py-2 shadow-lg">
-                    <div className="text-lg font-bold text-white drop-shadow-lg">
-                      {match.score.home} - {match.score.away}
+                  <div className="flex items-center justify-between mb-2 relative z-10">
+                    <div className="flex items-center gap-2 text-xs text-gray-400">
+                      <Calendar className="w-3 h-3" />
+                      <span>{formatDate(match.date)}</span>
+                    </div>
+                    <div className="flex items-center gap-2 text-xs text-gray-400 bg-gray-800/50 px-2 py-1 rounded shadow-inner">
+                      <Trophy className="w-3 h-3" />
+                      <span>{match.league || 'Unknown'}</span>
                     </div>
                   </div>
 
-                  <div className="flex flex-col gap-1">
-                    {getResultBadge(match, isHomeTeamHome)}
+                  <div className="flex items-center justify-between relative z-10">
+                    <div className="flex-1">
+                      <div className="text-sm text-white font-medium drop-shadow-lg">{match.homeTeam || 'Unknown'}</div>
+                      <div className="text-sm text-white font-medium mt-1 drop-shadow-lg">{match.awayTeam || 'Unknown'}</div>
+                    </div>
+
+                    <div className="text-center px-4 bg-gray-900/50 rounded-lg py-2 shadow-lg">
+                      <div className="text-lg font-bold text-white drop-shadow-lg">
+                        {match.score?.home ?? 0} - {match.score?.away ?? 0}
+                      </div>
+                    </div>
+
+                    <div className="flex flex-col gap-1">
+                      {getResultBadge(match, isHomeTeamHome)}
+                    </div>
                   </div>
                 </div>
-              </div>
-            );
-          })}
+              );
+            })}
+          </div>
         </div>
-      </div>
+      ) : (
+        <div className="text-center text-gray-400 py-8">
+          <p>No previous meetings found</p>
+        </div>
+      )}
     </div>
   );
 };
