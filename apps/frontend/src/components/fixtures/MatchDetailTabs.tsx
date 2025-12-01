@@ -15,7 +15,7 @@ const MatchDetailTabs: React.FC<MatchDetailTabsProps> = ({ activeTab, onTabChang
   ];
 
   return (
-    <div className="sticky top-0 bg-gray-900/95 backdrop-blur-sm border-b border-gray-700 z-10">
+    <div className="sticky top-0 bg-gradient-to-b from-gray-900 to-gray-900/95 backdrop-blur-md border-b border-gray-700/50 z-10 shadow-lg">
       <div className="flex">
         {tabs.map((tab) => {
           const Icon = tab.icon;
@@ -25,14 +25,27 @@ const MatchDetailTabs: React.FC<MatchDetailTabsProps> = ({ activeTab, onTabChang
             <button
               key={tab.id}
               onClick={() => onTabChange(tab.id)}
-              className={`flex-1 flex items-center justify-center gap-2 py-4 px-4 font-medium transition-all ${
+              className={`flex-1 flex items-center justify-center gap-2 py-4 px-4 font-medium transition-all duration-200 relative group ${
                 isActive
-                  ? 'text-purple-400 border-b-2 border-purple-400'
-                  : 'text-gray-400 hover:text-gray-300'
+                  ? 'text-purple-400'
+                  : 'text-gray-400 hover:text-gray-300 hover:-translate-y-0.5'
               }`}
             >
-              <Icon className="w-4 h-4" />
-              <span className="text-sm">{tab.label}</span>
+              {/* Active indicator with glow */}
+              {isActive && (
+                <>
+                  <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r from-transparent via-purple-400 to-transparent shadow-lg shadow-purple-500/50"></div>
+                  <div className="absolute inset-0 bg-gradient-to-t from-purple-500/10 to-transparent"></div>
+                </>
+              )}
+
+              {/* Hover effect */}
+              {!isActive && (
+                <div className="absolute inset-0 bg-gradient-to-t from-gray-700/0 to-gray-700/10 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+              )}
+
+              <Icon className={`w-4 h-4 relative z-10 ${isActive ? 'drop-shadow-lg' : ''}`} />
+              <span className={`text-sm relative z-10 ${isActive ? 'drop-shadow-lg' : ''}`}>{tab.label}</span>
             </button>
           );
         })}
