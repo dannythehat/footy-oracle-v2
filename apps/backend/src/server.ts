@@ -9,6 +9,7 @@ import cors from 'cors';
 import { createServer } from 'http';
 import { wsService } from './services/websocket';
 import { startFixturesCron } from './cron/fixturesCron';
+import { startLiveScoresCron } from './cron/liveScoresCron';
 
 const app = express();
 const httpServer = createServer(app);
@@ -39,9 +40,10 @@ app.use(express.json());
 connectDB();
 
 // --------------------
-// CRON JOBS - Initialize fixtures loading
+// CRON JOBS - Initialize fixtures loading and live scores
 // --------------------
 startFixturesCron();
+startLiveScoresCron(); // CRITICAL: Start live scores updates
 
 // --------------------
 // WEBSOCKET
