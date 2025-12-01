@@ -28,23 +28,38 @@ const MatchStats: React.FC<MatchStatsProps> = ({ fixture }) => {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    fetchStats();
-  }, [fixture.id]);
+    if (fixture && (fixture.id || fixture.fixtureId) && fixture.homeTeamId && fixture.awayTeamId && fixture.leagueId && fixture.season) {
+      fetchStats();
+    } else {
+      setError('Missing required fixture data');
+      setLoading(false);
+    }
+  }, [fixture?.id, fixture?.fixtureId]);
 
   const fetchStats = async () => {
     try {
       setLoading(true);
       setError(null);
 
+      const fixtureId = fixture.id || fixture.fixtureId;
+      const homeTeamId = fixture.homeTeamId;
+      const awayTeamId = fixture.awayTeamId;
+      const leagueId = fixture.leagueId;
+      const season = fixture.season;
+
+      if (!fixtureId || !homeTeamId || !awayTeamId || !leagueId || !season) {
+        throw new Error('Missing required IDs for stats');
+      }
+
       const response = await fixturesApi.getFixtureStats(
-        fixture.id || fixture.fixtureId,
-        fixture.homeTeamId,
-        fixture.awayTeamId,
-        fixture.leagueId,
-        fixture.season
+        Number(fixtureId),
+        Number(homeTeamId),
+        Number(awayTeamId),
+        Number(leagueId),
+        Number(season)
       );
 
-      if (response.success) {
+      if (response.success && response.data) {
         setStats(response.data);
       } else {
         setError('Stats not available');
@@ -109,7 +124,7 @@ const MatchStats: React.FC<MatchStatsProps> = ({ fixture }) => {
                 Statistics Not Available
               </div>
               <p className="text-xs text-gray-300">
-                Match statistics will be available during and after the match.
+                {error || 'Match statistics will be available during and after the match.'}
               </p>
             </div>
           </div>
@@ -128,14 +143,14 @@ const MatchStats: React.FC<MatchStatsProps> = ({ fixture }) => {
 
       {/* Team Names */}
       <div className="flex items-center justify-between mb-6 text-sm bg-gradient-to-r from-purple-900/30 via-gray-900/30 to-blue-900/30 rounded-lg p-3 border border-gray-700/50 shadow-lg">
-        <span className="text-purple-400 font-semibold drop-shadow-lg">{fixture.homeTeamName || fixture.homeTeam}</span>
-        <span className="text-blue-400 font-semibold drop-shadow-lg">{fixture.awayTeamName || fixture.awayTeam}</span>
+        <span className="text-purple-400 font-semibold drop-shadow-lg">{fixture.homeTeamName || fixture.homeTeam || 'Home'}</span>
+        <span className="text-blue-400 font-semibold drop-shadow-lg">{fixture.awayTeamName || fixture.awayTeam || 'Away'}</span>
       </div>
 
       {/* Stats */}
       <div className="space-y-3">
         {/* Possession */}
-        {stats.home.possession !== undefined && stats.away.possession !== undefined && (
+        {stats.home?.possession !== undefined && stats.away?.possession !== undefined && (
           <div className="mb-4 bg-gradient-to-br from-gray-800/40 to-gray-900/40 rounded-lg p-3 border border-gray-700/50 shadow-lg backdrop-blur-sm">
             <div className="flex items-center justify-between text-sm mb-2">
               <span className="text-white font-semibold drop-shadow-lg">{stats.home.possession}%</span>
@@ -159,7 +174,7 @@ const MatchStats: React.FC<MatchStatsProps> = ({ fixture }) => {
         )}
 
         {/* Shots */}
-        {stats.home.shots && stats.away.shots && (
+        {stats.home?.shots && stats.away?.shots && (
           renderStatBar(
             'Shots',
             stats.home.shots.total || 0,
@@ -169,7 +184,7 @@ const MatchStats: React.FC<MatchStatsProps> = ({ fixture }) => {
         )}
 
         {/* Shots on Target */}
-        {stats.home.shots && stats.away.shots && (
+        {stats.home?.shots && stats.away?.shots && (
           renderStatBar(
             'Shots on Target',
             stats.home.shots.on || 0,
@@ -179,7 +194,7 @@ const MatchStats: React.FC<MatchStatsProps> = ({ fixture }) => {
         )}
 
         {/* Corners */}
-        {stats.home.corners !== undefined && stats.away.corners !== undefined && (
+        {stats.home?.corners !== undefined && stats.away?.corners !== undefined && (
           renderStatBar(
             'Corners',
             stats.home.corners,
@@ -189,7 +204,7 @@ const MatchStats: React.FC<MatchStatsProps> = ({ fixture }) => {
         )}
 
         {/* Yellow Cards */}
-        {stats.home.yellowCards !== undefined && stats.away.yellowCards !== undefined && (
+        {stats.home?.yellowCards !== undefined && stats.away?.yellowCards !== undefined && (
           renderStatBar(
             'Yellow Cards',
             stats.home.yellowCards,
@@ -198,7 +213,7 @@ const MatchStats: React.FC<MatchStatsProps> = ({ fixture }) => {
         )}
 
         {/* Red Cards */}
-        {stats.home.redCards !== undefined && stats.away.redCards !== undefined && (
+        {stats.home?.redCards !== undefined && stats.away?.redCards !== undefined && (
           renderStatBar(
             'Red Cards',
             stats.home.redCards,
@@ -207,7 +222,7 @@ const MatchStats: React.FC<MatchStatsProps> = ({ fixture }) => {
         )}
 
         {/* Fouls */}
-        {stats.home.fouls !== undefined && stats.away.fouls !== undefined && (
+        {stats.home?.fouls !== undefined && stats.away?.fouls !== undefined && (
           renderStatBar(
             'Fouls',
             stats.home.fouls,
@@ -216,7 +231,7 @@ const MatchStats: React.FC<MatchStatsProps> = ({ fixture }) => {
         )}
 
         {/* Attacks */}
-        {stats.home.attacks !== undefined && stats.away.attacks !== undefined && (
+        {stats.home?.attacks !== undefined && stats.away?.attacks !== undefined && (
           renderStatBar(
             'Attacks',
             stats.home.attacks,
@@ -225,7 +240,7 @@ const MatchStats: React.FC<MatchStatsProps> = ({ fixture }) => {
         )}
 
         {/* Dangerous Attacks */}
-        {stats.home.dangerousAttacks !== undefined && stats.away.dangerousAttacks !== undefined && (
+        {stats.home?.dangerousAttacks !== undefined && stats.away?.dangerousAttacks !== undefined && (
           renderStatBar(
             'Dangerous Attacks',
             stats.home.dangerousAttacks,
