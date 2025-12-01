@@ -3,13 +3,13 @@ dotenv.config();
 
 console.log('🔍 DEBUG SERVER MONGODB_URI =', process.env.MONGODB_URI);
 
-import { connectDB } from './config/database';
+import { connectDB } from './config/database.js';
 import express from 'express';
 import cors from 'cors';
 import { createServer } from 'http';
-import { wsService } from './services/websocket';
-import { startFixturesCron } from './cron/fixturesCron';
-import { startLiveScoresCron } from './cron/liveScoresCron';
+import { wsService } from './services/websocket.js';
+import { startFixturesCron } from './cron/fixturesCron.js';
+import { startLiveScoresCron } from './cron/liveScoresCron.js';
 
 const app = express();
 const httpServer = createServer(app);
