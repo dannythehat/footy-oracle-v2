@@ -94,7 +94,7 @@ export async function loadTodaysFixtures() {
         const existing = await Fixture.findOne({ fixtureId: fixtureData.fixtureId });
 
         if (existing) {
-          // Update existing fixture - only fields that exist in model
+          // Update existing fixture - NOW INCLUDING IDs
           await Fixture.updateOne(
             { fixtureId: fixtureData.fixtureId },
             {
@@ -102,8 +102,12 @@ export async function loadTodaysFixtures() {
                 date: new Date(fixtureData.date),
                 homeTeam: fixtureData.homeTeam,
                 awayTeam: fixtureData.awayTeam,
+                homeTeamId: fixtureData.homeTeamId,  // NEW
+                awayTeamId: fixtureData.awayTeamId,  // NEW
                 league: fixtureData.league,
+                leagueId: fixtureData.leagueId,      // NEW
                 country: fixtureData.country,
+                season: fixtureData.season,          // NEW
                 status: fixtureData.status,
                 odds: fixtureData.odds || {},
                 updatedAt: new Date(),
@@ -112,14 +116,18 @@ export async function loadTodaysFixtures() {
           );
           updatedCount++;
         } else {
-          // Create new fixture - only fields that exist in model
+          // Create new fixture - NOW INCLUDING IDs
           await Fixture.create({
             fixtureId: fixtureData.fixtureId,
             date: new Date(fixtureData.date),
             homeTeam: fixtureData.homeTeam,
             awayTeam: fixtureData.awayTeam,
+            homeTeamId: fixtureData.homeTeamId,  // NEW
+            awayTeamId: fixtureData.awayTeamId,  // NEW
             league: fixtureData.league,
+            leagueId: fixtureData.leagueId,      // NEW
             country: fixtureData.country,
+            season: fixtureData.season,          // NEW
             status: fixtureData.status,
             odds: fixtureData.odds || {},
             createdAt: new Date(),
@@ -173,7 +181,7 @@ export async function loadFixturesForDate(date: string) {
       const existing = await Fixture.findOne({ fixtureId: fixtureData.fixtureId });
 
       if (existing) {
-        // Update existing fixture with latest data
+        // Update existing fixture with latest data - NOW INCLUDING IDs
         await Fixture.updateOne(
           { fixtureId: fixtureData.fixtureId },
           {
@@ -181,8 +189,12 @@ export async function loadFixturesForDate(date: string) {
               date: new Date(fixtureData.date),
               homeTeam: fixtureData.homeTeam,
               awayTeam: fixtureData.awayTeam,
+              homeTeamId: fixtureData.homeTeamId,  // NEW
+              awayTeamId: fixtureData.awayTeamId,  // NEW
               league: fixtureData.league,
+              leagueId: fixtureData.leagueId,      // NEW
               country: fixtureData.country,
+              season: fixtureData.season,          // NEW
               status: fixtureData.status,
               odds: fixtureData.odds || existing.odds || {},
               updatedAt: new Date(),
@@ -191,14 +203,18 @@ export async function loadFixturesForDate(date: string) {
         );
         updatedCount++;
       } else {
-        // Create new fixture
+        // Create new fixture - NOW INCLUDING IDs
         await Fixture.create({
           fixtureId: fixtureData.fixtureId,
           date: new Date(fixtureData.date),
           homeTeam: fixtureData.homeTeam,
           awayTeam: fixtureData.awayTeam,
+          homeTeamId: fixtureData.homeTeamId,  // NEW
+          awayTeamId: fixtureData.awayTeamId,  // NEW
           league: fixtureData.league,
+          leagueId: fixtureData.leagueId,      // NEW
           country: fixtureData.country,
+          season: fixtureData.season,          // NEW
           status: fixtureData.status,
           odds: fixtureData.odds || {},
           createdAt: new Date(),

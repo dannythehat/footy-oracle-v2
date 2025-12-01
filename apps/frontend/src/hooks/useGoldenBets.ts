@@ -35,7 +35,7 @@ const fetchGoldenBets = async (): Promise<GoldenBet[]> => {
 };
 
 export const useGoldenBets = () =>
-  useQuery<GoldenBet[]>({
+  useQuery({
     queryKey: ['golden-bets-today'],
     queryFn: fetchGoldenBets,
     staleTime: 30_000, // 30 seconds

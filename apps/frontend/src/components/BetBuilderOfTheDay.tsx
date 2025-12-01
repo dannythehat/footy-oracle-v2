@@ -94,7 +94,7 @@ const BetBuilderOfTheDay: React.FC<BetBuilderOfTheDayProps> = ({ betBuilder, loa
           : 'bg-red-500/20 text-red-400 border-2 border-red-500/50'
       }`}>
         {result === 'win' ? '✓ WON' : '✗ LOST'}
-        {profit !== undefined && (
+        {profit !== undefined && profit !== null && (
           <span className="ml-2">
             {profit > 0 ? '+' : ''}{profit.toFixed(2)}€
           </span>
@@ -104,8 +104,12 @@ const BetBuilderOfTheDay: React.FC<BetBuilderOfTheDayProps> = ({ betBuilder, loa
   };
 
   const generateShareText = () => {
-    const marketsList = markets.map(m => `${m.marketName} (${m.confidence}%)`).join(', ');
-    return `👑 BET BUILDER OF THE DAY 👑\n\n${homeTeam} vs ${awayTeam}\n${league} • ${kickoffTime}\n\nMarkets: ${marketsList}\n\nCombined Confidence: ${combinedConfidence}%\nCombined Odds: ${estimatedCombinedOdds.toFixed(2)}x\n€10 → €${(10 * estimatedCombinedOdds).toFixed(2)}\n\nML Composite Score: ${compositeScore?.toFixed(2)}/100\n\n#FootyOracle #BetBuilderOfTheDay`;
+    const marketsList = markets?.map(m => `${m.marketName} (${m.confidence ?? 0}%)`).join(', ') ?? '';
+    const oddsText = estimatedCombinedOdds ? estimatedCombinedOdds.toFixed(2) : 'N/A';
+    const returnText = estimatedCombinedOdds ? (10 * estimatedCombinedOdds).toFixed(2) : 'N/A';
+    const scoreText = compositeScore ? compositeScore.toFixed(2) : 'N/A';
+    
+    return `👑 BET BUILDER OF THE DAY 👑\n\n${homeTeam} vs ${awayTeam}\n${league} • ${kickoffTime}\n\nMarkets: ${marketsList}\n\nCombined Confidence: ${combinedConfidence ?? 0}%\nCombined Odds: ${oddsText}x\n€10 → €${returnText}\n\nML Composite Score: ${scoreText}/100\n\n#FootyOracle #BetBuilderOfTheDay`;
   };
 
   const handleShare = (platform: string) => {
@@ -219,7 +223,7 @@ const BetBuilderOfTheDay: React.FC<BetBuilderOfTheDayProps> = ({ betBuilder, loa
         </h3>
 
         {/* ML Composite Score */}
-        {compositeScore && (
+        {compositeScore !== undefined && compositeScore !== null && (
           <div className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-purple-500/20 to-pink-500/20 border border-purple-500/50 rounded-full mt-2">
             <Brain className="w-4 h-4 text-purple-400" />
             <span className="text-sm text-purple-300 font-semibold">
@@ -233,10 +237,10 @@ const BetBuilderOfTheDay: React.FC<BetBuilderOfTheDayProps> = ({ betBuilder, loa
       <div className="space-y-4 mb-6">
         <div className="flex items-center gap-2 text-sm font-semibold text-yellow-300 mb-3">
           <Target className="w-5 h-5" />
-          <span>Premium Multi-Market Convergence ({markets.length} Markets)</span>
+          <span>Premium Multi-Market Convergence ({markets?.length ?? 0} Markets)</span>
         </div>
         
-        {markets.map((market, index) => (
+        {markets?.map((market, index) => (
           <div
             key={index}
             className="bg-black/50 border-2 border-yellow-500/30 rounded-lg p-4 hover:border-yellow-500/60 transition-colors"
@@ -244,7 +248,7 @@ const BetBuilderOfTheDay: React.FC<BetBuilderOfTheDayProps> = ({ betBuilder, loa
             <div className="flex items-center justify-between mb-3">
               <span className="text-white font-bold text-lg">{market.marketName}</span>
               <span className="text-yellow-400 font-black text-2xl">
-                {market.estimatedOdds.toFixed(2)}
+                {market.estimatedOdds?.toFixed(2) ?? 'N/A'}
               </span>
             </div>
             
@@ -252,13 +256,13 @@ const BetBuilderOfTheDay: React.FC<BetBuilderOfTheDayProps> = ({ betBuilder, loa
             <div className="relative h-3 bg-gray-800 rounded-full overflow-hidden">
               <div
                 className="absolute top-0 left-0 h-full bg-gradient-to-r from-yellow-500 via-yellow-400 to-orange-400 rounded-full transition-all duration-500 shadow-lg shadow-yellow-500/50"
-                style={{ width: `${market.confidence}%` }}
+                style={{ width: `${market.confidence ?? 0}%` }}
               />
             </div>
             <div className="flex justify-between items-center mt-2">
               <span className="text-xs text-gray-400 font-semibold">AI Confidence</span>
               <span className="text-sm font-black text-yellow-300">
-                {market.confidence}%
+                {market.confidence ?? 0}%
               </span>
             </div>
           </div>
@@ -273,7 +277,7 @@ const BetBuilderOfTheDay: React.FC<BetBuilderOfTheDayProps> = ({ betBuilder, loa
             <span className="font-bold">Combined Confidence</span>
           </div>
           <div className="text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 to-orange-400">
-            {combinedConfidence}%
+            {combinedConfidence ?? 0}%
           </div>
         </div>
         
@@ -283,23 +287,25 @@ const BetBuilderOfTheDay: React.FC<BetBuilderOfTheDayProps> = ({ betBuilder, loa
             <span className="font-bold">Combined Odds</span>
           </div>
           <div className="text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 to-orange-400">
-            {estimatedCombinedOdds.toFixed(2)}
+            {estimatedCombinedOdds?.toFixed(2) ?? 'N/A'}
           </div>
         </div>
       </div>
 
       {/* Potential Return - Premium */}
-      <div className="mb-6 p-5 bg-gradient-to-r from-green-500/10 to-emerald-500/10 border-2 border-green-500/40 rounded-xl">
-        <div className="flex items-center justify-between">
-          <span className="text-green-400 font-bold text-lg">€10 Stake Returns:</span>
-          <span className="text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-green-400 to-emerald-400">
-            €{(10 * estimatedCombinedOdds).toFixed(2)}
-          </span>
+      {estimatedCombinedOdds !== undefined && estimatedCombinedOdds !== null && (
+        <div className="mb-6 p-5 bg-gradient-to-r from-green-500/10 to-emerald-500/10 border-2 border-green-500/40 rounded-xl">
+          <div className="flex items-center justify-between">
+            <span className="text-green-400 font-bold text-lg">€10 Stake Returns:</span>
+            <span className="text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-green-400 to-emerald-400">
+              €{(10 * estimatedCombinedOdds).toFixed(2)}
+            </span>
+          </div>
+          <div className="text-right text-sm text-green-400/80 mt-2 font-semibold">
+            Profit: €{(10 * estimatedCombinedOdds - 10).toFixed(2)}
+          </div>
         </div>
-        <div className="text-right text-sm text-green-400/80 mt-2 font-semibold">
-          Profit: €{(10 * estimatedCombinedOdds - 10).toFixed(2)}
-        </div>
-      </div>
+      )}
 
       {/* Enhanced AI Reasoning */}
       {enhancedReasoning && (

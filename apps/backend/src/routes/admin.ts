@@ -1,8 +1,146 @@
 import { Router } from 'express';
 import { importBetBuilders, importBetBuildersFromAPI } from '../services/betBuilderImporter.js';
 import { runBetBuilderImportNow } from '../cron/betBuilderCron.js';
+import { exportFixturesForML, getExportStatus } from '../services/fixtureExportService.js';
 
 const router = Router();
+
+/**
+ * POST /api/admin/export-fixtures-ml
+ * Export today's fixtures for ML processing
+ */
+router.post('/export-fixtures-ml', async (req, res) => {
+  try {
+    console.log('📤 Manual ML fixture export triggered');
+    
+    await exportFixturesForML();
+    
+    res.json({
+      success: true,
+      message: 'Fixtures exported successfully for ML processing',
+      next_steps: [
+        '1. Run ML prediction scripts in football-betting-ai-system repo',
+        '2. ML will generate predictions for 4 markets (BTTS, Over 2.5, Corners, Cards)',
+        '3. Outputs will be written to shared/ml_outputs/',
+        '4. Frontend will display Golden Bets, Value Bets, and Bet Builders',
+      ],
+    });
+  } catch (error: any) {
+    console.error('Error exporting fixtures:', error);
+    res.status(500).json({
+      success: false,
+      error: error.message,
+    });
+  }
+});
+
+/**
+ * GET /api/admin/ml-status
+ * Check ML integration status
+ */
+router.get('/ml-status', async (req, res) => {
+  try {
+    const fs = await import('fs');
+    const path = await import('path');
+    const { fileURLToPath } = await import('url');
+    
+    const __filename = fileURLToPath(import.meta.url);
+    const __dirname = path.dirname(__filename);
+    
+    // Check ML input file
+    const inputPath = path.join(__dirname, '../../../../shared/ml_inputs/fixtures_today.json');
+    const inputExists = fs.existsSync(inputPath);
+    let inputData = null;
+    if (inputExists) {
+      const content = fs.readFileSync(inputPath, 'utf-8');
+      inputData = JSON.parse(content);
+    }
+    
+    // Check ML output files
+    const outputDir = path.join(__dirname, '../../../../shared/ml_outputs');
+    const predictionsPath = path.join(outputDir, 'predictions.json');
+    const goldenBetsPath = path.join(outputDir, 'golden_bets.json');
+    const valueBetsPath = path.join(outputDir, 'value_bets.json');
+    const betBuilderPath = path.join(outputDir, 'bet_builder.json');
+    
+    const predictionsExists = fs.existsSync(predictionsPath);
+    const goldenBetsExists = fs.existsSync(goldenBetsPath);
+    const valueBetsExists = fs.existsSync(valueBetsPath);
+    const betBuilderExists = fs.existsSync(betBuilderPath);
+    
+    let predictionsData = null;
+    let goldenBetsData = null;
+    let valueBetsData = null;
+    let betBuilderData = null;
+    
+    if (predictionsExists) {
+      const content = fs.readFileSync(predictionsPath, 'utf-8');
+      predictionsData = JSON.parse(content);
+    }
+    if (goldenBetsExists) {
+      const content = fs.readFileSync(goldenBetsPath, 'utf-8');
+      goldenBetsData = JSON.parse(content);
+    }
+    if (valueBetsExists) {
+      const content = fs.readFileSync(valueBetsPath, 'utf-8');
+      valueBetsData = JSON.parse(content);
+    }
+    if (betBuilderExists) {
+      const content = fs.readFileSync(betBuilderPath, 'utf-8');
+      betBuilderData = JSON.parse(content);
+    }
+    
+    // Get export status
+    const exportStatus = await getExportStatus();
+    
+    res.json({
+      success: true,
+      ml_integration: {
+        input: {
+          file_exists: inputExists,
+          path: inputPath,
+          fixtures_count: inputData?.length || 0,
+          status: inputExists && inputData?.length > 0 ? '✅ Ready' : '❌ Missing',
+        },
+        outputs: {
+          predictions: {
+            file_exists: predictionsExists,
+            count: Array.isArray(predictionsData) ? predictionsData.length : 0,
+            has_data: predictionsData && predictionsData.length > 0 && predictionsData[0]?.predictions?.over25 !== null,
+            status: predictionsExists && predictionsData?.length > 0 ? '✅ Generated' : '❌ Empty',
+          },
+          golden_bets: {
+            file_exists: goldenBetsExists,
+            count: Array.isArray(goldenBetsData) ? goldenBetsData.length : 0,
+            status: goldenBetsExists && goldenBetsData?.length > 0 ? '✅ Generated' : '❌ Empty',
+          },
+          value_bets: {
+            file_exists: valueBetsExists,
+            count: Array.isArray(valueBetsData) ? valueBetsData.length : 0,
+            status: valueBetsExists && valueBetsData?.length > 0 ? '✅ Generated' : '❌ Empty',
+          },
+          bet_builder: {
+            file_exists: betBuilderExists,
+            count: Array.isArray(betBuilderData) ? betBuilderData.length : 0,
+            status: betBuilderExists && betBuilderData?.length > 0 ? '✅ Generated' : '❌ Empty',
+          },
+        },
+        export_status: exportStatus,
+      },
+      instructions: {
+        step_1: 'POST /api/admin/export-fixtures-ml to export fixtures',
+        step_2: 'Run ML scripts in football-betting-ai-system repo',
+        step_3: 'Check this endpoint again to verify outputs',
+      },
+    });
+  } catch (error: any) {
+    console.error('Error checking ML status:', error);
+    res.status(500).json({
+      success: false,
+      error: error.message,
+    });
+  }
+});
 
 /**
  * POST /api/admin/import-bet-builders

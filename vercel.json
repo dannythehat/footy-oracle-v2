@@ -1,6 +1,9 @@
 {
-  "buildCommand": "cd apps/frontend && npm ci && npm run build",
+  "buildCommand": "cd apps/frontend && npm install && npm run build",
   "outputDirectory": "apps/frontend/dist",
-  "installCommand": "cd apps/frontend && npm ci",
-  "framework": "vite"
+  "installCommand": "cd apps/frontend && npm install",
+  "framework": "vite",
+  "github": {
+    "silent": false
+  }
 }

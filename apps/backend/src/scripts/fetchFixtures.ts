@@ -1,12 +1,12 @@
 import axios from 'axios';
 import mongoose from 'mongoose';
 import dotenv from 'dotenv';
-import Fixture from '../models/Fixture.js';
+import { Fixture } from '../models/Fixture.js';
 
 dotenv.config();
 
-const MONGODB_URI = process.env.MONGODB_URI;
-const API_KEY = process.env.API_FOOTBALL_KEY;
+const MONGODB_URI = process.env.MONGODB_URI!;
+const API_KEY = process.env.API_FOOTBALL_KEY!;
 
 async function run() {
   await mongoose.connect(MONGODB_URI);
@@ -22,31 +22,38 @@ async function run() {
 
   for (const f of list) {
     const data = {
-      fixture_id: f.fixture.id,
-      date: today,
-      timestamp: f.fixture.timestamp,
-      league_id: f.league.id,
-      league_name: f.league.name,
+      fixtureId: f.fixture.id,
+      date: new Date(f.fixture.timestamp * 1000),
+      homeTeam: f.teams.home.name,
+      awayTeam: f.teams.away.name,
+      homeTeamId: f.teams.home.id,      // NEW: Required for clean structure
+      awayTeamId: f.teams.away.id,      // NEW: Required for clean structure
+      league: f.league.name,
+      leagueId: f.league.id,            // NEW: Required for clean structure
       country: f.league.country,
-      home_team: f.teams.home.name,
-      away_team: f.teams.away.name,
-      status: f.fixture.status.long,
-      score: {
-        fulltime: f.score.fulltime,
-        halftime: f.score.halftime
-      },
-      events: []
+      season: f.league.season,          // NEW: Required for clean structure
+      status: f.fixture.status.short === 'FT' ? 'finished' : 
+              f.fixture.status.short === 'NS' ? 'scheduled' : 'live',
+      score: f.score.fulltime.home !== null ? {
+        home: f.score.fulltime.home,
+        away: f.score.fulltime.away
+      } : undefined,
+      odds: {} // Odds would be fetched separately if needed
     };
 
     await Fixture.findOneAndUpdate(
-      { fixture_id: f.fixture.id },
+      { fixtureId: f.fixture.id },
       data,
       { upsert: true }
     );
   }
 
-  console.log('Fixtures updated: ' + list.length);
+  console.log('✅ Fixtures updated: ' + list.length);
+  await mongoose.disconnect();
   process.exit(0);
 }
 
-run();
+run().catch(err => {
+  console.error('❌ Error:', err);
+  process.exit(1);
+});
