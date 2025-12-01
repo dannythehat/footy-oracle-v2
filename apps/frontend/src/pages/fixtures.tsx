@@ -26,6 +26,7 @@ interface Fixture {
   time: string;              // HH:mm
   leagueId: number;
   leagueName: string;
+  leagueLogo?: string | null; // League logo URL
   homeTeamName: string;
   awayTeamName: string;
   homeTeamId: number;
@@ -261,6 +262,12 @@ export default function FixturesPage() {
     return null;
   };
 
+  // Helper to get league logo for a league name
+  const getLeagueLogoForName = (leagueName: string): string | null => {
+    const fixture = fixtures.find(f => f.leagueName === leagueName);
+    return fixture?.leagueLogo || null;
+  };
+
   return (
     <div className="min-h-screen bg-black text-white">
       {/* Compact Header */}
@@ -484,86 +491,103 @@ export default function FixturesPage() {
         {/* Fixtures List - Enhanced Cards with Depth */}
         {!loading && !error && Object.keys(groupedFixtures).length > 0 && (
           <div className="space-y-4">
-            {Object.entries(groupedFixtures).map(([league, leagueFixtures]) => (
-              <div key={league} className="bg-gradient-to-br from-purple-950/30 via-purple-900/10 to-black border border-purple-500/30 rounded-xl overflow-hidden shadow-xl shadow-purple-500/10 backdrop-blur-sm">
-                {/* League Header - Enhanced */}
-                <div className="bg-gradient-to-r from-purple-900/40 to-purple-800/30 border-b border-purple-500/30 px-3 py-2 shadow-lg">
-                  <div className="flex items-center justify-between">
-                    <h2 className="text-xs font-bold text-purple-300 truncate tracking-wide">{league}</h2>
-                    <span className="text-[10px] text-purple-400 bg-purple-500/20 px-2 py-0.5 rounded-full flex-shrink-0">{leagueFixtures.length}</span>
+            {Object.entries(groupedFixtures).map(([league, leagueFixtures]) => {
+              const leagueLogo = getLeagueLogoForName(league);
+              
+              return (
+                <div key={league} className="bg-gradient-to-br from-purple-950/30 via-purple-900/10 to-black border border-purple-500/30 rounded-xl overflow-hidden shadow-xl shadow-purple-500/10 backdrop-blur-sm">
+                  {/* League Header - Enhanced with Logo */}
+                  <div className="bg-gradient-to-r from-purple-900/40 to-purple-800/30 border-b border-purple-500/30 px-3 py-2 shadow-lg">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2 min-w-0 flex-1">
+                        {leagueLogo && (
+                          <img 
+                            src={leagueLogo} 
+                            alt={league}
+                            className="w-5 h-5 object-contain flex-shrink-0"
+                            onError={(e) => {
+                              // Hide image if it fails to load
+                              e.currentTarget.style.display = 'none';
+                            }}
+                          />
+                        )}
+                        <h2 className="text-xs font-bold text-purple-300 truncate tracking-wide">{league}</h2>
+                      </div>
+                      <span className="text-[10px] text-purple-400 bg-purple-500/20 px-2 py-0.5 rounded-full flex-shrink-0">{leagueFixtures.length}</span>
+                    </div>
+                  </div>
+
+                  {/* Fixtures - Premium Cards */}
+                  <div className="divide-y divide-purple-500/10">
+                    {leagueFixtures.map((fixture) => {
+                      const hasOdds = fixture.odds && Object.keys(fixture.odds).length > 0;
+                      const bestOdds = hasOdds ? getOddsValue(fixture, 'btts') || getOddsValue(fixture, 'over25') : null;
+                      
+                      return (
+                        <button
+                          key={fixture.id}
+                          onClick={() => openFixtureDetail(fixture)}
+                          className={`w-full px-3 py-2.5 flex items-center gap-2 hover:bg-purple-500/15 transition-all duration-200 active:bg-purple-500/20 hover:-translate-y-0.5 hover:shadow-lg relative group ${
+                            fixture.golden_bet || fixture.aiBets?.goldenBet ? 'bg-yellow-500/5 border-l-2 border-yellow-500 shadow-yellow-500/10' : ''
+                          }`}
+                        >
+                          {/* Hover glow effect */}
+                          <div className="absolute inset-0 bg-gradient-to-r from-purple-500/0 via-purple-500/5 to-purple-500/0 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                          
+                          {/* Favorite Star */}
+                          <button
+                            onClick={(e) => toggleFavorite(fixture.id, e)}
+                            className="flex-shrink-0 z-10"
+                          >
+                            <Star 
+                              className={`w-3.5 h-3.5 transition-all ${
+                                favorites.has(fixture.id) 
+                                  ? 'text-yellow-400 fill-yellow-400 drop-shadow-lg' 
+                                  : 'text-gray-600 hover:text-yellow-400'
+                              }`}
+                            />
+                          </button>
+
+                          {/* Time */}
+                          <div className="text-[10px] text-gray-400 w-10 text-left flex-shrink-0 z-10">
+                            {fixture.time}
+                          </div>
+
+                          {/* Teams with Scores */}
+                          <div className="flex-1 text-left min-w-0 z-10">
+                            <div className="flex items-center justify-between gap-2 mb-0.5">
+                              <span className="text-xs font-semibold truncate">{fixture.homeTeamName}</span>
+                              {(fixture.homeScore !== null && fixture.homeScore !== undefined) && (
+                                <span className="text-sm font-bold text-purple-400 flex-shrink-0 drop-shadow-lg">{fixture.homeScore}</span>
+                              )}
+                            </div>
+                            <div className="flex items-center justify-between gap-2">
+                              <span className="text-xs font-semibold truncate">{fixture.awayTeamName}</span>
+                              {(fixture.awayScore !== null && fixture.awayScore !== undefined) && (
+                                <span className="text-sm font-bold text-purple-400 flex-shrink-0 drop-shadow-lg">{fixture.awayScore}</span>
+                              )}
+                            </div>
+                          </div>
+
+                          {/* Odds Badge - Enhanced */}
+                          {bestOdds && (
+                            <div className="flex items-center gap-1 px-2 py-1 bg-green-500/15 border border-green-500/40 rounded shadow-lg shadow-green-500/20 z-10">
+                              <TrendingUp className="w-2.5 h-2.5 text-green-400" />
+                              <span className="text-[9px] font-bold text-green-400">{bestOdds.toFixed(2)}</span>
+                            </div>
+                          )}
+
+                          {/* Golden Bet Badge */}
+                          {(fixture.golden_bet || fixture.aiBets?.goldenBet) && (
+                            <Star className="w-3.5 h-3.5 text-yellow-400 fill-yellow-400 flex-shrink-0 z-10 drop-shadow-lg" />
+                          )}
+                        </button>
+                      );
+                    })}
                   </div>
                 </div>
-
-                {/* Fixtures - Premium Cards */}
-                <div className="divide-y divide-purple-500/10">
-                  {leagueFixtures.map((fixture) => {
-                    const hasOdds = fixture.odds && Object.keys(fixture.odds).length > 0;
-                    const bestOdds = hasOdds ? getOddsValue(fixture, 'btts') || getOddsValue(fixture, 'over25') : null;
-                    
-                    return (
-                      <button
-                        key={fixture.id}
-                        onClick={() => openFixtureDetail(fixture)}
-                        className={`w-full px-3 py-2.5 flex items-center gap-2 hover:bg-purple-500/15 transition-all duration-200 active:bg-purple-500/20 hover:-translate-y-0.5 hover:shadow-lg relative group ${
-                          fixture.golden_bet || fixture.aiBets?.goldenBet ? 'bg-yellow-500/5 border-l-2 border-yellow-500 shadow-yellow-500/10' : ''
-                        }`}
-                      >
-                        {/* Hover glow effect */}
-                        <div className="absolute inset-0 bg-gradient-to-r from-purple-500/0 via-purple-500/5 to-purple-500/0 opacity-0 group-hover:opacity-100 transition-opacity"></div>
-                        
-                        {/* Favorite Star */}
-                        <button
-                          onClick={(e) => toggleFavorite(fixture.id, e)}
-                          className="flex-shrink-0 z-10"
-                        >
-                          <Star 
-                            className={`w-3.5 h-3.5 transition-all ${
-                              favorites.has(fixture.id) 
-                                ? 'text-yellow-400 fill-yellow-400 drop-shadow-lg' 
-                                : 'text-gray-600 hover:text-yellow-400'
-                            }`}
-                          />
-                        </button>
-
-                        {/* Time */}
-                        <div className="text-[10px] text-gray-400 w-10 text-left flex-shrink-0 z-10">
-                          {fixture.time}
-                        </div>
-
-                        {/* Teams with Scores */}
-                        <div className="flex-1 text-left min-w-0 z-10">
-                          <div className="flex items-center justify-between gap-2 mb-0.5">
-                            <span className="text-xs font-semibold truncate">{fixture.homeTeamName}</span>
-                            {(fixture.homeScore !== null && fixture.homeScore !== undefined) && (
-                              <span className="text-sm font-bold text-purple-400 flex-shrink-0 drop-shadow-lg">{fixture.homeScore}</span>
-                            )}
-                          </div>
-                          <div className="flex items-center justify-between gap-2">
-                            <span className="text-xs font-semibold truncate">{fixture.awayTeamName}</span>
-                            {(fixture.awayScore !== null && fixture.awayScore !== undefined) && (
-                              <span className="text-sm font-bold text-purple-400 flex-shrink-0 drop-shadow-lg">{fixture.awayScore}</span>
-                            )}
-                          </div>
-                        </div>
-
-                        {/* Odds Badge - Enhanced */}
-                        {bestOdds && (
-                          <div className="flex items-center gap-1 px-2 py-1 bg-green-500/15 border border-green-500/40 rounded shadow-lg shadow-green-500/20 z-10">
-                            <TrendingUp className="w-2.5 h-2.5 text-green-400" />
-                            <span className="text-[9px] font-bold text-green-400">{bestOdds.toFixed(2)}</span>
-                          </div>
-                        )}
-
-                        {/* Golden Bet Badge */}
-                        {(fixture.golden_bet || fixture.aiBets?.goldenBet) && (
-                          <Star className="w-3.5 h-3.5 text-yellow-400 fill-yellow-400 flex-shrink-0 z-10 drop-shadow-lg" />
-                        )}
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         )}
       </div>
