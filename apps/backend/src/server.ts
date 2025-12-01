@@ -72,6 +72,7 @@ app.get('/health', (_, res) => {
       betBuilder: 'operational',
       cronJobs: 'active',
       websocket: 'operational',
+      liveScores: 'operational',
     },
   });
 });
@@ -84,6 +85,9 @@ app.use('/api/admin', fixturesAdmin);
 
 import fixtures from './routes/fixtures.js';
 app.use('/api/fixtures', fixtures);
+
+import liveFixtures from './routes/liveFixtures.js';
+app.use('/api/live-fixtures', liveFixtures);
 
 import goldenBets from './routes/goldenBets.js';
 app.use('/api/golden-bets', goldenBets);
@@ -100,4 +104,5 @@ httpServer.listen(10000, () => {
   console.log('🔌 WebSocket server ready at ws://localhost:10000/ws');
   console.log('🌐 CORS enabled for Vercel domain: footy-oracle-v2.vercel.app');
   console.log('⏰ Fixtures cron job initialized - loading fixtures...');
+  console.log('🔴 Live scores cron job active - updating every minute');
 });
