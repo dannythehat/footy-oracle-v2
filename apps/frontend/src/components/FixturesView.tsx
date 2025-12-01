@@ -5,6 +5,7 @@ import {
 } from 'lucide-react';
 import { fixturesApi } from '../services/api';
 import MatchDetailDrawer from './fixtures/MatchDetailDrawer';
+import { FavoriteButton } from './FavoriteButton';
 
 interface Fixture {
   fixtureId: string;
@@ -354,10 +355,20 @@ const FixturesView: React.FC<FixturesViewProps> = ({ onClose, embedded = false }
                       >
                         <div className="flex items-center justify-between">
                           <div className="flex items-center gap-4 flex-1">
-                            <Clock className="w-4 h-4 text-gray-400" />
-                            <span className="text-sm text-gray-400 w-16">
-                              {formatTime(fixture)}
-                            </span>
+                            <div className="flex items-center gap-2">
+                              <Clock className="w-4 h-4 text-gray-400" />
+                              <span className="text-sm text-gray-400 w-16">
+                                {formatTime(fixture)}
+                              </span>
+                              <FavoriteButton
+                                fixtureId={Number(fixture.fixtureId || fixture.id)}
+                                homeTeam={fixture.homeTeamName || fixture.homeTeam}
+                                awayTeam={fixture.awayTeamName || fixture.awayTeam}
+                                date={fixture.date || selectedDate.toISOString()}
+                                league={league}
+                                size="sm"
+                              />
+                            </div>
                             
                             <div className="flex-1">
                               <div className="flex items-center justify-between mb-1">
