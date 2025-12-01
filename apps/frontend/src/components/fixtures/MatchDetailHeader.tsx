@@ -6,14 +6,24 @@ interface MatchDetailHeaderProps {
 }
 
 const MatchDetailHeader: React.FC<MatchDetailHeaderProps> = ({ fixture }) => {
-  const formatDate = (dateStr: string) => {
-    const date = new Date(dateStr);
-    return date.toLocaleDateString('en-GB', {
-      weekday: 'short',
-      day: 'numeric',
-      month: 'short',
-      year: 'numeric'
-    });
+  // Safe null checks
+  if (!fixture) {
+    return null;
+  }
+
+  const formatDate = (dateStr: string | undefined) => {
+    if (!dateStr) return 'TBD';
+    try {
+      const date = new Date(dateStr);
+      return date.toLocaleDateString('en-GB', {
+        weekday: 'short',
+        day: 'numeric',
+        month: 'short',
+        year: 'numeric'
+      });
+    } catch {
+      return 'TBD';
+    }
   };
 
   const isLive = (status?: string) => {
@@ -24,12 +34,30 @@ const MatchDetailHeader: React.FC<MatchDetailHeaderProps> = ({ fixture }) => {
 
   const isFinished = (status?: string) => {
     if (!status) return false;
-    return status.toLowerCase().includes('ft');
+    return status.toLowerCase().includes('ft') || status.toLowerCase().includes('finished');
   };
 
   const hasScore = () => {
+    // Check both score object and individual fields
+    if (fixture.score && (fixture.score.home !== null || fixture.score.away !== null)) {
+      return true;
+    }
     return (fixture.homeScore !== null && fixture.homeScore !== undefined) ||
            (fixture.awayScore !== null && fixture.awayScore !== undefined);
+  };
+
+  const getHomeScore = () => {
+    if (fixture.score && fixture.score.home !== null && fixture.score.home !== undefined) {
+      return fixture.score.home;
+    }
+    return fixture.homeScore ?? '-';
+  };
+
+  const getAwayScore = () => {
+    if (fixture.score && fixture.score.away !== null && fixture.score.away !== undefined) {
+      return fixture.score.away;
+    }
+    return fixture.awayScore ?? '-';
   };
 
   const getStatusBadge = (status?: string) => {
@@ -64,7 +92,9 @@ const MatchDetailHeader: React.FC<MatchDetailHeaderProps> = ({ fixture }) => {
       {/* League & Country - Enhanced */}
       <div className="flex items-center gap-2 mb-4 bg-gradient-to-r from-gray-800/40 to-transparent rounded-lg px-3 py-2 border border-gray-700/30 shadow-lg">
         <Trophy className="w-4 h-4 text-yellow-400 drop-shadow-lg" />
-        <span className="text-sm text-gray-300 font-medium drop-shadow-lg">{fixture.leagueName || fixture.league}</span>
+        <span className="text-sm text-gray-300 font-medium drop-shadow-lg">
+          {fixture.leagueName || fixture.league || 'Unknown League'}
+        </span>
         {fixture.country && (
           <>
             <span className="text-gray-600">•</span>
@@ -78,10 +108,10 @@ const MatchDetailHeader: React.FC<MatchDetailHeaderProps> = ({ fixture }) => {
       <div className="flex items-center justify-between mb-4">
         <div className="flex-1">
           <div className="text-xl font-bold text-white mb-3 drop-shadow-lg">
-            {fixture.homeTeamName || fixture.homeTeam}
+            {fixture.homeTeamName || fixture.homeTeam || 'Home Team'}
           </div>
           <div className="text-xl font-bold text-white drop-shadow-lg">
-            {fixture.awayTeamName || fixture.awayTeam}
+            {fixture.awayTeamName || fixture.awayTeam || 'Away Team'}
           </div>
         </div>
 
@@ -89,11 +119,11 @@ const MatchDetailHeader: React.FC<MatchDetailHeaderProps> = ({ fixture }) => {
         {hasScore() && (
           <div className="text-center px-8 bg-gradient-to-br from-gray-800/60 to-gray-900/60 rounded-xl py-4 border border-gray-700/50 shadow-xl backdrop-blur-sm">
             <div className={`text-4xl font-bold drop-shadow-2xl ${isLive(fixture.status) ? 'text-red-400' : 'text-white'}`}>
-              {fixture.homeScore ?? '-'}
+              {getHomeScore()}
             </div>
             <div className="text-gray-500 text-sm my-2 font-bold">-</div>
             <div className={`text-4xl font-bold drop-shadow-2xl ${isLive(fixture.status) ? 'text-red-400' : 'text-white'}`}>
-              {fixture.awayScore ?? '-'}
+              {getAwayScore()}
             </div>
           </div>
         )}
@@ -103,11 +133,11 @@ const MatchDetailHeader: React.FC<MatchDetailHeaderProps> = ({ fixture }) => {
       <div className="flex items-center gap-4 text-sm text-gray-400 flex-wrap">
         <div className="flex items-center gap-1.5 bg-gray-800/40 px-3 py-1.5 rounded-lg shadow-lg">
           <Calendar className="w-4 h-4" />
-          <span>{formatDate(fixture.date)}</span>
+          <span>{formatDate(fixture.date || fixture.kickoff)}</span>
         </div>
         <div className="flex items-center gap-1.5 bg-gray-800/40 px-3 py-1.5 rounded-lg shadow-lg">
           <Clock className="w-4 h-4" />
-          <span>{fixture.time}</span>
+          <span>{fixture.time || 'TBD'}</span>
         </div>
         {getStatusBadge(fixture.status)}
       </div>
