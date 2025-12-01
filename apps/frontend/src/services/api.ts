@@ -185,6 +185,27 @@ export const fixturesApi = {
   },
 };
 
+// Live Fixtures API - Real-time scores and statistics
+export const liveFixturesApi = {
+  // Get all currently live fixtures with scores and statistics
+  getAll: async () => {
+    const response = await apiClient.get('/api/live-fixtures');
+    return response.data;
+  },
+
+  // Get detailed statistics for a specific live fixture
+  getStatistics: async (fixtureId: number) => {
+    const response = await apiClient.get(`/api/live-fixtures/${fixtureId}/statistics`);
+    return response.data;
+  },
+
+  // Manually trigger live scores update
+  forceUpdate: async () => {
+    const response = await apiClient.post('/api/live-fixtures/update');
+    return response.data;
+  },
+};
+
 // Predictions API
 export const predictionsApi = {
   getAll: async (params?: {
