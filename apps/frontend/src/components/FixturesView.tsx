@@ -74,6 +74,16 @@ const FixturesView: React.FC<FixturesViewProps> = ({ onClose, embedded = false }
       const dateStr = selectedDate.toISOString().split('T')[0];
       console.log('Fetching fixtures for:', dateStr);
       
+      // CRITICAL FIX: Refresh scores from API-Football BEFORE fetching from database
+      try {
+        console.log('🔄 Refreshing live scores from API...');
+        await fixturesApi.refreshScores(dateStr);
+        console.log('✅ Scores refreshed successfully');
+      } catch (refreshError) {
+        console.warn('⚠️ Score refresh failed (continuing with cached data):', refreshError);
+        // Continue even if refresh fails - show cached data
+      }
+      
       const response = await fixturesApi.getByDate(dateStr);
       
       if (response && response.data) {
