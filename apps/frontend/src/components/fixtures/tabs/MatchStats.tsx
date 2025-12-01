@@ -63,22 +63,22 @@ const MatchStats: React.FC<MatchStatsProps> = ({ fixture }) => {
     const awayPercent = (awayValue / total) * 100;
 
     return (
-      <div className="mb-4">
+      <div className="mb-4 bg-gradient-to-br from-gray-800/40 to-gray-900/40 rounded-lg p-3 border border-gray-700/50 shadow-lg backdrop-blur-sm">
         <div className="flex items-center justify-between text-sm mb-2">
-          <span className="text-white font-semibold">{homeValue}</span>
+          <span className="text-white font-semibold drop-shadow-lg">{homeValue}</span>
           <div className="flex items-center gap-2 text-gray-400">
             {icon}
             <span>{label}</span>
           </div>
-          <span className="text-white font-semibold">{awayValue}</span>
+          <span className="text-white font-semibold drop-shadow-lg">{awayValue}</span>
         </div>
-        <div className="flex h-2 bg-gray-700 rounded-full overflow-hidden">
+        <div className="flex h-2.5 bg-gray-700/50 rounded-full overflow-hidden shadow-inner">
           <div
-            className="bg-purple-500 transition-all duration-500"
+            className="bg-gradient-to-r from-purple-500 to-purple-600 transition-all duration-500 shadow-lg"
             style={{ width: `${homePercent}%` }}
           />
           <div
-            className="bg-blue-500 transition-all duration-500"
+            className="bg-gradient-to-r from-blue-500 to-blue-600 transition-all duration-500 shadow-lg"
             style={{ width: `${awayPercent}%` }}
           />
         </div>
@@ -89,7 +89,10 @@ const MatchStats: React.FC<MatchStatsProps> = ({ fixture }) => {
   if (loading) {
     return (
       <div className="p-6 flex flex-col items-center justify-center py-12">
-        <Loader className="w-8 h-8 text-purple-400 animate-spin mb-3" />
+        <div className="relative">
+          <Loader className="w-8 h-8 text-purple-400 animate-spin mb-3 drop-shadow-lg" />
+          <div className="absolute inset-0 blur-xl bg-purple-500/20 animate-pulse"></div>
+        </div>
         <p className="text-gray-400">Loading match statistics...</p>
       </div>
     );
@@ -98,9 +101,9 @@ const MatchStats: React.FC<MatchStatsProps> = ({ fixture }) => {
   if (error || !stats) {
     return (
       <div className="p-6">
-        <div className="bg-yellow-500/10 border border-yellow-500/30 rounded-xl p-4">
+        <div className="bg-yellow-500/10 border border-yellow-500/30 rounded-xl p-4 shadow-lg backdrop-blur-sm">
           <div className="flex items-start gap-3">
-            <AlertCircle className="w-5 h-5 text-yellow-400 mt-0.5" />
+            <AlertCircle className="w-5 h-5 text-yellow-400 mt-0.5 drop-shadow-lg" />
             <div>
               <div className="text-sm font-semibold text-yellow-400 mb-1">
                 Statistics Not Available
@@ -119,36 +122,36 @@ const MatchStats: React.FC<MatchStatsProps> = ({ fixture }) => {
     <div className="p-6">
       {/* Header */}
       <div className="flex items-center gap-2 mb-6">
-        <BarChart3 className="w-5 h-5 text-purple-400" />
-        <h2 className="text-lg font-bold text-white">Match Statistics</h2>
+        <BarChart3 className="w-5 h-5 text-purple-400 drop-shadow-lg" />
+        <h2 className="text-lg font-bold text-white drop-shadow-lg">Match Statistics</h2>
       </div>
 
       {/* Team Names */}
-      <div className="flex items-center justify-between mb-6 text-sm">
-        <span className="text-purple-400 font-semibold">{fixture.homeTeamName || fixture.homeTeam}</span>
-        <span className="text-blue-400 font-semibold">{fixture.awayTeamName || fixture.awayTeam}</span>
+      <div className="flex items-center justify-between mb-6 text-sm bg-gradient-to-r from-purple-900/30 via-gray-900/30 to-blue-900/30 rounded-lg p-3 border border-gray-700/50 shadow-lg">
+        <span className="text-purple-400 font-semibold drop-shadow-lg">{fixture.homeTeamName || fixture.homeTeam}</span>
+        <span className="text-blue-400 font-semibold drop-shadow-lg">{fixture.awayTeamName || fixture.awayTeam}</span>
       </div>
 
       {/* Stats */}
-      <div className="space-y-4">
+      <div className="space-y-3">
         {/* Possession */}
         {stats.home.possession !== undefined && stats.away.possession !== undefined && (
-          <div className="mb-4">
+          <div className="mb-4 bg-gradient-to-br from-gray-800/40 to-gray-900/40 rounded-lg p-3 border border-gray-700/50 shadow-lg backdrop-blur-sm">
             <div className="flex items-center justify-between text-sm mb-2">
-              <span className="text-white font-semibold">{stats.home.possession}%</span>
+              <span className="text-white font-semibold drop-shadow-lg">{stats.home.possession}%</span>
               <div className="flex items-center gap-2 text-gray-400">
                 <Activity className="w-4 h-4" />
                 <span>Possession</span>
               </div>
-              <span className="text-white font-semibold">{stats.away.possession}%</span>
+              <span className="text-white font-semibold drop-shadow-lg">{stats.away.possession}%</span>
             </div>
-            <div className="flex h-2 bg-gray-700 rounded-full overflow-hidden">
+            <div className="flex h-2.5 bg-gray-700/50 rounded-full overflow-hidden shadow-inner">
               <div
-                className="bg-purple-500 transition-all duration-500"
+                className="bg-gradient-to-r from-purple-500 to-purple-600 transition-all duration-500 shadow-lg"
                 style={{ width: `${stats.home.possession}%` }}
               />
               <div
-                className="bg-blue-500 transition-all duration-500"
+                className="bg-gradient-to-r from-blue-500 to-blue-600 transition-all duration-500 shadow-lg"
                 style={{ width: `${stats.away.possession}%` }}
               />
             </div>
