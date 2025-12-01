@@ -1,5 +1,6 @@
 import { Router, Request, Response } from 'express';
 import { Fixture } from '../models/Fixture.js';
+import axios from 'axios';
 
 import { 
   analyzeFixture, 
@@ -17,6 +18,18 @@ import {
 } from '../services/apiFootballService';
 
 const router = Router();
+
+const API_BASE_URL = process.env.API_FOOTBALL_BASE_URL || 'https://v3.football.api-sports.io';
+const API_KEY = process.env.API_FOOTBALL_KEY;
+
+const apiClient = axios.create({
+  baseURL: API_BASE_URL,
+  headers: {
+    'x-rapidapi-key': API_KEY,
+    'x-rapidapi-host': 'v3.football.api-sports.io',
+  },
+  timeout: 15000,
+});
 
 /**
  * Helper function to format Date to HH:mm string
@@ -36,6 +49,145 @@ function formatDate(date: Date): string {
   const day = date.getDate().toString().padStart(2, '0');
   return `${year}-${month}-${day}`;
 }
+
+/**
+ * MAP STATUS from API-Football to our format
+ */
+function mapStatus(short: string): string {
+  const statusMap: Record<string, string> = {
+    'TBD': 'scheduled',
+    'NS': 'scheduled',
+    '1H': 'live',
+    'HT': 'live',
+    '2H': 'live',
+    'ET': 'live',
+    'BT': 'live',
+    'P': 'live',
+    'SUSP': 'live',
+    'INT': 'live',
+    'FT': 'finished',
+    'AET': 'finished',
+    'PEN': 'finished',
+    'PST': 'postponed',
+    'CANC': 'cancelled',
+    'ABD': 'abandoned',
+    'AWD': 'finished',
+    'WO': 'finished',
+  };
+  return statusMap[short] || short;
+}
+
+/**
+ * Fetch live scores for specific fixtures from API-Football
+ */
+async function fetchLiveScores(fixtureIds: number[]): Promise<Map<number, any>> {
+  const scoresMap = new Map();
+  
+  try {
+    // Fetch in batches of 20 to avoid rate limits
+    const batchSize = 20;
+    for (let i = 0; i < fixtureIds.length; i += batchSize) {
+      const batch = fixtureIds.slice(i, i + batchSize);
+      
+      for (const fixtureId of batch) {
+        try {
+          const response = await apiClient.get('/fixtures', {
+            params: { id: fixtureId }
+          });
+          
+          const fixture = response.data.response?.[0];
+          if (fixture) {
+            scoresMap.set(fixtureId, {
+              status: mapStatus(fixture.fixture.status.short),
+              homeScore: fixture.goals.home ?? null,
+              awayScore: fixture.goals.away ?? null,
+              statusShort: fixture.fixture.status.short,
+            });
+          }
+          
+          // Rate limiting
+          await new Promise(resolve => setTimeout(resolve, 100));
+        } catch (err) {
+          console.error(`Error fetching score for fixture ${fixtureId}:`, err);
+        }
+      }
+    }
+  } catch (error) {
+    console.error('Error fetching live scores:', error);
+  }
+  
+  return scoresMap;
+}
+
+/* ============================================================
+   📌 REFRESH SCORES - Update live and completed fixture scores
+   ============================================================ */
+router.post('/refresh-scores', async (req: Request, res: Response) => {
+  try {
+    const { date } = req.body;
+    
+    let query: any = {};
+    
+    if (date) {
+      const targetDate = new Date(date);
+      const nextDate = new Date(targetDate);
+      nextDate.setDate(nextDate.getDate() + 1);
+      query.date = { $gte: targetDate, $lt: nextDate };
+    } else {
+      // Default: refresh today's fixtures
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      const tomorrow = new Date(today);
+      tomorrow.setDate(tomorrow.getDate() + 1);
+      query.date = { $gte: today, $lt: tomorrow };
+    }
+    
+    // Find fixtures that might need score updates (live or recently finished)
+    const fixtures = await Fixture.find(query).lean();
+    
+    if (fixtures.length === 0) {
+      return res.json({
+        success: true,
+        message: 'No fixtures found to update',
+        updated: 0
+      });
+    }
+    
+    const fixtureIds = fixtures.map(f => f.fixtureId);
+    const scoresMap = await fetchLiveScores(fixtureIds);
+    
+    let updated = 0;
+    
+    // Update fixtures with new scores
+    for (const [fixtureId, scoreData] of scoresMap.entries()) {
+      await Fixture.updateOne(
+        { fixtureId },
+        {
+          $set: {
+            status: scoreData.status,
+            'score.home': scoreData.homeScore,
+            'score.away': scoreData.awayScore,
+          }
+        }
+      );
+      updated++;
+    }
+    
+    res.json({
+      success: true,
+      message: `Updated ${updated} fixtures`,
+      updated,
+      total: fixtures.length
+    });
+    
+  } catch (error: any) {
+    console.error('❌ Error refreshing scores:', error);
+    res.status(500).json({
+      success: false,
+      error: error.message || 'Failed to refresh scores'
+    });
+  }
+});
 
 /* ============================================================
    📌 FIXTURES LIST - CLEAN FLAT STRUCTURE WITH ODDS & SCORES
@@ -68,10 +220,14 @@ router.get('/', async (req: Request, res: Response) => {
     // Convert to CLEAN FLAT structure with odds, scores, and predictions
     const cleanFixtures = fixtures.map((f: any) => ({
       id: f.fixtureId,
+      fixtureId: f.fixtureId,
       date: formatDate(new Date(f.date)),
       time: formatTime(new Date(f.date)),
       leagueId: f.leagueId,
+      league: f.league,
       leagueName: f.league,
+      homeTeam: f.homeTeam,
+      awayTeam: f.awayTeam,
       homeTeamName: f.homeTeam,
       awayTeamName: f.awayTeam,
       homeTeamId: f.homeTeamId,
@@ -79,6 +235,10 @@ router.get('/', async (req: Request, res: Response) => {
       status: f.status,
       homeScore: f.score?.home ?? null,
       awayScore: f.score?.away ?? null,
+      score: f.score ? {
+        home: f.score.home ?? null,
+        away: f.score.away ?? null
+      } : null,
       season: f.season,
       country: f.country,
       // Include odds if available
@@ -139,10 +299,14 @@ router.get('/:id', async (req, res) => {
     // Return CLEAN FLAT structure
     const cleanFixture = {
       id: fixture.fixtureId,
+      fixtureId: fixture.fixtureId,
       date: formatDate(new Date(fixture.date)),
       time: formatTime(new Date(fixture.date)),
       leagueId: fixture.leagueId,
+      league: fixture.league,
       leagueName: fixture.league,
+      homeTeam: fixture.homeTeam,
+      awayTeam: fixture.awayTeam,
       homeTeamName: fixture.homeTeam,
       awayTeamName: fixture.awayTeam,
       homeTeamId: fixture.homeTeamId,
@@ -152,8 +316,8 @@ router.get('/:id', async (req, res) => {
       season: fixture.season,
       homeScore: fixture.score?.home ?? null,
       awayScore: fixture.score?.away ?? null,
-      odds: fixture.odds,
       score: fixture.score,
+      odds: fixture.odds,
       aiBets: fixture.aiBets,
       golden_bet: fixture.golden_bet,
     };
