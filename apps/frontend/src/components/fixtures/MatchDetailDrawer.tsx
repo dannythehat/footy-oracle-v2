@@ -37,32 +37,35 @@ const MatchDetailDrawer: React.FC<MatchDetailDrawerProps> = ({ fixture, isOpen, 
 
   return (
     <>
-      {/* Backdrop */}
+      {/* Backdrop - Enhanced */}
       <div
-        className={`fixed inset-0 bg-black/60 backdrop-blur-sm z-40 transition-opacity duration-300 ${
+        className={`fixed inset-0 bg-black/70 backdrop-blur-md z-40 transition-opacity duration-300 ${
           isOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'
         }`}
         onClick={onClose}
       />
 
-      {/* Drawer */}
+      {/* Drawer - Enhanced with depth */}
       <div
-        className={`fixed bottom-0 left-0 right-0 bg-gradient-to-br from-gray-900 via-purple-900 to-gray-900 rounded-t-3xl z-50 transform transition-transform duration-300 ease-out ${
+        className={`fixed bottom-0 left-0 right-0 bg-gradient-to-br from-gray-900 via-purple-900/80 to-gray-900 rounded-t-3xl z-50 transform transition-transform duration-300 ease-out shadow-2xl border-t-2 border-purple-500/30 ${
           isOpen ? 'translate-y-0' : 'translate-y-full'
         }`}
         style={{ maxHeight: '90vh' }}
       >
-        {/* Close Button */}
+        {/* Glow effect at top */}
+        <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-transparent via-purple-500/50 to-transparent"></div>
+
+        {/* Close Button - Enhanced */}
         <button
           onClick={onClose}
-          className="absolute top-4 right-4 p-2 hover:bg-gray-800 rounded-full transition-colors z-10"
+          className="absolute top-4 right-4 p-2 hover:bg-gray-800/80 rounded-full transition-all z-10 shadow-lg hover:shadow-purple-500/50 backdrop-blur-sm border border-gray-700/50"
         >
           <X className="w-6 h-6 text-gray-400" />
         </button>
 
-        {/* Drag Handle */}
+        {/* Drag Handle - Enhanced */}
         <div className="flex justify-center pt-3 pb-2">
-          <div className="w-12 h-1.5 bg-gray-600 rounded-full" />
+          <div className="w-12 h-1.5 bg-gray-600 rounded-full shadow-lg" />
         </div>
 
         {/* Header */}
