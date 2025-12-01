@@ -16,7 +16,7 @@ import {
   Flame,
   TrendingUp
 } from 'lucide-react';
-import { fixturesApi } from '../services/api';
+import { fixturesApi, liveFixturesApi } from '../services/api';
 import MatchDetailDrawer from '../components/fixtures/MatchDetailDrawer';
 
 // CLEAN FLAT STRUCTURE - matches backend EXACTLY
@@ -99,6 +99,7 @@ export default function FixturesPage() {
   
   const [selectedDateIndex, setSelectedDateIndex] = useState(todayIndex);
   const [fixtures, setFixtures] = useState<Fixture[]>([]);
+  const [liveFixturesData, setLiveFixturesData] = useState<Fixture[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [retryCount, setRetryCount] = useState(0);
@@ -128,6 +129,52 @@ export default function FixturesPage() {
     setFavorites(newFavorites);
     localStorage.setItem('fixture_favorites', JSON.stringify(Array.from(newFavorites)));
   };
+
+  // Fetch live fixtures from API
+  const fetchLiveFixtures = async () => {
+    try {
+      const response = await liveFixturesApi.getAll();
+      if (response && response.success && response.data) {
+        // Transform live fixtures to match our Fixture interface
+        const transformedLive = response.data.map((lf: any) => ({
+          id: lf.fixtureId || lf.id,
+          date: lf.date,
+          time: lf.time,
+          leagueId: lf.leagueId,
+          leagueName: lf.league || lf.leagueName,
+          leagueLogo: lf.leagueLogo,
+          homeTeamName: lf.homeTeam,
+          awayTeamName: lf.awayTeam,
+          homeTeamId: lf.homeTeamId,
+          awayTeamId: lf.awayTeamId,
+          status: lf.status,
+          homeScore: lf.homeScore ?? lf.score?.home,
+          awayScore: lf.awayScore ?? lf.score?.away,
+          season: lf.season,
+          country: lf.country,
+        }));
+        setLiveFixturesData(transformedLive);
+        console.log(`🔴 Fetched ${transformedLive.length} live fixtures`);
+      }
+    } catch (err: any) {
+      console.error('Error fetching live fixtures:', err);
+      // Don't set error state for live fixtures - just log it
+    }
+  };
+
+  // Initial fetch of live fixtures
+  useEffect(() => {
+    fetchLiveFixtures();
+  }, []);
+
+  // Poll live fixtures every 30 seconds
+  useEffect(() => {
+    const interval = setInterval(() => {
+      fetchLiveFixtures();
+    }, 30000); // 30 seconds
+
+    return () => clearInterval(interval);
+  }, []);
 
   useEffect(() => {
     fetchFixtures();
@@ -198,13 +245,26 @@ export default function FixturesPage() {
     return `${weekday} ${day} ${month}`;
   };
 
+  // Merge live fixtures with regular fixtures (live fixtures take priority)
+  const allFixtures = useMemo(() => {
+    const fixtureMap = new Map<number, Fixture>();
+    
+    // Add regular fixtures first
+    fixtures.forEach(f => fixtureMap.set(f.id, f));
+    
+    // Override with live fixtures (they have latest scores)
+    liveFixturesData.forEach(lf => fixtureMap.set(lf.id, lf));
+    
+    return Array.from(fixtureMap.values());
+  }, [fixtures, liveFixturesData]);
+
   // Separate live fixtures
   const liveFixtures = useMemo(() => {
-    return fixtures.filter(f => isLive(f.status));
-  }, [fixtures]);
+    return allFixtures.filter(f => isLive(f.status));
+  }, [allFixtures]);
 
   const groupedFixtures = useMemo(() => {
-    const filtered = fixtures.filter(fixture => {
+    const filtered = allFixtures.filter(fixture => {
       const matchesSearch = searchQuery === '' || 
         fixture.homeTeamName.toLowerCase().includes(searchQuery.toLowerCase()) ||
         fixture.awayTeamName.toLowerCase().includes(searchQuery.toLowerCase());
@@ -228,9 +288,9 @@ export default function FixturesPage() {
     });
 
     return grouped;
-  }, [fixtures, searchQuery, selectedLeague]);
+  }, [allFixtures, searchQuery, selectedLeague]);
 
-  const leagues = ['all', ...Array.from(new Set(fixtures.map(f => f.leagueName)))];
+  const leagues = ['all', ...Array.from(new Set(allFixtures.map(f => f.leagueName)))];
 
   const navigateDate = (direction: 'prev' | 'next') => {
     if (direction === 'prev' && selectedDateIndex > 0) {
@@ -264,7 +324,7 @@ export default function FixturesPage() {
 
   // Helper to get league logo for a league name
   const getLeagueLogoForName = (leagueName: string): string | null => {
-    const fixture = fixtures.find(f => f.leagueName === leagueName);
+    const fixture = allFixtures.find(f => f.leagueName === leagueName);
     return fixture?.leagueLogo || null;
   };
 
@@ -289,6 +349,12 @@ export default function FixturesPage() {
             
             {/* Connection Status - Compact */}
             <div className="flex items-center gap-1.5">
+              {liveFixtures.length > 0 && (
+                <div className="flex items-center gap-1 px-2 py-0.5 rounded bg-red-500/10 border border-red-500/30">
+                  <Radio className="w-3 h-3 text-red-400 animate-pulse" />
+                  <span className="text-[10px] text-red-400">{liveFixtures.length} live</span>
+                </div>
+              )}
               {error ? (
                 <div className="flex items-center gap-1 px-2 py-0.5 rounded bg-red-500/10 border border-red-500/30">
                   <WifiOff className="w-3 h-3 text-red-400" />
@@ -480,7 +546,7 @@ export default function FixturesPage() {
         )}
 
         {/* Empty State */}
-        {!loading && !error && fixtures.length === 0 && (
+        {!loading && !error && allFixtures.length === 0 && (
           <div className="text-center py-12">
             <Calendar className="w-10 h-10 text-purple-400 mx-auto mb-2 opacity-50" />
             <h3 className="text-sm font-bold text-gray-300 mb-1">No Fixtures</h3>
