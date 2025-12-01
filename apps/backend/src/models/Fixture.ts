@@ -44,10 +44,52 @@ export interface IFixture extends Document {
     generatedAt?: Date;
   };
   status: 'scheduled' | 'live' | 'finished' | 'postponed';
+  statusShort?: string; // API-Football status code (1H, 2H, HT, FT, etc.)
+  elapsed?: number; // Minutes elapsed in the match
   score?: {
     home: number;
     away: number;
   };
+  // Live match statistics
+  statistics?: {
+    home: {
+      shotsOnGoal?: number;
+      shotsOffGoal?: number;
+      shotsInsideBox?: number;
+      shotsOutsideBox?: number;
+      totalShots?: number;
+      blockedShots?: number;
+      fouls?: number;
+      cornerKicks?: number;
+      offsides?: number;
+      ballPossession?: string;
+      yellowCards?: number;
+      redCards?: number;
+      goalkeeperSaves?: number;
+      totalPasses?: number;
+      passesAccurate?: number;
+      passesPercentage?: string;
+    };
+    away: {
+      shotsOnGoal?: number;
+      shotsOffGoal?: number;
+      shotsInsideBox?: number;
+      shotsOutsideBox?: number;
+      totalShots?: number;
+      blockedShots?: number;
+      fouls?: number;
+      cornerKicks?: number;
+      offsides?: number;
+      ballPossession?: string;
+      yellowCards?: number;
+      redCards?: number;
+      goalkeeperSaves?: number;
+      totalPasses?: number;
+      passesAccurate?: number;
+      passesPercentage?: string;
+    };
+  };
+  lastUpdated?: Date; // Last time live data was updated
   createdAt: Date;
   updatedAt: Date;
 }
@@ -107,10 +149,51 @@ const FixtureSchema = new Schema<IFixture>({
     enum: ['scheduled', 'live', 'finished', 'postponed'],
     default: 'scheduled'
   },
+  statusShort: String,
+  elapsed: Number,
   score: {
     home: Number,
     away: Number,
-  }
+  },
+  statistics: {
+    home: {
+      shotsOnGoal: Number,
+      shotsOffGoal: Number,
+      shotsInsideBox: Number,
+      shotsOutsideBox: Number,
+      totalShots: Number,
+      blockedShots: Number,
+      fouls: Number,
+      cornerKicks: Number,
+      offsides: Number,
+      ballPossession: String,
+      yellowCards: Number,
+      redCards: Number,
+      goalkeeperSaves: Number,
+      totalPasses: Number,
+      passesAccurate: Number,
+      passesPercentage: String,
+    },
+    away: {
+      shotsOnGoal: Number,
+      shotsOffGoal: Number,
+      shotsInsideBox: Number,
+      shotsOutsideBox: Number,
+      totalShots: Number,
+      blockedShots: Number,
+      fouls: Number,
+      cornerKicks: Number,
+      offsides: Number,
+      ballPossession: String,
+      yellowCards: Number,
+      redCards: Number,
+      goalkeeperSaves: Number,
+      totalPasses: Number,
+      passesAccurate: Number,
+      passesPercentage: String,
+    }
+  },
+  lastUpdated: Date
 }, {
   timestamps: true
 });
@@ -123,5 +206,6 @@ FixtureSchema.index({ status: 1 });
 FixtureSchema.index({ homeTeamId: 1 });  // NEW: For team queries
 FixtureSchema.index({ awayTeamId: 1 });  // NEW: For team queries
 FixtureSchema.index({ 'aiBets.generatedAt': 1 });
+FixtureSchema.index({ lastUpdated: 1 }); // NEW: For live updates
 
 export const Fixture = mongoose.model<IFixture>('Fixture', FixtureSchema);
