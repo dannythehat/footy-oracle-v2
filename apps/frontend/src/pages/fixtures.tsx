@@ -6,18 +6,17 @@ import {
   ChevronDown, 
   ChevronUp, 
   Star, 
-  TrendingUp, 
   Calendar,
   Radio,
   BarChart3,
-  Users,
-  History,
   ArrowLeft,
-  Trophy,
   RefreshCw,
   AlertCircle,
   Wifi,
-  WifiOff
+  WifiOff,
+  ChevronLeft,
+  ChevronRight,
+  Flame
 } from 'lucide-react';
 import { fixturesApi } from '../services/api';
 
@@ -89,12 +88,34 @@ interface FixtureStats {
   h2h: H2HData;
 }
 
-type TabType = 'today' | 'tomorrow' | 'results';
 type StatsTabType = 'markets' | 'h2h' | 'stats' | 'form';
 
 export default function FixturesPage() {
   const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState<TabType>('today');
+  
+  // Generate rolling dates: 7 past + today + 7 future
+  const generateRollingDates = () => {
+    const dates = [];
+    const today = new Date();
+    
+    for (let i = -7; i <= 7; i++) {
+      const date = new Date(today);
+      date.setDate(today.getDate() + i);
+      dates.push({
+        date: date,
+        dateStr: date.toISOString().split('T')[0],
+        isToday: i === 0,
+        isPast: i < 0,
+        isFuture: i > 0
+      });
+    }
+    return dates;
+  };
+
+  const rollingDates = generateRollingDates();
+  const todayIndex = rollingDates.findIndex(d => d.isToday);
+  
+  const [selectedDateIndex, setSelectedDateIndex] = useState(todayIndex);
   const [fixtures, setFixtures] = useState<Fixture[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -105,30 +126,39 @@ export default function FixturesPage() {
   const [activeStatsTab, setActiveStatsTab] = useState<StatsTabType>('markets');
   const [fixtureStats, setFixtureStats] = useState<Record<number, FixtureStats>>({});
   const [loadingStats, setLoadingStats] = useState<Record<number, boolean>>({});
+  const [favorites, setFavorites] = useState<Set<number>>(new Set());
+
+  // Load favorites from localStorage
+  useEffect(() => {
+    const savedFavorites = localStorage.getItem('fixture_favorites');
+    if (savedFavorites) {
+      setFavorites(new Set(JSON.parse(savedFavorites)));
+    }
+  }, []);
+
+  // Save favorites to localStorage
+  const toggleFavorite = (fixtureId: number, e: React.MouseEvent) => {
+    e.stopPropagation();
+    const newFavorites = new Set(favorites);
+    if (newFavorites.has(fixtureId)) {
+      newFavorites.delete(fixtureId);
+    } else {
+      newFavorites.add(fixtureId);
+    }
+    setFavorites(newFavorites);
+    localStorage.setItem('fixture_favorites', JSON.stringify(Array.from(newFavorites)));
+  };
 
   useEffect(() => {
     fetchFixtures();
-  }, [activeTab]);
+  }, [selectedDateIndex]);
 
   const fetchFixtures = async (isRetry = false) => {
     try {
       setLoading(true);
       setError(null);
       
-      const today = new Date();
-      let targetDate: Date;
-
-      if (activeTab === 'today') {
-        targetDate = today;
-      } else if (activeTab === 'tomorrow') {
-        targetDate = new Date(today);
-        targetDate.setDate(today.getDate() + 1);
-      } else {
-        targetDate = new Date(today);
-        targetDate.setDate(today.getDate() - 1);
-      }
-
-      const dateStr = targetDate.toISOString().split('T')[0];
+      const dateStr = rollingDates[selectedDateIndex].dateStr;
       const response = await fixturesApi.getByDate(dateStr);
 
       if (response && response.data) {
@@ -148,7 +178,7 @@ export default function FixturesPage() {
         setTimeout(() => {
           setRetryCount(prev => prev + 1);
           fetchFixtures(true);
-        }, 2000 * (retryCount + 1)); // Exponential backoff
+        }, 2000 * (retryCount + 1));
       }
     } finally {
       setLoading(false);
@@ -162,7 +192,7 @@ export default function FixturesPage() {
 
   const isLive = (status: string) => {
     const s = status.toLowerCase();
-    return s.includes('live') || s.includes('1h') || s.includes('2h');
+    return s.includes('live') || s.includes('1h') || s.includes('2h') || s.includes('ht');
   };
 
   const isFinished = (status: string) => {
@@ -247,23 +277,19 @@ export default function FixturesPage() {
     }
   };
 
-  const renderFormBadge = (result: string) => {
-    const colors = {
-      W: 'bg-green-500/20 text-green-400 border-green-500/30',
-      D: 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30',
-      L: 'bg-red-500/20 text-red-400 border-red-500/30'
-    };
-    return (
-      <span className={`inline-block w-7 h-7 text-xs font-bold rounded border ${colors[result as keyof typeof colors]} flex items-center justify-center`}>
-        {result}
-      </span>
-    );
+  const formatDateLabel = (dateObj: typeof rollingDates[0]) => {
+    if (dateObj.isToday) return 'Today';
+    const date = dateObj.date;
+    const day = date.getDate();
+    const month = date.toLocaleDateString('en-US', { month: 'short' });
+    const weekday = date.toLocaleDateString('en-US', { weekday: 'short' });
+    return `${weekday} ${day} ${month}`;
   };
 
-  const calculateMarkupValue = (probability: number, odds: number) => {
-    const impliedProbability = 1 / odds;
-    return ((probability - impliedProbability) / impliedProbability) * 100;
-  };
+  // Separate live fixtures
+  const liveFixtures = useMemo(() => {
+    return fixtures.filter(f => isLive(f.status));
+  }, [fixtures]);
 
   const groupedFixtures = useMemo(() => {
     const filtered = fixtures.filter(fixture => {
@@ -273,7 +299,7 @@ export default function FixturesPage() {
       
       const matchesLeague = selectedLeague === 'all' || fixture.leagueName === selectedLeague;
       
-      return matchesSearch && matchesLeague;
+      return matchesSearch && matchesLeague && !isLive(fixture.status);
     });
 
     const grouped: Record<string, Fixture[]> = {};
@@ -294,97 +320,112 @@ export default function FixturesPage() {
 
   const leagues = ['all', ...Array.from(new Set(fixtures.map(f => f.leagueName)))];
 
+  const navigateDate = (direction: 'prev' | 'next') => {
+    if (direction === 'prev' && selectedDateIndex > 0) {
+      setSelectedDateIndex(selectedDateIndex - 1);
+    } else if (direction === 'next' && selectedDateIndex < rollingDates.length - 1) {
+      setSelectedDateIndex(selectedDateIndex + 1);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-black text-white">
-      {/* Header */}
+      {/* Compact Header */}
       <div className="bg-gradient-to-r from-purple-900/40 to-black border-b border-purple-500/30 sticky top-0 z-40 backdrop-blur-sm">
-        <div className="max-w-7xl mx-auto px-4 py-4">
-          <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center gap-4">
+        <div className="max-w-7xl mx-auto px-3 py-2">
+          <div className="flex items-center justify-between mb-2">
+            <div className="flex items-center gap-2">
               <button
                 onClick={() => navigate('/')}
-                className="p-2 hover:bg-purple-500/20 rounded-lg transition-colors"
+                className="p-1.5 hover:bg-purple-500/20 rounded-lg transition-colors"
               >
-                <ArrowLeft className="w-5 h-5" />
+                <ArrowLeft className="w-4 h-4" />
               </button>
-              <div className="flex items-center gap-3">
-                <Calendar className="w-6 h-6 text-purple-400" />
-                <h1 className="text-2xl font-bold">Fixtures & Results</h1>
+              <div className="flex items-center gap-2">
+                <Calendar className="w-4 h-4 text-purple-400" />
+                <h1 className="text-base font-bold">Fixtures</h1>
               </div>
             </div>
             
-            {/* Connection Status */}
-            <div className="flex items-center gap-2">
+            {/* Connection Status - Compact */}
+            <div className="flex items-center gap-1.5">
               {error ? (
-                <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-red-500/10 border border-red-500/30">
-                  <WifiOff className="w-4 h-4 text-red-400" />
-                  <span className="text-xs text-red-400">Offline</span>
+                <div className="flex items-center gap-1 px-2 py-0.5 rounded bg-red-500/10 border border-red-500/30">
+                  <WifiOff className="w-3 h-3 text-red-400" />
+                  <span className="text-[10px] text-red-400">Offline</span>
                 </div>
               ) : (
-                <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-green-500/10 border border-green-500/30">
-                  <Wifi className="w-4 h-4 text-green-400" />
-                  <span className="text-xs text-green-400">Connected</span>
+                <div className="flex items-center gap-1 px-2 py-0.5 rounded bg-green-500/10 border border-green-500/30">
+                  <Wifi className="w-3 h-3 text-green-400" />
+                  <span className="text-[10px] text-green-400">Live</span>
                 </div>
               )}
             </div>
           </div>
 
-          {/* Tabs */}
-          <div className="flex items-center gap-2 mb-4">
-            <button
-              onClick={() => setActiveTab('today')}
-              className={`px-6 py-2 rounded-lg font-semibold transition-all ${
-                activeTab === 'today'
-                  ? 'bg-purple-600 text-white'
-                  : 'bg-purple-900/20 text-purple-300 hover:bg-purple-900/40'
-              }`}
-            >
-              Today
-            </button>
-            <button
-              onClick={() => setActiveTab('tomorrow')}
-              className={`px-6 py-2 rounded-lg font-semibold transition-all ${
-                activeTab === 'tomorrow'
-                  ? 'bg-purple-600 text-white'
-                  : 'bg-purple-900/20 text-purple-300 hover:bg-purple-900/40'
-              }`}
-            >
-              Tomorrow
-            </button>
-            <button
-              onClick={() => setActiveTab('results')}
-              className={`px-6 py-2 rounded-lg font-semibold transition-all ${
-                activeTab === 'results'
-                  ? 'bg-purple-600 text-white'
-                  : 'bg-purple-900/20 text-purple-300 hover:bg-purple-900/40'
-              }`}
-            >
-              Results
-            </button>
+          {/* Rolling Date Selector - Mobile Optimized */}
+          <div className="mb-2">
+            <div className="flex items-center gap-1">
+              <button
+                onClick={() => navigateDate('prev')}
+                disabled={selectedDateIndex === 0}
+                className="p-1 rounded bg-purple-900/20 disabled:opacity-30 disabled:cursor-not-allowed hover:bg-purple-900/40 transition-colors"
+              >
+                <ChevronLeft className="w-4 h-4" />
+              </button>
+              
+              <div className="flex-1 overflow-x-auto scrollbar-hide">
+                <div className="flex gap-1">
+                  {rollingDates.map((dateObj, index) => (
+                    <button
+                      key={dateObj.dateStr}
+                      onClick={() => setSelectedDateIndex(index)}
+                      className={`flex-shrink-0 px-2 py-1 rounded text-[10px] font-semibold transition-all whitespace-nowrap ${
+                        selectedDateIndex === index
+                          ? 'bg-purple-600 text-white neon-purple'
+                          : dateObj.isToday
+                          ? 'bg-purple-900/40 text-purple-300 border border-purple-500/30'
+                          : 'bg-purple-900/20 text-purple-400 hover:bg-purple-900/30'
+                      }`}
+                    >
+                      {formatDateLabel(dateObj)}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <button
+                onClick={() => navigateDate('next')}
+                disabled={selectedDateIndex === rollingDates.length - 1}
+                className="p-1 rounded bg-purple-900/20 disabled:opacity-30 disabled:cursor-not-allowed hover:bg-purple-900/40 transition-colors"
+              >
+                <ChevronRight className="w-4 h-4" />
+              </button>
+            </div>
           </div>
 
-          {/* Search & Filter */}
-          <div className="flex flex-col sm:flex-row gap-3">
+          {/* Search & Filter - Compact */}
+          <div className="flex gap-2">
             <div className="flex-1 relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+              <Search className="absolute left-2 top-1/2 -translate-y-1/2 w-3 h-3 text-gray-400" />
               <input
                 type="text"
                 placeholder="Search teams..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-10 pr-4 py-2 bg-black/40 border border-purple-500/30 rounded-lg focus:outline-none focus:border-purple-500/50 text-white placeholder-gray-500"
+                className="w-full pl-7 pr-2 py-1.5 text-xs bg-black/40 border border-purple-500/30 rounded-lg focus:outline-none focus:border-purple-500/50 text-white placeholder-gray-500"
               />
             </div>
             <div className="relative">
-              <Filter className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+              <Filter className="absolute left-2 top-1/2 -translate-y-1/2 w-3 h-3 text-gray-400 pointer-events-none" />
               <select
                 value={selectedLeague}
                 onChange={(e) => setSelectedLeague(e.target.value)}
-                className="pl-10 pr-8 py-2 bg-black/40 border border-purple-500/30 rounded-lg focus:outline-none focus:border-purple-500/50 text-white appearance-none cursor-pointer min-w-[200px]"
+                className="pl-7 pr-6 py-1.5 text-xs bg-black/40 border border-purple-500/30 rounded-lg focus:outline-none focus:border-purple-500/50 text-white appearance-none cursor-pointer"
               >
                 {leagues.map(league => (
                   <option key={league} value={league} className="bg-gray-900">
-                    {league === 'all' ? 'All Leagues' : league}
+                    {league === 'all' ? 'All' : league}
                   </option>
                 ))}
               </select>
@@ -394,137 +435,209 @@ export default function FixturesPage() {
       </div>
 
       {/* Content */}
-      <div className="max-w-7xl mx-auto px-4 py-6">
+      <div className="max-w-7xl mx-auto px-3 py-3">
         {/* Loading State */}
         {loading && (
-          <div className="text-center py-20">
+          <div className="text-center py-12">
             <div className="relative inline-block">
-              <div className="animate-spin rounded-full h-16 w-16 border-4 border-purple-500/20 border-t-purple-500 mx-auto mb-4"></div>
+              <div className="animate-spin rounded-full h-10 w-10 border-2 border-purple-500/20 border-t-purple-500 mx-auto mb-2"></div>
               <div className="absolute inset-0 rounded-full bg-purple-500/10 blur-xl animate-pulse"></div>
             </div>
-            <div className="text-gray-400 mb-2">Loading fixtures...</div>
-            {retryCount > 0 && (
-              <div className="text-sm text-purple-400">Retry attempt {retryCount}/3</div>
-            )}
+            <div className="text-xs text-gray-400">Loading...</div>
           </div>
         )}
 
         {/* Error State */}
         {!loading && error && (
-          <div className="max-w-2xl mx-auto">
-            <div className="p-8 rounded-2xl bg-gradient-to-br from-red-950/20 to-black border border-red-500/30 text-center">
-              <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-red-500/10 border border-red-500/30 mb-4">
-                <AlertCircle className="w-8 h-8 text-red-400" />
-              </div>
-              <h3 className="text-xl font-bold text-red-400 mb-2">Unable to Load Fixtures</h3>
-              <p className="text-gray-400 mb-6">{error}</p>
+          <div className="max-w-md mx-auto">
+            <div className="p-4 rounded-xl bg-gradient-to-br from-red-950/20 to-black border border-red-500/30 text-center">
+              <AlertCircle className="w-8 h-8 text-red-400 mx-auto mb-2" />
+              <h3 className="text-sm font-bold text-red-400 mb-1">Connection Error</h3>
+              <p className="text-xs text-gray-400 mb-3">{error}</p>
               <button
                 onClick={handleRetry}
-                className="inline-flex items-center gap-2 px-6 py-3 rounded-lg bg-purple-600 hover:bg-purple-500 text-white font-semibold transition-all"
+                className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-lg bg-purple-600 hover:bg-purple-500 text-white text-xs font-semibold transition-all"
               >
-                <RefreshCw className="w-4 h-4" />
+                <RefreshCw className="w-3 h-3" />
                 Retry
               </button>
-              <div className="mt-6 p-4 rounded-lg bg-black/50 border border-purple-500/20 text-left">
-                <p className="text-sm text-gray-400 mb-2">Troubleshooting tips:</p>
-                <ul className="text-xs text-gray-500 space-y-1">
-                  <li>• Check your internet connection</li>
-                  <li>• Backend may be starting up (Render free tier)</li>
-                  <li>• Try refreshing in a few moments</li>
-                </ul>
+            </div>
+          </div>
+        )}
+
+        {/* LIVE SECTION - Prominent */}
+        {!loading && !error && liveFixtures.length > 0 && (
+          <div className="mb-3">
+            <div className="bg-gradient-to-br from-red-950/30 to-black border border-red-500/30 rounded-xl overflow-hidden">
+              {/* Live Header */}
+              <div className="bg-red-900/30 border-b border-red-500/20 px-3 py-1.5 flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Flame className="w-4 h-4 text-red-400 animate-pulse" />
+                  <h2 className="text-xs font-bold text-red-400">LIVE NOW</h2>
+                </div>
+                <span className="text-[10px] text-red-400">{liveFixtures.length} live</span>
+              </div>
+
+              {/* Live Fixtures */}
+              <div className="divide-y divide-red-500/10">
+                {liveFixtures.map((fixture) => (
+                  <div key={fixture.id} className="bg-red-500/5">
+                    <button
+                      onClick={() => toggleFixture(fixture.id)}
+                      className="w-full px-3 py-2 flex items-center gap-2 hover:bg-red-500/10 transition-all"
+                    >
+                      {/* Favorite Star */}
+                      <button
+                        onClick={(e) => toggleFavorite(fixture.id, e)}
+                        className="flex-shrink-0"
+                      >
+                        <Star 
+                          className={`w-3.5 h-3.5 transition-all ${
+                            favorites.has(fixture.id) 
+                              ? 'text-yellow-400 fill-yellow-400' 
+                              : 'text-gray-600 hover:text-yellow-400'
+                          }`}
+                        />
+                      </button>
+
+                      {/* Time & Live Indicator */}
+                      <div className="flex flex-col items-center w-12">
+                        <span className="text-[10px] text-gray-400">{fixture.time}</span>
+                        <div className="flex items-center gap-1">
+                          <Radio className="w-2.5 h-2.5 text-red-500 animate-pulse" />
+                          <span className="text-[9px] font-bold text-red-400">LIVE</span>
+                        </div>
+                      </div>
+
+                      {/* Teams - Compact */}
+                      <div className="flex-1 text-left min-w-0">
+                        <div className="flex items-center justify-between gap-2 mb-0.5">
+                          <span className="text-xs font-semibold truncate">{fixture.homeTeamName}</span>
+                          {fixture.homeScore !== null && fixture.homeScore !== undefined && (
+                            <span className="text-sm font-bold text-purple-400 flex-shrink-0">{fixture.homeScore}</span>
+                          )}
+                        </div>
+                        <div className="flex items-center justify-between gap-2">
+                          <span className="text-xs font-semibold truncate">{fixture.awayTeamName}</span>
+                          {fixture.awayScore !== null && fixture.awayScore !== undefined && (
+                            <span className="text-sm font-bold text-purple-400 flex-shrink-0">{fixture.awayScore}</span>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Golden Bet Badge - Compact */}
+                      {fixture.golden_bet && (
+                        <Star className="w-3.5 h-3.5 text-yellow-400 fill-yellow-400 flex-shrink-0" />
+                      )}
+
+                      {/* Expand Icon */}
+                      {expandedFixture === fixture.id ? (
+                        <ChevronUp className="w-4 h-4 text-gray-400 flex-shrink-0" />
+                      ) : (
+                        <ChevronDown className="w-4 h-4 text-gray-400 flex-shrink-0" />
+                      )}
+                    </button>
+
+                    {/* Expanded Stats */}
+                    {expandedFixture === fixture.id && (
+                      <div className="bg-black/20 border-t border-red-500/10 p-3">
+                        <div className="text-center text-gray-400 py-4">
+                          <BarChart3 className="w-8 h-8 mx-auto mb-2 opacity-50" />
+                          <p className="text-xs">Stats coming soon</p>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                ))}
               </div>
             </div>
           </div>
         )}
 
         {/* Empty State */}
-        {!loading && !error && Object.keys(groupedFixtures).length === 0 && (
-          <div className="text-center py-20">
-            <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-purple-500/10 border border-purple-500/30 mb-4">
-              <Calendar className="w-8 h-8 text-purple-400" />
-            </div>
-            <h3 className="text-xl font-bold text-gray-300 mb-2">No Fixtures Found</h3>
-            <p className="text-gray-500">No matches scheduled for this date</p>
+        {!loading && !error && fixtures.length === 0 && (
+          <div className="text-center py-12">
+            <Calendar className="w-10 h-10 text-purple-400 mx-auto mb-2 opacity-50" />
+            <h3 className="text-sm font-bold text-gray-300 mb-1">No Fixtures</h3>
+            <p className="text-xs text-gray-500">No matches for this date</p>
           </div>
         )}
 
-        {/* Fixtures List */}
+        {/* Fixtures List - Compact */}
         {!loading && !error && Object.keys(groupedFixtures).length > 0 && (
-          <div className="space-y-6">
+          <div className="space-y-3">
             {Object.entries(groupedFixtures).map(([league, leagueFixtures]) => (
-              <div key={league} className="bg-gradient-to-br from-purple-950/20 to-black border border-purple-500/20 rounded-2xl overflow-hidden">
-                {/* League Header */}
-                <div className="bg-purple-900/30 border-b border-purple-500/20 px-6 py-3">
+              <div key={league} className="bg-gradient-to-br from-purple-950/20 to-black border border-purple-500/20 rounded-xl overflow-hidden">
+                {/* League Header - Compact */}
+                <div className="bg-purple-900/30 border-b border-purple-500/20 px-3 py-1.5">
                   <div className="flex items-center justify-between">
-                    <h2 className="text-lg font-bold text-purple-300">{league}</h2>
-                    <span className="text-sm text-purple-400">{leagueFixtures.length} matches</span>
+                    <h2 className="text-xs font-bold text-purple-300 truncate">{league}</h2>
+                    <span className="text-[10px] text-purple-400 flex-shrink-0">{leagueFixtures.length}</span>
                   </div>
                 </div>
 
-                {/* Fixtures */}
+                {/* Fixtures - Ultra Compact */}
                 <div className="divide-y divide-purple-500/10">
                   {leagueFixtures.map((fixture) => (
-                    <div key={fixture.id} className="transition-all">
-                      {/* Fixture Row */}
+                    <div key={fixture.id} className={`transition-all ${fixture.golden_bet ? 'bg-yellow-500/5 border-l-2 border-yellow-500' : ''}`}>
                       <button
                         onClick={() => toggleFixture(fixture.id)}
-                        className={`w-full px-6 py-4 flex items-center justify-between hover:bg-purple-500/5 transition-all ${
-                          fixture.golden_bet ? 'bg-yellow-500/5 border-l-4 border-yellow-500' : ''
-                        }`}
+                        className="w-full px-3 py-2 flex items-center gap-2 hover:bg-purple-500/5 transition-all"
                       >
-                        <div className="flex items-center gap-6 flex-1">
-                          {/* Time */}
-                          <div className="text-sm text-gray-400 w-16 text-left">
-                            {fixture.time}
-                          </div>
+                        {/* Favorite Star */}
+                        <button
+                          onClick={(e) => toggleFavorite(fixture.id, e)}
+                          className="flex-shrink-0"
+                        >
+                          <Star 
+                            className={`w-3.5 h-3.5 transition-all ${
+                              favorites.has(fixture.id) 
+                                ? 'text-yellow-400 fill-yellow-400' 
+                                : 'text-gray-600 hover:text-yellow-400'
+                            }`}
+                          />
+                        </button>
 
-                          {/* Live Indicator */}
-                          {isLive(fixture.status) && (
-                            <div className="flex items-center gap-2">
-                              <Radio className="w-4 h-4 text-red-500 animate-pulse" />
-                              <span className="text-xs font-bold text-red-400">LIVE</span>
-                            </div>
-                          )}
-
-                          {/* Teams */}
-                          <div className="flex-1 text-left">
-                            <div className="flex items-center gap-2 mb-1">
-                              <span className="font-semibold">{fixture.homeTeamName}</span>
-                              {fixture.homeScore !== null && fixture.homeScore !== undefined && (
-                                <span className="text-purple-400 font-bold">{fixture.homeScore}</span>
-                              )}
-                            </div>
-                            <div className="flex items-center gap-2">
-                              <span className="font-semibold">{fixture.awayTeamName}</span>
-                              {fixture.awayScore !== null && fixture.awayScore !== undefined && (
-                                <span className="text-purple-400 font-bold">{fixture.awayScore}</span>
-                              )}
-                            </div>
-                          </div>
-
-                          {/* Golden Bet Badge */}
-                          {fixture.golden_bet && (
-                            <div className="flex items-center gap-2 px-3 py-1 rounded-full bg-yellow-500/10 border border-yellow-500/30">
-                              <Star className="w-4 h-4 text-yellow-400 fill-yellow-400" />
-                              <span className="text-xs font-bold text-yellow-400">GOLDEN BET</span>
-                            </div>
-                          )}
-
-                          {/* Expand Icon */}
-                          {expandedFixture === fixture.id ? (
-                            <ChevronUp className="w-5 h-5 text-gray-400" />
-                          ) : (
-                            <ChevronDown className="w-5 h-5 text-gray-400" />
-                          )}
+                        {/* Time */}
+                        <div className="text-[10px] text-gray-400 w-10 text-left flex-shrink-0">
+                          {fixture.time}
                         </div>
+
+                        {/* Teams - Compact */}
+                        <div className="flex-1 text-left min-w-0">
+                          <div className="flex items-center justify-between gap-2 mb-0.5">
+                            <span className="text-xs font-semibold truncate">{fixture.homeTeamName}</span>
+                            {fixture.homeScore !== null && fixture.homeScore !== undefined && (
+                              <span className="text-sm font-bold text-purple-400 flex-shrink-0">{fixture.homeScore}</span>
+                            )}
+                          </div>
+                          <div className="flex items-center justify-between gap-2">
+                            <span className="text-xs font-semibold truncate">{fixture.awayTeamName}</span>
+                            {fixture.awayScore !== null && fixture.awayScore !== undefined && (
+                              <span className="text-sm font-bold text-purple-400 flex-shrink-0">{fixture.awayScore}</span>
+                            )}
+                          </div>
+                        </div>
+
+                        {/* Golden Bet Badge - Compact */}
+                        {fixture.golden_bet && (
+                          <Star className="w-3.5 h-3.5 text-yellow-400 fill-yellow-400 flex-shrink-0" />
+                        )}
+
+                        {/* Expand Icon */}
+                        {expandedFixture === fixture.id ? (
+                          <ChevronUp className="w-4 h-4 text-gray-400 flex-shrink-0" />
+                        ) : (
+                          <ChevronDown className="w-4 h-4 text-gray-400 flex-shrink-0" />
+                        )}
                       </button>
 
-                      {/* Expanded Content - Stats Tabs */}
+                      {/* Expanded Stats */}
                       {expandedFixture === fixture.id && (
-                        <div className="bg-black/20 border-t border-purple-500/10 p-6">
-                          <div className="text-center text-gray-400 py-8">
-                            <BarChart3 className="w-12 h-12 mx-auto mb-3 opacity-50" />
-                            <p>Detailed stats coming soon</p>
+                        <div className="bg-black/20 border-t border-purple-500/10 p-3">
+                          <div className="text-center text-gray-400 py-4">
+                            <BarChart3 className="w-8 h-8 mx-auto mb-2 opacity-50" />
+                            <p className="text-xs">Stats coming soon</p>
                           </div>
                         </div>
                       )}
@@ -536,6 +649,17 @@ export default function FixturesPage() {
           </div>
         )}
       </div>
+
+      {/* Hide scrollbar for date selector */}
+      <style>{`
+        .scrollbar-hide::-webkit-scrollbar {
+          display: none;
+        }
+        .scrollbar-hide {
+          -ms-overflow-style: none;
+          scrollbar-width: none;
+        }
+      `}</style>
     </div>
   );
 }
