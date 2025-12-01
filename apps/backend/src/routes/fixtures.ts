@@ -79,42 +79,40 @@ function mapStatus(short: string): string {
 }
 
 /**
- * Fetch live scores for specific fixtures from API-Football
+ * Fetch live scores for a specific date from API-Football (ONE API CALL)
+ * This is 100x faster than fetching individual fixtures
  */
-async function fetchLiveScores(fixtureIds: number[]): Promise<Map<number, any>> {
+async function fetchLiveScoresByDate(dateStr: string): Promise<Map<number, any>> {
   const scoresMap = new Map();
   
   try {
-    // Fetch in batches of 20 to avoid rate limits
-    const batchSize = 20;
-    for (let i = 0; i < fixtureIds.length; i += batchSize) {
-      const batch = fixtureIds.slice(i, i + batchSize);
-      
-      for (const fixtureId of batch) {
-        try {
-          const response = await apiClient.get('/fixtures', {
-            params: { id: fixtureId }
-          });
-          
-          const fixture = response.data.response?.[0];
-          if (fixture) {
-            scoresMap.set(fixtureId, {
-              status: mapStatus(fixture.fixture.status.short),
-              homeScore: fixture.goals.home ?? null,
-              awayScore: fixture.goals.away ?? null,
-              statusShort: fixture.fixture.status.short,
-            });
-          }
-          
-          // Rate limiting
-          await new Promise(resolve => setTimeout(resolve, 100));
-        } catch (err) {
-          console.error(`Error fetching score for fixture ${fixtureId}:`, err);
-        }
+    console.log(`🔄 Fetching all fixtures for date: ${dateStr}`);
+    
+    // Fetch ALL fixtures for this date in ONE API call
+    const response = await apiClient.get('/fixtures', {
+      params: { 
+        date: dateStr,
+        timezone: 'UTC'
       }
+    });
+    
+    const fixtures = response.data.response || [];
+    console.log(`✅ Received ${fixtures.length} fixtures from API`);
+    
+    // Map all fixtures by their ID
+    for (const fixture of fixtures) {
+      const fixtureId = fixture.fixture.id;
+      scoresMap.set(fixtureId, {
+        status: mapStatus(fixture.fixture.status.short),
+        homeScore: fixture.goals.home ?? null,
+        awayScore: fixture.goals.away ?? null,
+        statusShort: fixture.fixture.status.short,
+      });
     }
-  } catch (error) {
-    console.error('Error fetching live scores:', error);
+    
+    console.log(`✅ Mapped ${scoresMap.size} fixture scores`);
+  } catch (error: any) {
+    console.error('❌ Error fetching live scores by date:', error.message);
   }
   
   return scoresMap;
@@ -127,9 +125,11 @@ router.post('/refresh-scores', async (req: Request, res: Response) => {
   try {
     const { date } = req.body;
     
+    let dateStr: string;
     let query: any = {};
     
     if (date) {
+      dateStr = date;
       const targetDate = new Date(date);
       const nextDate = new Date(targetDate);
       nextDate.setDate(nextDate.getDate() + 1);
@@ -138,12 +138,15 @@ router.post('/refresh-scores', async (req: Request, res: Response) => {
       // Default: refresh today's fixtures
       const today = new Date();
       today.setHours(0, 0, 0, 0);
+      dateStr = formatDate(today);
       const tomorrow = new Date(today);
       tomorrow.setDate(tomorrow.getDate() + 1);
       query.date = { $gte: today, $lt: tomorrow };
     }
     
-    // Find fixtures that might need score updates (live or recently finished)
+    console.log(`🔄 Refreshing scores for date: ${dateStr}`);
+    
+    // Find fixtures in our database for this date
     const fixtures = await Fixture.find(query).lean();
     
     if (fixtures.length === 0) {
@@ -154,31 +157,43 @@ router.post('/refresh-scores', async (req: Request, res: Response) => {
       });
     }
     
-    const fixtureIds = fixtures.map(f => f.fixtureId);
-    const scoresMap = await fetchLiveScores(fixtureIds);
+    console.log(`📊 Found ${fixtures.length} fixtures in database`);
+    
+    // Fetch ALL scores for this date in ONE API call
+    const scoresMap = await fetchLiveScoresByDate(dateStr);
     
     let updated = 0;
+    let notFound = 0;
     
     // Update fixtures with new scores
-    for (const [fixtureId, scoreData] of scoresMap.entries()) {
-      await Fixture.updateOne(
-        { fixtureId },
-        {
-          $set: {
-            status: scoreData.status,
-            'score.home': scoreData.homeScore,
-            'score.away': scoreData.awayScore,
+    for (const fixture of fixtures) {
+      const scoreData = scoresMap.get(fixture.fixtureId);
+      
+      if (scoreData) {
+        await Fixture.updateOne(
+          { fixtureId: fixture.fixtureId },
+          {
+            $set: {
+              status: scoreData.status,
+              'score.home': scoreData.homeScore,
+              'score.away': scoreData.awayScore,
+            }
           }
-        }
-      );
-      updated++;
+        );
+        updated++;
+      } else {
+        notFound++;
+      }
     }
+    
+    console.log(`✅ Updated ${updated} fixtures, ${notFound} not found in API response`);
     
     res.json({
       success: true,
       message: `Updated ${updated} fixtures`,
       updated,
-      total: fixtures.length
+      total: fixtures.length,
+      notFound
     });
     
   } catch (error: any) {
@@ -197,7 +212,6 @@ router.post('/refresh-scores', async (req: Request, res: Response) => {
 router.get('/', async (req: Request, res: Response) => {
   try {
     const { date, league, status } = req.query;
-
     const query: any = {};
 
     if (date) {
