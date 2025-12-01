@@ -175,6 +175,14 @@ export const fixturesApi = {
     });
     return response.data;
   },
+
+  // Refresh scores from API-Football
+  refreshScores: async (date?: string) => {
+    const response = await apiClient.post('/api/fixtures/refresh-scores', {
+      date
+    });
+    return response.data;
+  },
 };
 
 // Predictions API
