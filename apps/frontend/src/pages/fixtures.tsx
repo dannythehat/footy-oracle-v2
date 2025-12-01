@@ -13,7 +13,8 @@ import {
   WifiOff,
   ChevronLeft,
   ChevronRight,
-  Flame
+  Flame,
+  TrendingUp
 } from 'lucide-react';
 import { fixturesApi } from '../services/api';
 import MatchDetailDrawer from '../components/fixtures/MatchDetailDrawer';
@@ -32,6 +33,8 @@ interface Fixture {
   status: string;
   homeScore?: number | null;
   awayScore?: number | null;
+  season?: number;
+  country?: string;
   predictions?: {
     btts_yes: number;
     over_2_5: number;
@@ -39,10 +42,24 @@ interface Fixture {
     over_3_5_cards: number;
   };
   odds?: {
-    btts_yes: number;
-    over_2_5: number;
-    over_9_5_corners: number;
-    over_3_5_cards: number;
+    btts?: number;
+    btts_yes?: number;
+    over25?: number;
+    over_2_5?: number;
+    over35cards?: number;
+    over_3_5_cards?: number;
+    over95corners?: number;
+    over_9_5_corners?: number;
+  };
+  aiBets?: {
+    bts?: { percentage: number; confidence: string };
+    over25?: { percentage: number; confidence: string };
+    over35cards?: { percentage: number; confidence: string };
+    over95corners?: { percentage: number; confidence: string };
+    goldenBet?: {
+      type: string;
+      reasoning: string;
+    };
   };
   golden_bet?: {
     market: string;
@@ -56,19 +73,20 @@ interface Fixture {
 export default function FixturesPage() {
   const navigate = useNavigate();
   
-  // Generate rolling dates: 7 past + today + 7 future
+  // Generate rolling dates: TODAY + 14 future days (no past dates)
   const generateRollingDates = () => {
     const dates = [];
     const today = new Date();
     
-    for (let i = -7; i <= 7; i++) {
+    // Start from today (i=0) and go 14 days into future
+    for (let i = 0; i <= 14; i++) {
       const date = new Date(today);
       date.setDate(today.getDate() + i);
       dates.push({
         date: date,
         dateStr: date.toISOString().split('T')[0],
         isToday: i === 0,
-        isPast: i < 0,
+        isPast: false,
         isFuture: i > 0
       });
     }
@@ -76,7 +94,7 @@ export default function FixturesPage() {
   };
 
   const rollingDates = generateRollingDates();
-  const todayIndex = rollingDates.findIndex(d => d.isToday);
+  const todayIndex = 0; // Today is always at index 0
   
   const [selectedDateIndex, setSelectedDateIndex] = useState(todayIndex);
   const [fixtures, setFixtures] = useState<Fixture[]>([]);
@@ -219,6 +237,28 @@ export default function FixturesPage() {
     } else if (direction === 'next' && selectedDateIndex < rollingDates.length - 1) {
       setSelectedDateIndex(selectedDateIndex + 1);
     }
+  };
+
+  // Helper to get best odds value
+  const getOddsValue = (fixture: Fixture, market: string): number | null => {
+    if (!fixture.odds) return null;
+    
+    // Try different possible keys for the same market
+    const oddsKeys: Record<string, string[]> = {
+      'btts': ['btts', 'btts_yes'],
+      'over25': ['over25', 'over_2_5'],
+      'over35cards': ['over35cards', 'over_3_5_cards'],
+      'over95corners': ['over95corners', 'over_9_5_corners']
+    };
+
+    const keys = oddsKeys[market] || [market];
+    for (const key of keys) {
+      const value = (fixture.odds as any)[key];
+      if (value !== undefined && value !== null) {
+        return value;
+      }
+    }
+    return null;
   };
 
   return (
@@ -419,7 +459,7 @@ export default function FixturesPage() {
                     </div>
 
                     {/* Golden Bet Badge */}
-                    {fixture.golden_bet && (
+                    {(fixture.golden_bet || fixture.aiBets?.goldenBet) && (
                       <Star className="w-3.5 h-3.5 text-yellow-400 fill-yellow-400 flex-shrink-0" />
                     )}
                   </button>
@@ -453,55 +493,68 @@ export default function FixturesPage() {
 
                 {/* Fixtures - Clickable */}
                 <div className="divide-y divide-purple-500/10">
-                  {leagueFixtures.map((fixture) => (
-                    <button
-                      key={fixture.id}
-                      onClick={() => openFixtureDetail(fixture)}
-                      className={`w-full px-3 py-2 flex items-center gap-2 hover:bg-purple-500/10 transition-all active:bg-purple-500/15 ${
-                        fixture.golden_bet ? 'bg-yellow-500/5 border-l-2 border-yellow-500' : ''
-                      }`}
-                    >
-                      {/* Favorite Star */}
+                  {leagueFixtures.map((fixture) => {
+                    const hasOdds = fixture.odds && Object.keys(fixture.odds).length > 0;
+                    const bestOdds = hasOdds ? getOddsValue(fixture, 'btts') || getOddsValue(fixture, 'over25') : null;
+                    
+                    return (
                       <button
-                        onClick={(e) => toggleFavorite(fixture.id, e)}
-                        className="flex-shrink-0"
+                        key={fixture.id}
+                        onClick={() => openFixtureDetail(fixture)}
+                        className={`w-full px-3 py-2 flex items-center gap-2 hover:bg-purple-500/10 transition-all active:bg-purple-500/15 ${
+                          fixture.golden_bet || fixture.aiBets?.goldenBet ? 'bg-yellow-500/5 border-l-2 border-yellow-500' : ''
+                        }`}
                       >
-                        <Star 
-                          className={`w-3.5 h-3.5 transition-all ${
-                            favorites.has(fixture.id) 
-                              ? 'text-yellow-400 fill-yellow-400' 
-                              : 'text-gray-600 hover:text-yellow-400'
-                          }`}
-                        />
+                        {/* Favorite Star */}
+                        <button
+                          onClick={(e) => toggleFavorite(fixture.id, e)}
+                          className="flex-shrink-0"
+                        >
+                          <Star 
+                            className={`w-3.5 h-3.5 transition-all ${
+                              favorites.has(fixture.id) 
+                                ? 'text-yellow-400 fill-yellow-400' 
+                                : 'text-gray-600 hover:text-yellow-400'
+                            }`}
+                          />
+                        </button>
+
+                        {/* Time */}
+                        <div className="text-[10px] text-gray-400 w-10 text-left flex-shrink-0">
+                          {fixture.time}
+                        </div>
+
+                        {/* Teams with Scores */}
+                        <div className="flex-1 text-left min-w-0">
+                          <div className="flex items-center justify-between gap-2 mb-0.5">
+                            <span className="text-xs font-semibold truncate">{fixture.homeTeamName}</span>
+                            {(fixture.homeScore !== null && fixture.homeScore !== undefined) && (
+                              <span className="text-sm font-bold text-purple-400 flex-shrink-0">{fixture.homeScore}</span>
+                            )}
+                          </div>
+                          <div className="flex items-center justify-between gap-2">
+                            <span className="text-xs font-semibold truncate">{fixture.awayTeamName}</span>
+                            {(fixture.awayScore !== null && fixture.awayScore !== undefined) && (
+                              <span className="text-sm font-bold text-purple-400 flex-shrink-0">{fixture.awayScore}</span>
+                            )}
+                          </div>
+                        </div>
+
+                        {/* Odds Badge */}
+                        {bestOdds && (
+                          <div className="flex items-center gap-1 px-1.5 py-0.5 bg-green-500/10 border border-green-500/30 rounded">
+                            <TrendingUp className="w-2.5 h-2.5 text-green-400" />
+                            <span className="text-[9px] font-bold text-green-400">{bestOdds.toFixed(2)}</span>
+                          </div>
+                        )}
+
+                        {/* Golden Bet Badge */}
+                        {(fixture.golden_bet || fixture.aiBets?.goldenBet) && (
+                          <Star className="w-3.5 h-3.5 text-yellow-400 fill-yellow-400 flex-shrink-0" />
+                        )}
                       </button>
-
-                      {/* Time */}
-                      <div className="text-[10px] text-gray-400 w-10 text-left flex-shrink-0">
-                        {fixture.time}
-                      </div>
-
-                      {/* Teams with Scores */}
-                      <div className="flex-1 text-left min-w-0">
-                        <div className="flex items-center justify-between gap-2 mb-0.5">
-                          <span className="text-xs font-semibold truncate">{fixture.homeTeamName}</span>
-                          {(fixture.homeScore !== null && fixture.homeScore !== undefined) && (
-                            <span className="text-sm font-bold text-purple-400 flex-shrink-0">{fixture.homeScore}</span>
-                          )}
-                        </div>
-                        <div className="flex items-center justify-between gap-2">
-                          <span className="text-xs font-semibold truncate">{fixture.awayTeamName}</span>
-                          {(fixture.awayScore !== null && fixture.awayScore !== undefined) && (
-                            <span className="text-sm font-bold text-purple-400 flex-shrink-0">{fixture.awayScore}</span>
-                          )}
-                        </div>
-                      </div>
-
-                      {/* Golden Bet Badge */}
-                      {fixture.golden_bet && (
-                        <Star className="w-3.5 h-3.5 text-yellow-400 fill-yellow-400 flex-shrink-0" />
-                      )}
-                    </button>
-                  ))}
+                    );
+                  })}
                 </div>
               </div>
             ))}
@@ -515,17 +568,6 @@ export default function FixturesPage() {
         isOpen={isDrawerOpen}
         onClose={closeDrawer}
       />
-
-      {/* Hide scrollbar for date selector */}
-      <style>{`
-        .scrollbar-hide::-webkit-scrollbar {
-          display: none;
-        }
-        .scrollbar-hide {
-          -ms-overflow-style: none;
-          scrollbar-width: none;
-        }
-      `}</style>
     </div>
   );
 }
