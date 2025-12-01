@@ -264,7 +264,7 @@ export default function FixturesPage() {
   return (
     <div className="min-h-screen bg-black text-white">
       {/* Compact Header */}
-      <div className="bg-gradient-to-r from-purple-900/40 to-black border-b border-purple-500/30 sticky top-0 z-40 backdrop-blur-sm">
+      <div className="bg-gradient-to-r from-purple-900/40 to-black border-b border-purple-500/30 sticky top-0 z-40 backdrop-blur-sm shadow-lg">
         <div className="max-w-7xl mx-auto px-3 py-2">
           <div className="flex items-center justify-between mb-2">
             <div className="flex items-center gap-2">
@@ -315,7 +315,7 @@ export default function FixturesPage() {
                       onClick={() => setSelectedDateIndex(index)}
                       className={`flex-shrink-0 px-2 py-1 rounded text-[10px] font-semibold transition-all whitespace-nowrap ${
                         selectedDateIndex === index
-                          ? 'bg-purple-600 text-white neon-purple'
+                          ? 'bg-purple-600 text-white neon-purple shadow-lg shadow-purple-500/50'
                           : dateObj.isToday
                           ? 'bg-purple-900/40 text-purple-300 border border-purple-500/30'
                           : 'bg-purple-900/20 text-purple-400 hover:bg-purple-900/30'
@@ -383,13 +383,13 @@ export default function FixturesPage() {
         {/* Error State */}
         {!loading && error && (
           <div className="max-w-md mx-auto">
-            <div className="p-4 rounded-xl bg-gradient-to-br from-red-950/20 to-black border border-red-500/30 text-center">
+            <div className="p-4 rounded-xl bg-gradient-to-br from-red-950/20 to-black border border-red-500/30 text-center shadow-xl">
               <AlertCircle className="w-8 h-8 text-red-400 mx-auto mb-2" />
               <h3 className="text-sm font-bold text-red-400 mb-1">Connection Error</h3>
               <p className="text-xs text-gray-400 mb-3">{error}</p>
               <button
                 onClick={handleRetry}
-                className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-lg bg-purple-600 hover:bg-purple-500 text-white text-xs font-semibold transition-all"
+                className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-lg bg-purple-600 hover:bg-purple-500 text-white text-xs font-semibold transition-all shadow-lg hover:shadow-purple-500/50"
               >
                 <RefreshCw className="w-3 h-3" />
                 Retry
@@ -398,61 +398,64 @@ export default function FixturesPage() {
           </div>
         )}
 
-        {/* LIVE SECTION - Prominent */}
+        {/* LIVE SECTION - Prominent with Depth */}
         {!loading && !error && liveFixtures.length > 0 && (
-          <div className="mb-3">
-            <div className="bg-gradient-to-br from-red-950/30 to-black border border-red-500/30 rounded-xl overflow-hidden">
+          <div className="mb-4">
+            <div className="bg-gradient-to-br from-red-950/40 via-red-900/20 to-black border border-red-500/40 rounded-xl overflow-hidden shadow-xl shadow-red-500/20 backdrop-blur-sm">
               {/* Live Header */}
-              <div className="bg-red-900/30 border-b border-red-500/20 px-3 py-1.5 flex items-center justify-between">
+              <div className="bg-gradient-to-r from-red-900/40 to-red-800/30 border-b border-red-500/30 px-3 py-2 flex items-center justify-between shadow-lg">
                 <div className="flex items-center gap-2">
-                  <Flame className="w-4 h-4 text-red-400 animate-pulse" />
-                  <h2 className="text-xs font-bold text-red-400">LIVE NOW</h2>
+                  <Flame className="w-4 h-4 text-red-400 animate-pulse drop-shadow-lg" />
+                  <h2 className="text-xs font-bold text-red-400 tracking-wide">LIVE NOW</h2>
                 </div>
-                <span className="text-[10px] text-red-400">{liveFixtures.length} live</span>
+                <span className="text-[10px] text-red-400 bg-red-500/20 px-2 py-0.5 rounded-full">{liveFixtures.length} live</span>
               </div>
 
-              {/* Live Fixtures - Clickable */}
+              {/* Live Fixtures - Enhanced Cards */}
               <div className="divide-y divide-red-500/10">
                 {liveFixtures.map((fixture) => (
                   <button
                     key={fixture.id}
                     onClick={() => openFixtureDetail(fixture)}
-                    className="w-full px-3 py-2 flex items-center gap-2 hover:bg-red-500/10 transition-all bg-red-500/5 active:bg-red-500/15"
+                    className="w-full px-3 py-2.5 flex items-center gap-2 hover:bg-red-500/15 transition-all duration-200 bg-red-500/5 active:bg-red-500/20 hover:-translate-y-0.5 hover:shadow-lg relative group"
                   >
+                    {/* Hover glow effect */}
+                    <div className="absolute inset-0 bg-gradient-to-r from-red-500/0 via-red-500/5 to-red-500/0 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                    
                     {/* Favorite Star */}
                     <button
                       onClick={(e) => toggleFavorite(fixture.id, e)}
-                      className="flex-shrink-0"
+                      className="flex-shrink-0 z-10"
                     >
                       <Star 
                         className={`w-3.5 h-3.5 transition-all ${
                           favorites.has(fixture.id) 
-                            ? 'text-yellow-400 fill-yellow-400' 
+                            ? 'text-yellow-400 fill-yellow-400 drop-shadow-lg' 
                             : 'text-gray-600 hover:text-yellow-400'
                         }`}
                       />
                     </button>
 
                     {/* Time & Live Indicator */}
-                    <div className="flex flex-col items-center w-12">
+                    <div className="flex flex-col items-center w-12 z-10">
                       <span className="text-[10px] text-gray-400">{fixture.time}</span>
                       <div className="flex items-center gap-1">
-                        <Radio className="w-2.5 h-2.5 text-red-500 animate-pulse" />
+                        <Radio className="w-2.5 h-2.5 text-red-500 animate-pulse drop-shadow-lg" />
                         <span className="text-[9px] font-bold text-red-400">LIVE</span>
                       </div>
                     </div>
 
                     {/* Teams with Scores - Prominent */}
-                    <div className="flex-1 text-left min-w-0">
+                    <div className="flex-1 text-left min-w-0 z-10">
                       <div className="flex items-center justify-between gap-2 mb-0.5">
                         <span className="text-xs font-semibold truncate">{fixture.homeTeamName}</span>
-                        <span className="text-base font-bold text-white flex-shrink-0">
+                        <span className="text-base font-bold text-white flex-shrink-0 drop-shadow-lg">
                           {fixture.homeScore ?? '-'}
                         </span>
                       </div>
                       <div className="flex items-center justify-between gap-2">
                         <span className="text-xs font-semibold truncate">{fixture.awayTeamName}</span>
-                        <span className="text-base font-bold text-white flex-shrink-0">
+                        <span className="text-base font-bold text-white flex-shrink-0 drop-shadow-lg">
                           {fixture.awayScore ?? '-'}
                         </span>
                       </div>
@@ -460,7 +463,7 @@ export default function FixturesPage() {
 
                     {/* Golden Bet Badge */}
                     {(fixture.golden_bet || fixture.aiBets?.goldenBet) && (
-                      <Star className="w-3.5 h-3.5 text-yellow-400 fill-yellow-400 flex-shrink-0" />
+                      <Star className="w-3.5 h-3.5 text-yellow-400 fill-yellow-400 flex-shrink-0 z-10 drop-shadow-lg" />
                     )}
                   </button>
                 ))}
@@ -478,20 +481,20 @@ export default function FixturesPage() {
           </div>
         )}
 
-        {/* Fixtures List - Clickable */}
+        {/* Fixtures List - Enhanced Cards with Depth */}
         {!loading && !error && Object.keys(groupedFixtures).length > 0 && (
-          <div className="space-y-3">
+          <div className="space-y-4">
             {Object.entries(groupedFixtures).map(([league, leagueFixtures]) => (
-              <div key={league} className="bg-gradient-to-br from-purple-950/20 to-black border border-purple-500/20 rounded-xl overflow-hidden">
-                {/* League Header */}
-                <div className="bg-purple-900/30 border-b border-purple-500/20 px-3 py-1.5">
+              <div key={league} className="bg-gradient-to-br from-purple-950/30 via-purple-900/10 to-black border border-purple-500/30 rounded-xl overflow-hidden shadow-xl shadow-purple-500/10 backdrop-blur-sm">
+                {/* League Header - Enhanced */}
+                <div className="bg-gradient-to-r from-purple-900/40 to-purple-800/30 border-b border-purple-500/30 px-3 py-2 shadow-lg">
                   <div className="flex items-center justify-between">
-                    <h2 className="text-xs font-bold text-purple-300 truncate">{league}</h2>
-                    <span className="text-[10px] text-purple-400 flex-shrink-0">{leagueFixtures.length}</span>
+                    <h2 className="text-xs font-bold text-purple-300 truncate tracking-wide">{league}</h2>
+                    <span className="text-[10px] text-purple-400 bg-purple-500/20 px-2 py-0.5 rounded-full flex-shrink-0">{leagueFixtures.length}</span>
                   </div>
                 </div>
 
-                {/* Fixtures - Clickable */}
+                {/* Fixtures - Premium Cards */}
                 <div className="divide-y divide-purple-500/10">
                   {leagueFixtures.map((fixture) => {
                     const hasOdds = fixture.odds && Object.keys(fixture.odds).length > 0;
@@ -501,48 +504,51 @@ export default function FixturesPage() {
                       <button
                         key={fixture.id}
                         onClick={() => openFixtureDetail(fixture)}
-                        className={`w-full px-3 py-2 flex items-center gap-2 hover:bg-purple-500/10 transition-all active:bg-purple-500/15 ${
-                          fixture.golden_bet || fixture.aiBets?.goldenBet ? 'bg-yellow-500/5 border-l-2 border-yellow-500' : ''
+                        className={`w-full px-3 py-2.5 flex items-center gap-2 hover:bg-purple-500/15 transition-all duration-200 active:bg-purple-500/20 hover:-translate-y-0.5 hover:shadow-lg relative group ${
+                          fixture.golden_bet || fixture.aiBets?.goldenBet ? 'bg-yellow-500/5 border-l-2 border-yellow-500 shadow-yellow-500/10' : ''
                         }`}
                       >
+                        {/* Hover glow effect */}
+                        <div className="absolute inset-0 bg-gradient-to-r from-purple-500/0 via-purple-500/5 to-purple-500/0 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                        
                         {/* Favorite Star */}
                         <button
                           onClick={(e) => toggleFavorite(fixture.id, e)}
-                          className="flex-shrink-0"
+                          className="flex-shrink-0 z-10"
                         >
                           <Star 
                             className={`w-3.5 h-3.5 transition-all ${
                               favorites.has(fixture.id) 
-                                ? 'text-yellow-400 fill-yellow-400' 
+                                ? 'text-yellow-400 fill-yellow-400 drop-shadow-lg' 
                                 : 'text-gray-600 hover:text-yellow-400'
                             }`}
                           />
                         </button>
 
                         {/* Time */}
-                        <div className="text-[10px] text-gray-400 w-10 text-left flex-shrink-0">
+                        <div className="text-[10px] text-gray-400 w-10 text-left flex-shrink-0 z-10">
                           {fixture.time}
                         </div>
 
                         {/* Teams with Scores */}
-                        <div className="flex-1 text-left min-w-0">
+                        <div className="flex-1 text-left min-w-0 z-10">
                           <div className="flex items-center justify-between gap-2 mb-0.5">
                             <span className="text-xs font-semibold truncate">{fixture.homeTeamName}</span>
                             {(fixture.homeScore !== null && fixture.homeScore !== undefined) && (
-                              <span className="text-sm font-bold text-purple-400 flex-shrink-0">{fixture.homeScore}</span>
+                              <span className="text-sm font-bold text-purple-400 flex-shrink-0 drop-shadow-lg">{fixture.homeScore}</span>
                             )}
                           </div>
                           <div className="flex items-center justify-between gap-2">
                             <span className="text-xs font-semibold truncate">{fixture.awayTeamName}</span>
                             {(fixture.awayScore !== null && fixture.awayScore !== undefined) && (
-                              <span className="text-sm font-bold text-purple-400 flex-shrink-0">{fixture.awayScore}</span>
+                              <span className="text-sm font-bold text-purple-400 flex-shrink-0 drop-shadow-lg">{fixture.awayScore}</span>
                             )}
                           </div>
                         </div>
 
-                        {/* Odds Badge */}
+                        {/* Odds Badge - Enhanced */}
                         {bestOdds && (
-                          <div className="flex items-center gap-1 px-1.5 py-0.5 bg-green-500/10 border border-green-500/30 rounded">
+                          <div className="flex items-center gap-1 px-2 py-1 bg-green-500/15 border border-green-500/40 rounded shadow-lg shadow-green-500/20 z-10">
                             <TrendingUp className="w-2.5 h-2.5 text-green-400" />
                             <span className="text-[9px] font-bold text-green-400">{bestOdds.toFixed(2)}</span>
                           </div>
@@ -550,7 +556,7 @@ export default function FixturesPage() {
 
                         {/* Golden Bet Badge */}
                         {(fixture.golden_bet || fixture.aiBets?.goldenBet) && (
-                          <Star className="w-3.5 h-3.5 text-yellow-400 fill-yellow-400 flex-shrink-0" />
+                          <Star className="w-3.5 h-3.5 text-yellow-400 fill-yellow-400 flex-shrink-0 z-10 drop-shadow-lg" />
                         )}
                       </button>
                     );
