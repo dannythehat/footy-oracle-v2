@@ -3,12 +3,9 @@ import { useNavigate } from 'react-router-dom';
 import { 
   Search, 
   Filter, 
-  ChevronDown, 
-  ChevronUp, 
   Star, 
   Calendar,
   Radio,
-  BarChart3,
   ArrowLeft,
   RefreshCw,
   AlertCircle,
@@ -19,6 +16,7 @@ import {
   Flame
 } from 'lucide-react';
 import { fixturesApi } from '../services/api';
+import MatchDetailDrawer from '../components/fixtures/MatchDetailDrawer';
 
 // CLEAN FLAT STRUCTURE - matches backend EXACTLY
 interface Fixture {
@@ -55,41 +53,6 @@ interface Fixture {
   };
 }
 
-interface TeamStats {
-  form: string;
-  goalsFor: number;
-  goalsAgainst: number;
-  cleanSheets: number;
-  failedToScore: number;
-  avgGoalsScored: number;
-  avgGoalsConceded: number;
-  bttsPercentage: number;
-  over25Percentage: number;
-}
-
-interface H2HData {
-  played: number;
-  homeWins: number;
-  awayWins: number;
-  draws: number;
-  lastMeetings: Array<{
-    date: string;
-    homeTeam: string;
-    awayTeam: string;
-    homeScore: number;
-    awayScore: number;
-    league: string;
-  }>;
-}
-
-interface FixtureStats {
-  homeTeam: TeamStats;
-  awayTeam: TeamStats;
-  h2h: H2HData;
-}
-
-type StatsTabType = 'markets' | 'h2h' | 'stats' | 'form';
-
 export default function FixturesPage() {
   const navigate = useNavigate();
   
@@ -122,11 +85,9 @@ export default function FixturesPage() {
   const [retryCount, setRetryCount] = useState(0);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedLeague, setSelectedLeague] = useState<string>('all');
-  const [expandedFixture, setExpandedFixture] = useState<number | null>(null);
-  const [activeStatsTab, setActiveStatsTab] = useState<StatsTabType>('markets');
-  const [fixtureStats, setFixtureStats] = useState<Record<number, FixtureStats>>({});
-  const [loadingStats, setLoadingStats] = useState<Record<number, boolean>>({});
   const [favorites, setFavorites] = useState<Set<number>>(new Set());
+  const [selectedFixture, setSelectedFixture] = useState<Fixture | null>(null);
+  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
 
   // Load favorites from localStorage
   useEffect(() => {
@@ -199,82 +160,14 @@ export default function FixturesPage() {
     return status.toLowerCase().includes('ft');
   };
 
-  const toggleFixture = async (fixtureId: number) => {
-    if (expandedFixture === fixtureId) {
-      setExpandedFixture(null);
-      setActiveStatsTab('markets');
-    } else {
-      setExpandedFixture(fixtureId);
-      setActiveStatsTab('markets');
-      
-      if (!fixtureStats[fixtureId]) {
-        await loadFixtureStats(fixtureId);
-      }
-    }
+  const openFixtureDetail = (fixture: Fixture) => {
+    setSelectedFixture(fixture);
+    setIsDrawerOpen(true);
   };
 
-  const loadFixtureStats = async (fixtureId: number) => {
-    const fixture = fixtures.find(f => f.id === fixtureId);
-    if (!fixture) return;
-
-    setLoadingStats(prev => ({ ...prev, [fixtureId]: true }));
-
-    try {
-      const mockStats: FixtureStats = {
-        homeTeam: {
-          form: 'WWDWL',
-          goalsFor: 28,
-          goalsAgainst: 12,
-          cleanSheets: 6,
-          failedToScore: 2,
-          avgGoalsScored: 2.3,
-          avgGoalsConceded: 1.0,
-          bttsPercentage: 58,
-          over25Percentage: 67
-        },
-        awayTeam: {
-          form: 'WLWDW',
-          goalsFor: 24,
-          goalsAgainst: 15,
-          cleanSheets: 4,
-          failedToScore: 3,
-          avgGoalsScored: 2.0,
-          avgGoalsConceded: 1.3,
-          bttsPercentage: 62,
-          over25Percentage: 58
-        },
-        h2h: {
-          played: 10,
-          homeWins: 4,
-          awayWins: 3,
-          draws: 3,
-          lastMeetings: [
-            {
-              date: '2024-03-15',
-              homeTeam: fixture.homeTeamName,
-              awayTeam: fixture.awayTeamName,
-              homeScore: 2,
-              awayScore: 1,
-              league: fixture.leagueName
-            },
-            {
-              date: '2023-11-20',
-              homeTeam: fixture.awayTeamName,
-              awayTeam: fixture.homeTeamName,
-              homeScore: 1,
-              awayScore: 1,
-              league: fixture.leagueName
-            }
-          ]
-        }
-      };
-
-      setFixtureStats(prev => ({ ...prev, [fixtureId]: mockStats }));
-    } catch (error) {
-      console.error('Error loading stats:', error);
-    } finally {
-      setLoadingStats(prev => ({ ...prev, [fixtureId]: false }));
-    }
+  const closeDrawer = () => {
+    setIsDrawerOpen(false);
+    setTimeout(() => setSelectedFixture(null), 300);
   };
 
   const formatDateLabel = (dateObj: typeof rollingDates[0]) => {
@@ -478,76 +371,58 @@ export default function FixturesPage() {
                 <span className="text-[10px] text-red-400">{liveFixtures.length} live</span>
               </div>
 
-              {/* Live Fixtures */}
+              {/* Live Fixtures - Clickable */}
               <div className="divide-y divide-red-500/10">
                 {liveFixtures.map((fixture) => (
-                  <div key={fixture.id} className="bg-red-500/5">
+                  <button
+                    key={fixture.id}
+                    onClick={() => openFixtureDetail(fixture)}
+                    className="w-full px-3 py-2 flex items-center gap-2 hover:bg-red-500/10 transition-all bg-red-500/5 active:bg-red-500/15"
+                  >
+                    {/* Favorite Star */}
                     <button
-                      onClick={() => toggleFixture(fixture.id)}
-                      className="w-full px-3 py-2 flex items-center gap-2 hover:bg-red-500/10 transition-all"
+                      onClick={(e) => toggleFavorite(fixture.id, e)}
+                      className="flex-shrink-0"
                     >
-                      {/* Favorite Star */}
-                      <button
-                        onClick={(e) => toggleFavorite(fixture.id, e)}
-                        className="flex-shrink-0"
-                      >
-                        <Star 
-                          className={`w-3.5 h-3.5 transition-all ${
-                            favorites.has(fixture.id) 
-                              ? 'text-yellow-400 fill-yellow-400' 
-                              : 'text-gray-600 hover:text-yellow-400'
-                          }`}
-                        />
-                      </button>
-
-                      {/* Time & Live Indicator */}
-                      <div className="flex flex-col items-center w-12">
-                        <span className="text-[10px] text-gray-400">{fixture.time}</span>
-                        <div className="flex items-center gap-1">
-                          <Radio className="w-2.5 h-2.5 text-red-500 animate-pulse" />
-                          <span className="text-[9px] font-bold text-red-400">LIVE</span>
-                        </div>
-                      </div>
-
-                      {/* Teams - Compact */}
-                      <div className="flex-1 text-left min-w-0">
-                        <div className="flex items-center justify-between gap-2 mb-0.5">
-                          <span className="text-xs font-semibold truncate">{fixture.homeTeamName}</span>
-                          {fixture.homeScore !== null && fixture.homeScore !== undefined && (
-                            <span className="text-sm font-bold text-purple-400 flex-shrink-0">{fixture.homeScore}</span>
-                          )}
-                        </div>
-                        <div className="flex items-center justify-between gap-2">
-                          <span className="text-xs font-semibold truncate">{fixture.awayTeamName}</span>
-                          {fixture.awayScore !== null && fixture.awayScore !== undefined && (
-                            <span className="text-sm font-bold text-purple-400 flex-shrink-0">{fixture.awayScore}</span>
-                          )}
-                        </div>
-                      </div>
-
-                      {/* Golden Bet Badge - Compact */}
-                      {fixture.golden_bet && (
-                        <Star className="w-3.5 h-3.5 text-yellow-400 fill-yellow-400 flex-shrink-0" />
-                      )}
-
-                      {/* Expand Icon */}
-                      {expandedFixture === fixture.id ? (
-                        <ChevronUp className="w-4 h-4 text-gray-400 flex-shrink-0" />
-                      ) : (
-                        <ChevronDown className="w-4 h-4 text-gray-400 flex-shrink-0" />
-                      )}
+                      <Star 
+                        className={`w-3.5 h-3.5 transition-all ${
+                          favorites.has(fixture.id) 
+                            ? 'text-yellow-400 fill-yellow-400' 
+                            : 'text-gray-600 hover:text-yellow-400'
+                        }`}
+                      />
                     </button>
 
-                    {/* Expanded Stats */}
-                    {expandedFixture === fixture.id && (
-                      <div className="bg-black/20 border-t border-red-500/10 p-3">
-                        <div className="text-center text-gray-400 py-4">
-                          <BarChart3 className="w-8 h-8 mx-auto mb-2 opacity-50" />
-                          <p className="text-xs">Stats coming soon</p>
-                        </div>
+                    {/* Time & Live Indicator */}
+                    <div className="flex flex-col items-center w-12">
+                      <span className="text-[10px] text-gray-400">{fixture.time}</span>
+                      <div className="flex items-center gap-1">
+                        <Radio className="w-2.5 h-2.5 text-red-500 animate-pulse" />
+                        <span className="text-[9px] font-bold text-red-400">LIVE</span>
                       </div>
+                    </div>
+
+                    {/* Teams with Scores - Prominent */}
+                    <div className="flex-1 text-left min-w-0">
+                      <div className="flex items-center justify-between gap-2 mb-0.5">
+                        <span className="text-xs font-semibold truncate">{fixture.homeTeamName}</span>
+                        <span className="text-base font-bold text-white flex-shrink-0">
+                          {fixture.homeScore ?? '-'}
+                        </span>
+                      </div>
+                      <div className="flex items-center justify-between gap-2">
+                        <span className="text-xs font-semibold truncate">{fixture.awayTeamName}</span>
+                        <span className="text-base font-bold text-white flex-shrink-0">
+                          {fixture.awayScore ?? '-'}
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Golden Bet Badge */}
+                    {fixture.golden_bet && (
+                      <Star className="w-3.5 h-3.5 text-yellow-400 fill-yellow-400 flex-shrink-0" />
                     )}
-                  </div>
+                  </button>
                 ))}
               </div>
             </div>
@@ -563,12 +438,12 @@ export default function FixturesPage() {
           </div>
         )}
 
-        {/* Fixtures List - Compact */}
+        {/* Fixtures List - Clickable */}
         {!loading && !error && Object.keys(groupedFixtures).length > 0 && (
           <div className="space-y-3">
             {Object.entries(groupedFixtures).map(([league, leagueFixtures]) => (
               <div key={league} className="bg-gradient-to-br from-purple-950/20 to-black border border-purple-500/20 rounded-xl overflow-hidden">
-                {/* League Header - Compact */}
+                {/* League Header */}
                 <div className="bg-purple-900/30 border-b border-purple-500/20 px-3 py-1.5">
                   <div className="flex items-center justify-between">
                     <h2 className="text-xs font-bold text-purple-300 truncate">{league}</h2>
@@ -576,72 +451,56 @@ export default function FixturesPage() {
                   </div>
                 </div>
 
-                {/* Fixtures - Ultra Compact */}
+                {/* Fixtures - Clickable */}
                 <div className="divide-y divide-purple-500/10">
                   {leagueFixtures.map((fixture) => (
-                    <div key={fixture.id} className={`transition-all ${fixture.golden_bet ? 'bg-yellow-500/5 border-l-2 border-yellow-500' : ''}`}>
+                    <button
+                      key={fixture.id}
+                      onClick={() => openFixtureDetail(fixture)}
+                      className={`w-full px-3 py-2 flex items-center gap-2 hover:bg-purple-500/10 transition-all active:bg-purple-500/15 ${
+                        fixture.golden_bet ? 'bg-yellow-500/5 border-l-2 border-yellow-500' : ''
+                      }`}
+                    >
+                      {/* Favorite Star */}
                       <button
-                        onClick={() => toggleFixture(fixture.id)}
-                        className="w-full px-3 py-2 flex items-center gap-2 hover:bg-purple-500/5 transition-all"
+                        onClick={(e) => toggleFavorite(fixture.id, e)}
+                        className="flex-shrink-0"
                       >
-                        {/* Favorite Star */}
-                        <button
-                          onClick={(e) => toggleFavorite(fixture.id, e)}
-                          className="flex-shrink-0"
-                        >
-                          <Star 
-                            className={`w-3.5 h-3.5 transition-all ${
-                              favorites.has(fixture.id) 
-                                ? 'text-yellow-400 fill-yellow-400' 
-                                : 'text-gray-600 hover:text-yellow-400'
-                            }`}
-                          />
-                        </button>
-
-                        {/* Time */}
-                        <div className="text-[10px] text-gray-400 w-10 text-left flex-shrink-0">
-                          {fixture.time}
-                        </div>
-
-                        {/* Teams - Compact */}
-                        <div className="flex-1 text-left min-w-0">
-                          <div className="flex items-center justify-between gap-2 mb-0.5">
-                            <span className="text-xs font-semibold truncate">{fixture.homeTeamName}</span>
-                            {fixture.homeScore !== null && fixture.homeScore !== undefined && (
-                              <span className="text-sm font-bold text-purple-400 flex-shrink-0">{fixture.homeScore}</span>
-                            )}
-                          </div>
-                          <div className="flex items-center justify-between gap-2">
-                            <span className="text-xs font-semibold truncate">{fixture.awayTeamName}</span>
-                            {fixture.awayScore !== null && fixture.awayScore !== undefined && (
-                              <span className="text-sm font-bold text-purple-400 flex-shrink-0">{fixture.awayScore}</span>
-                            )}
-                          </div>
-                        </div>
-
-                        {/* Golden Bet Badge - Compact */}
-                        {fixture.golden_bet && (
-                          <Star className="w-3.5 h-3.5 text-yellow-400 fill-yellow-400 flex-shrink-0" />
-                        )}
-
-                        {/* Expand Icon */}
-                        {expandedFixture === fixture.id ? (
-                          <ChevronUp className="w-4 h-4 text-gray-400 flex-shrink-0" />
-                        ) : (
-                          <ChevronDown className="w-4 h-4 text-gray-400 flex-shrink-0" />
-                        )}
+                        <Star 
+                          className={`w-3.5 h-3.5 transition-all ${
+                            favorites.has(fixture.id) 
+                              ? 'text-yellow-400 fill-yellow-400' 
+                              : 'text-gray-600 hover:text-yellow-400'
+                          }`}
+                        />
                       </button>
 
-                      {/* Expanded Stats */}
-                      {expandedFixture === fixture.id && (
-                        <div className="bg-black/20 border-t border-purple-500/10 p-3">
-                          <div className="text-center text-gray-400 py-4">
-                            <BarChart3 className="w-8 h-8 mx-auto mb-2 opacity-50" />
-                            <p className="text-xs">Stats coming soon</p>
-                          </div>
+                      {/* Time */}
+                      <div className="text-[10px] text-gray-400 w-10 text-left flex-shrink-0">
+                        {fixture.time}
+                      </div>
+
+                      {/* Teams with Scores */}
+                      <div className="flex-1 text-left min-w-0">
+                        <div className="flex items-center justify-between gap-2 mb-0.5">
+                          <span className="text-xs font-semibold truncate">{fixture.homeTeamName}</span>
+                          {(fixture.homeScore !== null && fixture.homeScore !== undefined) && (
+                            <span className="text-sm font-bold text-purple-400 flex-shrink-0">{fixture.homeScore}</span>
+                          )}
                         </div>
+                        <div className="flex items-center justify-between gap-2">
+                          <span className="text-xs font-semibold truncate">{fixture.awayTeamName}</span>
+                          {(fixture.awayScore !== null && fixture.awayScore !== undefined) && (
+                            <span className="text-sm font-bold text-purple-400 flex-shrink-0">{fixture.awayScore}</span>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Golden Bet Badge */}
+                      {fixture.golden_bet && (
+                        <Star className="w-3.5 h-3.5 text-yellow-400 fill-yellow-400 flex-shrink-0" />
                       )}
-                    </div>
+                    </button>
                   ))}
                 </div>
               </div>
@@ -649,6 +508,13 @@ export default function FixturesPage() {
           </div>
         )}
       </div>
+
+      {/* Match Detail Drawer */}
+      <MatchDetailDrawer
+        fixture={selectedFixture}
+        isOpen={isDrawerOpen}
+        onClose={closeDrawer}
+      />
 
       {/* Hide scrollbar for date selector */}
       <style>{`
