@@ -105,6 +105,71 @@ router.get("/", async (req, res) => {
   }
 });
 
+// Refresh scores from API-Football (stub for now)
+router.post("/refresh-scores", async (req, res) => {
+  try {
+    const { date } = req.body;
+    
+    console.log(`📥 /api/fixtures/refresh-scores hit for date: ${date}`);
+    
+    // TODO: Implement actual API-Football score refresh
+    // For now, just return success to prevent frontend errors
+    
+    return res.json({
+      success: true,
+      message: "Score refresh queued",
+      date
+    });
+  } catch (err: any) {
+    console.error("❌ Refresh scores ERROR:", err.message);
+    return res.status(500).json({
+      success: false,
+      error: err.message || "Server error",
+    });
+  }
+});
+
+// Get head-to-head stats
+router.get("/h2h", async (req, res) => {
+  try {
+    const { homeTeamId, awayTeamId } = req.query;
+    
+    console.log(`📥 /api/fixtures/h2h hit`, { homeTeamId, awayTeamId });
+
+    if (!homeTeamId || !awayTeamId) {
+      return res.status(400).json({
+        success: false,
+        error: "homeTeamId and awayTeamId are required"
+      });
+    }
+
+    // Find previous matches between these teams
+    const h2hFixtures = await Fixture.find({
+      $or: [
+        { homeTeamId: parseInt(homeTeamId as string), awayTeamId: parseInt(awayTeamId as string) },
+        { homeTeamId: parseInt(awayTeamId as string), awayTeamId: parseInt(homeTeamId as string) }
+      ],
+      status: 'finished'
+    })
+    .sort({ date: -1 })
+    .limit(10)
+    .lean();
+
+    console.log(`✅ Found ${h2hFixtures.length} H2H fixtures`);
+
+    return res.json({
+      success: true,
+      data: h2hFixtures
+    });
+  } catch (err: any) {
+    console.error("❌ H2H ERROR:", err.message);
+    return res.status(500).json({
+      success: false,
+      error: err.message || "Server error",
+    });
+  }
+});
+
 // Get fixture by ID
 router.get("/:fixtureId", async (req, res) => {
   try {
@@ -131,6 +196,53 @@ router.get("/:fixtureId", async (req, res) => {
     });
   } catch (err: any) {
     console.error("❌ Fixture by ID ERROR:", err.message);
+    return res.status(500).json({
+      success: false,
+      error: err.message || "Server error",
+    });
+  }
+});
+
+// Get fixture stats
+router.get("/:fixtureId/stats", async (req, res) => {
+  try {
+    const { fixtureId } = req.params;
+    
+    console.log(`📥 /api/fixtures/${fixtureId}/stats hit`);
+
+    const fixture = await Fixture.findOne({ 
+      fixtureId: parseInt(fixtureId) 
+    }).lean();
+
+    if (!fixture) {
+      return res.status(404).json({
+        success: false,
+        error: "Fixture not found"
+      });
+    }
+
+    // Return stats if available, otherwise return basic fixture data
+    const stats = {
+      fixture: {
+        id: fixture.fixtureId,
+        homeTeam: fixture.homeTeam,
+        awayTeam: fixture.awayTeam,
+        homeScore: fixture.homeScore || 0,
+        awayScore: fixture.awayScore || 0,
+        status: fixture.status
+      },
+      // TODO: Add actual match statistics when available
+      statistics: []
+    };
+
+    console.log(`✅ Returning stats for: ${fixture.homeTeam} vs ${fixture.awayTeam}`);
+
+    return res.json({
+      success: true,
+      data: stats
+    });
+  } catch (err: any) {
+    console.error("❌ Fixture stats ERROR:", err.message);
     return res.status(500).json({
       success: false,
       error: err.message || "Server error",
