@@ -639,5 +639,142 @@ router.post('/value-bets', async (req: Request, res: Response) => {
     });
   }
 });
+/* ============================================================
+   ⭐ NEW ROUTE: LIVE FIXTURE SNAPSHOT
+   ============================================================ */
+import { fetchLiveFixtureSnapshot, fetchOdds, fetchLeagueStandings } from "../services/apiFootballService";
+
+router.get('/:id/live', async (req: Request, res: Response) => {
+  try {
+    const fixtureId = Number(req.params.id);
+    const live = await fetchLiveFixtureSnapshot(fixtureId);
+
+    if (!live) {
+      return res.status(404).json({
+        success: false,
+        error: "Live data not available"
+      });
+    }
+
+    res.json({ success: true, data: live });
+
+  } catch (error: any) {
+    console.error("❌ Live snapshot error:", error.message);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+
+/* ============================================================
+   ⭐ NEW ROUTE: ODDS
+   ============================================================ */
+router.get('/:id/odds', async (req: Request, res: Response) => {
+  try {
+    const fixtureId = Number(req.params.id);
+    const odds = await fetchOdds(fixtureId);
+
+    if (!odds) {
+      return res.json({ success: true, data: null });
+    }
+
+    res.json({ success: true, data: odds });
+
+  } catch (error: any) {
+    console.error("❌ Odds error:", error.message);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+
+/* ============================================================
+   ⭐ NEW ROUTE: EVENTS (refreshed from API)
+   ============================================================ */
+router.get('/:id/events', async (req: Request, res: Response) => {
+  try {
+    const fixtureId = Number(req.params.id);
+
+    const response = await apiClient.get("/fixtures", {
+      params: { id: fixtureId }
+    });
+
+    const match = response.data.response?.[0];
+    const events = match?.events || [];
+
+    res.json({ success: true, data: events });
+
+  } catch (error: any) {
+    console.error("❌ Events error:", error.message);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+
+/* ============================================================
+   ⭐ NEW ROUTE: GOALSCORERS
+   ============================================================ */
+router.get('/:id/goalscorers', async (req: Request, res: Response) => {
+  try {
+    const fixtureId = Number(req.params.id);
+
+    const response = await apiClient.get("/fixtures", {
+      params: { id: fixtureId }
+    });
+
+    const match = response.data.response?.[0];
+    const events = match?.events || [];
+
+    const goals = events.filter((e: any) => e.type === "Goal");
+
+    res.json({ success: true, data: goals });
+
+  } catch (error: any) {
+    console.error("❌ Goalscorers error:", error.message);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+
+/* ============================================================
+   ⭐ NEW ROUTE: IN-PLAY STATS (live stats only)
+   ============================================================ */
+router.get('/:id/inplay', async (req: Request, res: Response) => {
+  try {
+    const fixtureId = Number(req.params.id);
+
+    const response = await apiClient.get("/fixtures/statistics", {
+      params: { fixture: fixtureId }
+    });
+
+    const stats = response.data.response || [];
+
+    res.json({
+      success: true,
+      data: stats
+    });
+
+  } catch (error: any) {
+    console.error("❌ Inplay stats error:", error.message);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+
+/* ============================================================
+   ⭐ NEW ROUTE: LEAGUE TABLE
+   ============================================================ */
+router.get('/league/:leagueId/standings', async (req: Request, res: Response) => {
+  try {
+    const leagueId = Number(req.params.leagueId);
+    const season = Number(req.query.season) || new Date().getFullYear();
+
+    const standings = await fetchLeagueStandings(leagueId, season);
+
+    res.json({ success: true, data: standings });
+
+  } catch (error: any) {
+    console.error("❌ League standings error:", error.message);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
 
 export default router;
