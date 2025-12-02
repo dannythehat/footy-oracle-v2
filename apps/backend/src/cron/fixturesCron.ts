@@ -1,233 +1,157 @@
 import cron from 'node-cron';
 import { Fixture } from '../models/Fixture.js';
-import { fetchFixtures, fetchOddsForFixture } from '../services/apiFootballService.js';
+import { fetchFixtures, fetchOdds } from '../services/apiFootballService.js';
 
 /**
- * Cron job to fetch and store fixtures
- * Runs every 2 hours to keep fixtures updated
+ * Start the fixtures cron: refreshes 7 days back + 7 days forward
  */
 export function startFixturesCron() {
-  // Run every 2 hours to keep fixtures fresh
+  // Run every 2 hours
   cron.schedule('0 */2 * * *', async () => {
     console.log('🔄 Running fixtures update cron (every 2 hours)...');
     await loadFixturesWindow();
   });
 
-  // Also run on startup to ensure fixtures are available immediately
+  // Run once on startup
   console.log('🚀 Fixtures cron initialized - loading fixtures window...');
   loadFixturesWindow().catch(console.error);
 }
 
 /**
- * Load fixtures window: 7 days back + 7 days ahead (14-day rolling window)
- * This provides context with recent results AND upcoming fixtures
+ * Load fixtures for a 14-day window (7 days back + 7 days ahead)
  */
 export async function loadFixturesWindow() {
   try {
     const today = new Date();
     const startDate = new Date(today);
-    startDate.setDate(startDate.getDate() - 7); // 7 days back
+    startDate.setDate(startDate.getDate() - 7);
+
     const endDate = new Date(today);
-    endDate.setDate(endDate.getDate() + 7); // 7 days ahead
-    
-    console.log(`📅 Loading fixtures window: ${startDate.toISOString().split('T')[0]} to ${endDate.toISOString().split('T')[0]} (7 days back + 7 days ahead)...`);
+    endDate.setDate(endDate.getDate() + 7);
+
+    console.log(
+      `📅 Loading fixtures window: ${startDate.toISOString().split('T')[0]} → ${endDate
+        .toISOString()
+        .split('T')[0]}`
+    );
 
     let totalSaved = 0;
     let totalUpdated = 0;
 
-    // Loop through each date and fetch fixtures
     for (let date = new Date(startDate); date <= endDate; date.setDate(date.getDate() + 1)) {
       const dateStr = date.toISOString().split('T')[0];
-      
+
       try {
         const result = await loadFixturesForDate(dateStr);
         totalSaved += result.new || 0;
         totalUpdated += result.updated || 0;
-        
-        // Rate limiting: Wait 1 second between dates to avoid API limits
-        await new Promise(resolve => setTimeout(resolve, 1000));
-      } catch (error) {
-        console.error(`❌ Error loading fixtures for ${dateStr}:`, error);
-        // Continue with next date even if one fails
+
+        // Avoid API rate limits
+        await new Promise((resolve) => setTimeout(resolve, 800));
+      } catch (err) {
+        console.error(`❌ Error loading fixtures for ${dateStr}:`, err);
       }
     }
 
-    console.log(`✅ Fixtures window update complete: ${totalSaved} new, ${totalUpdated} updated`);
-  } catch (error) {
-    console.error('❌ Error loading fixtures window:', error);
+    console.log(`✅ Window update complete: ${totalSaved} new, ${totalUpdated} updated`);
+  } catch (err) {
+    console.error('❌ Error loading fixtures window:', err);
   }
 }
 
 /**
- * Load upcoming fixtures (legacy function - now uses window approach)
- * @deprecated Use loadFixturesWindow() instead
+ * Legacy compatibility
  */
 export async function loadUpcomingFixtures() {
   return loadFixturesWindow();
 }
 
-/**
- * Load today's fixtures (legacy function for backward compatibility)
- */
 export async function loadTodaysFixtures() {
-  try {
-    const today = new Date().toISOString().split('T')[0];
-    console.log(`📥 Loading fixtures for ${today}...`);
-
-    // Fetch fixtures from API-Football
-    const fixturesData = await fetchFixtures(today);
-    
-    if (!fixturesData || fixturesData.length === 0) {
-      console.log(`ℹ️  No fixtures found for ${today}`);
-      return;
-    }
-
-    console.log(`✅ Found ${fixturesData.length} fixtures`);
-
-    // Store each fixture in database
-    let savedCount = 0;
-    let updatedCount = 0;
-
-    for (const fixtureData of fixturesData) {
-      try {
-        // Check if fixture already exists
-        const existing = await Fixture.findOne({ fixtureId: fixtureData.fixtureId });
-
-        if (existing) {
-          // Update existing fixture - NOW INCLUDING IDs
-          await Fixture.updateOne(
-            { fixtureId: fixtureData.fixtureId },
-            {
-              $set: {
-                date: new Date(fixtureData.date),
-                homeTeam: fixtureData.homeTeam,
-                awayTeam: fixtureData.awayTeam,
-                homeTeamId: fixtureData.homeTeamId,  // NEW
-                awayTeamId: fixtureData.awayTeamId,  // NEW
-                league: fixtureData.league,
-                leagueId: fixtureData.leagueId,      // NEW
-                country: fixtureData.country,
-                season: fixtureData.season,          // NEW
-                status: fixtureData.status,
-                odds: fixtureData.odds || {},
-                updatedAt: new Date(),
-              }
-            }
-          );
-          updatedCount++;
-        } else {
-          // Create new fixture - NOW INCLUDING IDs
-          await Fixture.create({
-            fixtureId: fixtureData.fixtureId,
-            date: new Date(fixtureData.date),
-            homeTeam: fixtureData.homeTeam,
-            awayTeam: fixtureData.awayTeam,
-            homeTeamId: fixtureData.homeTeamId,  // NEW
-            awayTeamId: fixtureData.awayTeamId,  // NEW
-            league: fixtureData.league,
-            leagueId: fixtureData.leagueId,      // NEW
-            country: fixtureData.country,
-            season: fixtureData.season,          // NEW
-            status: fixtureData.status,
-            odds: fixtureData.odds || {},
-            createdAt: new Date(),
-            updatedAt: new Date(),
-          });
-          savedCount++;
-        }
-
-        // Fetch and update odds (with delay to avoid rate limiting)
-        if (fixtureData.fixtureId) {
-          await new Promise(resolve => setTimeout(resolve, 500)); // 500ms delay
-          const odds = await fetchOddsForFixture(fixtureData.fixtureId);
-          
-          if (odds) {
-            await Fixture.updateOne(
-              { fixtureId: fixtureData.fixtureId },
-              { $set: { odds, updatedAt: new Date() } }
-            );
-          }
-        }
-      } catch (error) {
-        console.error(`❌ Error processing fixture ${fixtureData.fixtureId}:`, error);
-      }
-    }
-
-    console.log(`✅ Fixtures loaded: ${savedCount} new, ${updatedCount} updated`);
-  } catch (error) {
-    console.error('❌ Error loading fixtures:', error);
-  }
+  const today = new Date().toISOString().split('T')[0];
+  return loadFixturesForDate(today);
 }
 
 /**
- * Load fixtures for a specific date (manual trigger)
- * Updates existing fixtures with latest data (scores, odds, status)
+ * Load fixtures for a single date
  */
 export async function loadFixturesForDate(date: string) {
   try {
-    console.log(`📥 Loading fixtures for ${date}...`);
+    console.log(`📥 Fetching fixtures for ${date}...`);
 
     const fixturesData = await fetchFixtures(date);
-    
+
     if (!fixturesData || fixturesData.length === 0) {
-      console.log(`ℹ️  No fixtures found for ${date}`);
+      console.log(`ℹ️ No fixtures found for ${date}`);
       return { success: true, count: 0, new: 0, updated: 0 };
     }
 
-    let savedCount = 0;
-    let updatedCount = 0;
+    let saved = 0;
+    let updated = 0;
 
-    for (const fixtureData of fixturesData) {
-      const existing = await Fixture.findOne({ fixtureId: fixtureData.fixtureId });
+    for (const fixture of fixturesData) {
+      const existing = await Fixture.findOne({ fixtureId: fixture.fixtureId });
 
       if (existing) {
-        // Update existing fixture with latest data - NOW INCLUDING IDs
         await Fixture.updateOne(
-          { fixtureId: fixtureData.fixtureId },
+          { fixtureId: fixture.fixtureId },
           {
             $set: {
-              date: new Date(fixtureData.date),
-              homeTeam: fixtureData.homeTeam,
-              awayTeam: fixtureData.awayTeam,
-              homeTeamId: fixtureData.homeTeamId,  // NEW
-              awayTeamId: fixtureData.awayTeamId,  // NEW
-              league: fixtureData.league,
-              leagueId: fixtureData.leagueId,      // NEW
-              country: fixtureData.country,
-              season: fixtureData.season,          // NEW
-              status: fixtureData.status,
-              odds: fixtureData.odds || existing.odds || {},
+              date: new Date(fixture.date),
+              homeTeam: fixture.homeTeam,
+              awayTeam: fixture.awayTeam,
+              homeTeamId: fixture.homeTeamId,
+              awayTeamId: fixture.awayTeamId,
+              league: fixture.league,
+              leagueId: fixture.leagueId,
+              country: fixture.country,
+              season: fixture.season,
+              status: fixture.status,
               updatedAt: new Date(),
-            }
+            },
           }
         );
-        updatedCount++;
+        updated++;
       } else {
-        // Create new fixture - NOW INCLUDING IDs
         await Fixture.create({
-          fixtureId: fixtureData.fixtureId,
-          date: new Date(fixtureData.date),
-          homeTeam: fixtureData.homeTeam,
-          awayTeam: fixtureData.awayTeam,
-          homeTeamId: fixtureData.homeTeamId,  // NEW
-          awayTeamId: fixtureData.awayTeamId,  // NEW
-          league: fixtureData.league,
-          leagueId: fixtureData.leagueId,      // NEW
-          country: fixtureData.country,
-          season: fixtureData.season,          // NEW
-          status: fixtureData.status,
-          odds: fixtureData.odds || {},
+          fixtureId: fixture.fixtureId,
+          date: new Date(fixture.date),
+          homeTeam: fixture.homeTeam,
+          awayTeam: fixture.awayTeam,
+          homeTeamId: fixture.homeTeamId,
+          awayTeamId: fixture.awayTeamId,
+          league: fixture.league,
+          leagueId: fixture.leagueId,
+          country: fixture.country,
+          season: fixture.season,
+          status: fixture.status,
           createdAt: new Date(),
           updatedAt: new Date(),
         });
-        savedCount++;
+        saved++;
       }
+
+      // 🔥 Update odds for every fixture
+      const odds = await fetchOdds(fixture.fixtureId);
+      if (odds) {
+        await Fixture.updateOne(
+          { fixtureId: fixture.fixtureId },
+          {
+            $set: {
+              odds,
+              updatedAt: new Date(),
+            },
+          }
+        );
+      }
+
+      // Rate limiting: API-Football gets angry otherwise
+      await new Promise((resolve) => setTimeout(resolve, 250));
     }
 
-    console.log(`✅ ${date}: ${savedCount} new, ${updatedCount} updated`);
-    return { success: true, count: savedCount + updatedCount, new: savedCount, updated: updatedCount };
-  } catch (error) {
-    console.error('❌ Error loading fixtures for date:', error);
-    throw error;
+    console.log(`✅ ${date}: ${saved} new, ${updated} updated`);
+    return { success: true, count: saved + updated, new: saved, updated: updated };
+  } catch (err) {
+    console.error(`❌ Error loading fixtures for ${date}:`, err);
+    throw err;
   }
 }
