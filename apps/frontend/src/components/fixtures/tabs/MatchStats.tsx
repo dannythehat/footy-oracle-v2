@@ -28,7 +28,8 @@ const MatchStats: React.FC<MatchStatsProps> = ({ fixture }) => {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (fixture && (fixture.id || fixture.fixtureId) && fixture.homeTeamId && fixture.awayTeamId && fixture.leagueId && fixture.season) {
+    // Only require basic fixture data - try to fetch stats even if leagueId/season missing
+    if (fixture && (fixture.id || fixture.fixtureId) && fixture.homeTeamId && fixture.awayTeamId) {
       fetchStats();
     } else {
       setError('Missing required fixture data');
@@ -44,10 +45,10 @@ const MatchStats: React.FC<MatchStatsProps> = ({ fixture }) => {
       const fixtureId = fixture.id || fixture.fixtureId;
       const homeTeamId = fixture.homeTeamId;
       const awayTeamId = fixture.awayTeamId;
-      const leagueId = fixture.leagueId;
-      const season = fixture.season;
+      const leagueId = fixture.leagueId || 0; // Default to 0 if missing
+      const season = fixture.season || new Date().getFullYear(); // Default to current year
 
-      if (!fixtureId || !homeTeamId || !awayTeamId || !leagueId || !season) {
+      if (!fixtureId || !homeTeamId || !awayTeamId) {
         throw new Error('Missing required IDs for stats');
       }
 
