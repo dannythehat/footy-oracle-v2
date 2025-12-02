@@ -1,24 +1,43 @@
 import { useQuery } from "@tanstack/react-query";
-import { fixturesApi } from "../services/api";
-import dayjs from "dayjs";
+import apiClient from "../services/api";
 
-// Hook to load fixtures for a given date
-// If no date is passed ? defaults to today's date
-export function useFixtures(date?: string) {
-  const queryDate = date || dayjs().format("YYYY-MM-DD");
-
-  return useQuery({
-    queryKey: ["fixtures", queryDate],
-    queryFn: async () => {
-      const res = await fixturesApi.getByDate(queryDate);
-
-      // Backend might return:
-      // { success: true, data: [...] }
-      // OR just an array
-      return res.data || res;
-    },
-    refetchInterval: 60 * 1000, // refresh fixtures every 60 seconds
-  });
+export interface NormalizedFixture {
+  id: number;
+  fixtureId: number;
+  date: string;
+  time: string;
+  status: string;
+  homeTeamName: string;
+  awayTeamName: string;
+  leagueName: string;
+  leagueId: number;
+  country: string | null;
+  season: number | null;
 }
 
-export default useFixtures;
+export const useFixtures = (date: string) => {
+  return useQuery({
+    queryKey: ["fixtures", date],
+    queryFn: async () => {
+      const res = await apiClient.get(`/fixtures?date=${date}`);
+
+      const raw = res.data?.data ?? [];
+
+      const normalized: NormalizedFixture[] = raw.map((fx: any) => ({
+        id: fx.id ?? fx.fixtureId,
+        fixtureId: fx.fixtureId,
+        date: fx.date,
+        time: fx.time,
+        status: fx.status,
+        homeTeamName: fx.homeTeamName ?? fx.homeTeam,
+        awayTeamName: fx.awayTeamName ?? fx.awayTeam,
+        leagueName: fx.leagueName ?? fx.league,
+        leagueId: fx.leagueId,
+        country: fx.country ?? null,
+        season: fx.season ?? null,
+      }));
+
+      return normalized;
+    },
+  });
+};
