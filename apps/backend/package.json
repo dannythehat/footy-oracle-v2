@@ -3,6 +3,8 @@
   "version": "1.0.0",
   "scripts": {
     "start": "tsx src/server.ts",
+    "build": "tsc",
+    "test": "echo \"No tests configured yet\" && exit 0",
     "seed:fixtures": "tsx src/scripts/seedFixtures.ts",
     "seed:fetch": "tsx src/scripts/fetchFixtures.ts"
   },
@@ -17,5 +19,13 @@
     "openai": "^4.58.1",
     "node-cron": "^3.0.3",
     "nodemailer": "^6.9.13"
+  },
+  "devDependencies": {
+    "typescript": "^5.3.3",
+    "@types/node": "^20.10.0",
+    "@types/express": "^4.17.21",
+    "@types/cors": "^2.8.17",
+    "@types/node-cron": "^3.0.11",
+    "@types/nodemailer": "^6.4.14"
   }
 }
