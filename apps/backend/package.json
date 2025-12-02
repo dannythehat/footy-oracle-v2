@@ -13,6 +13,7 @@
     "mongoose": "^7.5.0",
     "tsx": "^4.0.0",
     "openai": "^4.58.1",
-    "node-cron": "^3.0.3"
+    "node-cron": "^3.0.3",
+    "nodemailer": "^6.9.13"
   }
 }
