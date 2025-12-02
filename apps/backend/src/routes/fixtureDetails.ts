@@ -1,114 +1,220 @@
 import express, { Request, Response } from 'express';
-import axios from 'axios';
+import { Fixture } from '../models/Fixture.js';
+import {
+  getCompleteFixtureData,
+  fetchFixtureById,
+  fetchFixtureStatistics,
+  fetchFixtureEvents,
+  fetchH2H,
+  fetchStandings
+} from '../services/fixtureDataService.js';
 
 const router = express.Router();
 
-const API_BASE_URL =
-  process.env.API_FOOTBALL_BASE_URL || 'https://v3.football.api-sports.io';
+/**
+ * Get complete fixture data (all endpoints in one call)
+ * GET /fixtures/:fixtureId/complete
+ */
+router.get('/fixtures/:fixtureId/complete', async (req: Request, res: Response): Promise<void> => {
+  try {
+    const fixtureId = Number(req.params.fixtureId);
+    if (!fixtureId) {
+      res.status(400).json({ error: 'Invalid fixtureId' });
+      return;
+    }
 
-const API_KEY = process.env.API_FOOTBALL_KEY || '';
+    // Get fixture from MongoDB
+    const fixtureDoc = await Fixture.findOne({ fixtureId }).lean();
+    
+    if (!fixtureDoc) {
+      res.status(404).json({ error: 'Fixture not found in database' });
+      return;
+    }
 
-const api = axios.create({
-  baseURL: API_BASE_URL,
-  headers: {
-    'x-apisports-key': API_KEY,
-  },
+    // Fetch all data using the unified service
+    const completeData = await getCompleteFixtureData(fixtureDoc);
+
+    res.json({
+      success: true,
+      data: completeData
+    });
+  } catch (err: any) {
+    console.error('[fixtureDetails] Complete data error:', err.message || err);
+    res.status(500).json({ error: 'Failed to fetch complete fixture data' });
+  }
 });
 
-async function getFixtureById(fixtureId: number) {
-  const res = await api.get('/fixtures', { params: { id: fixtureId } });
-  if (!res.data || !Array.isArray(res.data.response) || res.data.response.length === 0) {
-    return null;
-  }
-  return res.data.response[0];
-}
+/**
+ * Get fixture by ID
+ * GET /fixtures/:fixtureId
+ */
+router.get('/fixtures/:fixtureId', async (req: Request, res: Response): Promise<void> => {
+  try {
+    const fixtureId = Number(req.params.fixtureId);
+    if (!fixtureId) {
+      res.status(400).json({ error: 'Invalid fixtureId' });
+      return;
+    }
 
+    const fixture = await fetchFixtureById(fixtureId);
+
+    res.json({
+      success: true,
+      data: fixture
+    });
+  } catch (err: any) {
+    console.error('[fixtureDetails] Fixture error:', err.message || err);
+    res.status(500).json({ error: 'Failed to fetch fixture' });
+  }
+});
+
+/**
+ * Get head-to-head matches
+ * GET /fixtures/:fixtureId/h2h
+ */
 router.get('/fixtures/:fixtureId/h2h', async (req: Request, res: Response): Promise<void> => {
   try {
     const fixtureId = Number(req.params.fixtureId);
-    if (!fixtureId) { res.status(400).json({ error: 'Invalid fixtureId' }); return; }
+    if (!fixtureId) {
+      res.status(400).json({ error: 'Invalid fixtureId' });
+      return;
+    }
 
-    const fixture = await getFixtureById(fixtureId);
-    if (!fixture) { res.status(404).json({ error: 'Fixture not found' }); return; }
+    // Get fixture from MongoDB to get team IDs
+    const fixtureDoc = await Fixture.findOne({ fixtureId }).lean();
+    
+    if (!fixtureDoc) {
+      res.status(404).json({ error: 'Fixture not found in database' });
+      return;
+    }
 
-    const homeId = fixture.teams?.home?.id;
-    const awayId = fixture.teams?.away?.id;
+    const homeId = fixtureDoc.homeTeamId;
+    const awayId = fixtureDoc.awayTeamId;
 
     if (!homeId || !awayId) {
       res.status(400).json({ error: 'Cannot determine teams for H2H' });
       return;
     }
 
-    const h2hRes = await api.get('/fixtures/headtohead', {
-      params: { h2h: `${homeId}-${awayId}`, last: 10 },
-    });
+    const h2hData = await fetchH2H(homeId, awayId);
 
-    res.json(h2hRes.data);
+    res.json({
+      success: true,
+      data: h2hData
+    });
   } catch (err: any) {
     console.error('[fixtureDetails] H2H error:', err.message || err);
     res.status(500).json({ error: 'Failed to fetch H2H data' });
   }
 });
 
+/**
+ * Get fixture statistics
+ * GET /fixtures/:fixtureId/stats
+ */
 router.get('/fixtures/:fixtureId/stats', async (req: Request, res: Response): Promise<void> => {
   try {
     const fixtureId = Number(req.params.fixtureId);
-    if (!fixtureId) { res.status(400).json({ error: 'Invalid fixtureId' }); return; }
+    if (!fixtureId) {
+      res.status(400).json({ error: 'Invalid fixtureId' });
+      return;
+    }
 
-    const statsRes = await api.get('/fixtures/statistics', { params: { fixture: fixtureId } });
+    const stats = await fetchFixtureStatistics(fixtureId);
 
-    res.json(statsRes.data);
+    res.json({
+      success: true,
+      data: stats
+    });
   } catch (err: any) {
     console.error('[fixtureDetails] Stats error:', err.message || err);
     res.status(500).json({ error: 'Failed to fetch fixture statistics' });
   }
 });
 
-router.get('/fixtures/:fixtureId/odds', async (req: Request, res: Response): Promise<void> => {
+/**
+ * Get fixture events (goals, cards, subs)
+ * GET /fixtures/:fixtureId/events
+ */
+router.get('/fixtures/:fixtureId/events', async (req: Request, res: Response): Promise<void> => {
   try {
     const fixtureId = Number(req.params.fixtureId);
-    if (!fixtureId) { res.status(400).json({ error: 'Invalid fixtureId' }); return; }
+    if (!fixtureId) {
+      res.status(400).json({ error: 'Invalid fixtureId' });
+      return;
+    }
 
-    const oddsRes = await api.get('/odds', { params: { fixture: fixtureId } });
+    const events = await fetchFixtureEvents(fixtureId);
 
-    res.json(oddsRes.data);
+    res.json({
+      success: true,
+      data: events
+    });
   } catch (err: any) {
-    console.error('[fixtureDetails] Odds error:', err.message || err);
-    res.status(500).json({ error: 'Failed to fetch odds' });
+    console.error('[fixtureDetails] Events error:', err.message || err);
+    res.status(500).json({ error: 'Failed to fetch fixture events' });
   }
 });
 
-router.get('/fixtures/:fixtureId/live', async (req: Request, res: Response): Promise<void> => {
-  try {
-    const fixtureId = Number(req.params.fixtureId);
-    if (!fixtureId) { res.status(400).json({ error: 'Invalid fixtureId' }); return; }
-
-    const [fixtureRes, eventsRes] = await Promise.all([
-      api.get('/fixtures', { params: { id: fixtureId } }),
-      api.get('/fixtures/events', { params: { fixture: fixtureId } }),
-    ]);
-
-    res.json({ fixture: fixtureRes.data, events: eventsRes.data });
-  } catch (err: any) {
-    console.error('[fixtureDetails] Live error:', err.message || err);
-    res.status(500).json({ error: 'Failed to fetch live data' });
-  }
-});
-
+/**
+ * Get league standings
+ * GET /leagues/:leagueId/standings?season=2024
+ */
 router.get('/leagues/:leagueId/standings', async (req: Request, res: Response): Promise<void> => {
   try {
     const leagueId = Number(req.params.leagueId);
     const season = Number(req.query.season);
 
-    if (!leagueId) { res.status(400).json({ error: 'Invalid leagueId' }); return; }
-    if (!season) { res.status(400).json({ error: 'season query parameter is required' }); return; }
+    if (!leagueId) {
+      res.status(400).json({ error: 'Invalid leagueId' });
+      return;
+    }
+    if (!season) {
+      res.status(400).json({ error: 'season query parameter is required' });
+      return;
+    }
 
-    const standingsRes = await api.get('/standings', { params: { league: leagueId, season } });
+    const standings = await fetchStandings(leagueId, season);
 
-    res.json(standingsRes.data);
+    res.json({
+      success: true,
+      data: standings
+    });
   } catch (err: any) {
     console.error('[fixtureDetails] Standings error:', err.message || err);
     res.status(500).json({ error: 'Failed to fetch league standings' });
+  }
+});
+
+/**
+ * Get live fixture data (fixture + events)
+ * GET /fixtures/:fixtureId/live
+ */
+router.get('/fixtures/:fixtureId/live', async (req: Request, res: Response): Promise<void> => {
+  try {
+    const fixtureId = Number(req.params.fixtureId);
+    if (!fixtureId) {
+      res.status(400).json({ error: 'Invalid fixtureId' });
+      return;
+    }
+
+    const [fixture, events, stats] = await Promise.all([
+      fetchFixtureById(fixtureId),
+      fetchFixtureEvents(fixtureId),
+      fetchFixtureStatistics(fixtureId)
+    ]);
+
+    res.json({
+      success: true,
+      data: {
+        fixture,
+        events,
+        stats
+      }
+    });
+  } catch (err: any) {
+    console.error('[fixtureDetails] Live error:', err.message || err);
+    res.status(500).json({ error: 'Failed to fetch live data' });
   }
 });
 
