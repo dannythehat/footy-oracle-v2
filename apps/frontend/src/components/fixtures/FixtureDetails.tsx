@@ -7,6 +7,10 @@ import {
   useFixtureLive,
   useLeagueStandings,
 } from "../../hooks/useFixtureDetails";
+import MatchStats from "./tabs/MatchStats";
+import MatchH2H from "./tabs/MatchH2H";
+import MatchOdds from "./tabs/MatchOdds";
+import MatchStandings from "./tabs/MatchStandings";
 
 interface FixtureTeam {
   id: number;
@@ -30,28 +34,28 @@ export interface FixtureSummary {
   league: FixtureLeague;
 }
 
-type TabId = "match" | "stats" | "odds" | "h2h" | "standings";
+type TabId = "odds" | "stats" | "h2h" | "standings";
 
 const countryFlag = (c?: string) => {
-  if (!c) return "??";
+  if (!c) return "🌍";
   const map: Record<string, string> = {
-    England: "??",
-    Scotland: "??",
-    Wales: "??",
-    Spain: "????",
-    Italy: "????",
-    Germany: "????",
-    France: "????",
-    Netherlands: "????",
-    Portugal: "????",
-    Brazil: "????",
-    Argentina: "????",
+    England: "🏴󠁧󠁢󠁥󠁮󠁧󠁿",
+    Scotland: "🏴󠁧󠁢󠁳󠁣󠁴󠁿",
+    Wales: "🏴󠁧󠁢󠁷󠁬󠁳󠁿",
+    Spain: "🇪🇸",
+    Italy: "🇮🇹",
+    Germany: "🇩🇪",
+    France: "🇫🇷",
+    Netherlands: "🇳🇱",
+    Portugal: "🇵🇹",
+    Brazil: "🇧🇷",
+    Argentina: "🇦🇷",
   };
-  return map[c] || "??";
+  return map[c] || "🌍";
 };
 
 const FixtureDetails = ({ fixture }: { fixture: FixtureSummary }) => {
-  const [tab, setTab] = useState<TabId>("match");
+  const [tab, setTab] = useState<TabId>("odds");
 
   const { data: h2h } = useFixtureH2H(fixture.id);
   const { data: stats } = useFixtureStats(fixture.id);
@@ -64,66 +68,96 @@ const FixtureDetails = ({ fixture }: { fixture: FixtureSummary }) => {
 
   const kickoff = dayjs(fixture.date).format("HH:mm");
 
+  // Prepare fixture data for tabs
+  const fixtureData = {
+    id: fixture.id,
+    fixtureId: fixture.id,
+    homeTeamId: fixture.homeTeam.id,
+    awayTeamId: fixture.awayTeam.id,
+    homeTeamName: fixture.homeTeam.name,
+    awayTeamName: fixture.awayTeam.name,
+    homeTeam: fixture.homeTeam.name,
+    awayTeam: fixture.awayTeam.name,
+    leagueId: fixture.league.id,
+    season: fixture.league.season,
+    odds: odds,
+    aiBets: odds?.aiBets,
+  };
+
   return (
-    <div className="text-white flex flex-col gap-4 p-4">
-      <div className="flex justify-between items-center">
-        <div className="font-semibold text-sm">
-          {countryFlag(fixture.league.country)} {fixture.league.name} �{" "}
-          {fixture.league.season}
+    <div className="text-white flex flex-col gap-4 bg-slate-950">
+      {/* Header */}
+      <div className="sticky top-0 bg-slate-950 z-10 p-4 pb-0">
+        <div className="flex justify-between items-center mb-4">
+          <div className="font-semibold text-sm">
+            {countryFlag(fixture.league.country)} {fixture.league.name} •{" "}
+            {fixture.league.season}
+          </div>
+          <div className="font-mono">{kickoff}</div>
         </div>
-        <div className="font-mono">{kickoff}</div>
-      </div>
 
-      <div className="flex justify-between items-center">
-        <div className="flex flex-col gap-3">
-          <div className="flex items-center gap-3">
-            {fixture.homeTeam.logo && (
-              <img
-                src={fixture.homeTeam.logo}
-                className="w-8 h-8 rounded-full object-cover"
-              />
-            )}
-            <span className="font-semibold">{fixture.homeTeam.name}</span>
+        <div className="flex justify-between items-center mb-4">
+          <div className="flex flex-col gap-3">
+            <div className="flex items-center gap-3">
+              {fixture.homeTeam.logo && (
+                <img
+                  src={fixture.homeTeam.logo}
+                  className="w-8 h-8 rounded-full object-cover"
+                />
+              )}
+              <span className="font-semibold">{fixture.homeTeam.name}</span>
+            </div>
+
+            <div className="flex items-center gap-3">
+              {fixture.awayTeam.logo && (
+                <img
+                  src={fixture.awayTeam.logo}
+                  className="w-8 h-8 rounded-full object-cover"
+                />
+              )}
+              <span className="font-semibold">{fixture.awayTeam.name}</span>
+            </div>
           </div>
 
-          <div className="flex items-center gap-3">
-            {fixture.awayTeam.logo && (
-              <img
-                src={fixture.awayTeam.logo}
-                className="w-8 h-8 rounded-full object-cover"
-              />
-            )}
-            <span className="font-semibold">{fixture.awayTeam.name}</span>
+          <div className="text-4xl font-bold text-center">
+            {live?.fixture?.response?.[0]?.goals?.home ?? "-"} :{" "}
+            {live?.fixture?.response?.[0]?.goals?.away ?? "-"}
           </div>
         </div>
 
-        <div className="text-4xl font-bold text-center">
-          {live?.fixture?.response?.[0]?.goals?.home ?? "-"} :{" "}
-          {live?.fixture?.response?.[0]?.goals?.away ?? "-"}
+        {/* Tabs */}
+        <div className="flex gap-2 overflow-x-auto pb-3">
+          {[
+            { id: "odds", label: "Golden Bets" },
+            { id: "stats", label: "Stats" },
+            { id: "h2h", label: "H2H" },
+            { id: "standings", label: "League" },
+          ].map((t) => (
+            <button
+              key={t.id}
+              onClick={() => setTab(t.id as TabId)}
+              className={`px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-all ${
+                tab === t.id
+                  ? "bg-purple-700 shadow-lg shadow-purple-500/50"
+                  : "bg-purple-900/40 hover:bg-purple-800/60"
+              }`}
+            >
+              {t.label}
+            </button>
+          ))}
         </div>
       </div>
 
-      <div className="flex gap-2 overflow-x-auto pb-1">
-        {["match", "stats", "odds", "h2h", "standings"].map((t) => (
-          <button
-            key={t}
-            onClick={() => setTab(t as TabId)}
-            className={`px-4 py-1 rounded-full text-sm ${
-              tab === t ? "bg-purple-700" : "bg-purple-900/40"
-            }`}
-          >
-            {t.toUpperCase()}
-          </button>
-        ))}
-      </div>
-
-      <div className="bg-black/50 rounded-xl p-4 min-h-[220px] text-xs overflow-auto">
-        {tab === "match" && <pre>{JSON.stringify(live, null, 2)}</pre>}
-        {tab === "stats" && <pre>{JSON.stringify(stats, null, 2)}</pre>}
-        {tab === "odds" && <pre>{JSON.stringify(odds, null, 2)}</pre>}
-        {tab === "h2h" && <pre>{JSON.stringify(h2h, null, 2)}</pre>}
+      {/* Tab Content */}
+      <div className="overflow-y-auto">
+        {tab === "odds" && <MatchOdds fixture={fixtureData} />}
+        {tab === "stats" && <MatchStats fixture={fixtureData} />}
+        {tab === "h2h" && <MatchH2H fixture={fixtureData} />}
         {tab === "standings" && (
-          <pre>{JSON.stringify(standings, null, 2)}</pre>
+          <MatchStandings
+            leagueId={fixture.league.id}
+            season={fixture.league.season}
+          />
         )}
       </div>
     </div>
