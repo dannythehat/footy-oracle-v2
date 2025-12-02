@@ -1,61 +1,62 @@
 import { useQuery } from "@tanstack/react-query";
-import api from "../services/api";
+import { fixturesApi } from "../services/api";
 
-// Backend routes are all mounted under /api in server.ts
-const FIXTURES_BASE = "/api/fixtures";
-const LEAGUES_BASE = "/api/leagues";
+export interface FixtureTeamInfo {
+  id: number;
+  name: string;
+  logo?: string;
+}
 
-export const useFixtureH2H = (fixtureId?: number) =>
-  useQuery({
-    queryKey: ["fixture-h2h", fixtureId],
+export interface FixtureLeagueInfo {
+  id: number;
+  name: string;
+  country: string;
+  season: number;
+}
+
+export interface FixtureDetailsData {
+  id: number;
+  date: string;
+  status: string;
+  homeTeam: FixtureTeamInfo;
+  awayTeam: FixtureTeamInfo;
+  league: FixtureLeagueInfo;
+  odds?: any;
+}
+
+const useFixtureDetails = (fixtureId: number | null) => {
+  return useQuery({
+    queryKey: ["fixture-details", fixtureId],
     queryFn: async () => {
-      const res = await api.get(`${FIXTURES_BASE}/${fixtureId}/h2h`);
-      return res.data;
+      if (!fixtureId) return null;
+
+      const response = await fixturesApi.getById(fixtureId);
+
+      return {
+        id: response.fixtureId,
+        date: response.date,
+        status: response.status,
+        homeTeam: {
+          id: response.homeTeamId,
+          name: response.homeTeam,
+          logo: response.homeTeamLogo,
+        },
+        awayTeam: {
+          id: response.awayTeamId,
+          name: response.awayTeam,
+          logo: response.awayTeamLogo,
+        },
+        league: {
+          id: response.leagueId,
+          name: response.league,
+          country: response.country,
+          season: response.season,
+        },
+        odds: response.odds || null,
+      } as FixtureDetailsData;
     },
     enabled: !!fixtureId,
   });
+};
 
-export const useFixtureStats = (fixtureId?: number) =>
-  useQuery({
-    queryKey: ["fixture-stats", fixtureId],
-    queryFn: async () => {
-      const res = await api.get(`${FIXTURES_BASE}/${fixtureId}/stats`);
-      return res.data;
-    },
-    enabled: !!fixtureId,
-  });
-
-export const useFixtureOdds = (fixtureId?: number) =>
-  useQuery({
-    queryKey: ["fixture-odds", fixtureId],
-    queryFn: async () => {
-      const res = await api.get(`${FIXTURES_BASE}/${fixtureId}/odds`);
-      return res.data;
-    },
-    enabled: !!fixtureId,
-    refetchInterval: 60000,
-  });
-
-export const useFixtureLive = (fixtureId?: number) =>
-  useQuery({
-    queryKey: ["fixture-live", fixtureId],
-    queryFn: async () => {
-      const res = await api.get(`${FIXTURES_BASE}/${fixtureId}/live`);
-      return res.data;
-    },
-    enabled: !!fixtureId,
-    refetchInterval: 30000,
-  });
-
-export const useLeagueStandings = (leagueId?: number, season?: number) =>
-  useQuery({
-    queryKey: ["league-standings", leagueId, season],
-    queryFn: async () => {
-      const res = await api.get(
-        `${LEAGUES_BASE}/${leagueId}/standings`,
-        { params: { season } }
-      );
-      return res.data;
-    },
-    enabled: !!leagueId && !!season,
-  });
+export default useFixtureDetails;
