@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { 
   Calendar, ChevronLeft, ChevronRight, RefreshCw,
-  ChevronDown, ChevronUp, AlertCircle
+  ChevronDown, ChevronUp, AlertCircle, Radio
 } from 'lucide-react';
 import { fixturesApi } from '../services/api';
 import MatchDetailDrawer from './fixtures/MatchDetailDrawer';
@@ -149,6 +149,15 @@ const FixturesView: React.FC<FixturesViewProps> = ({ onClose, embedded = false }
     setTimeout(() => setSelectedFixture(null), 300);
   };
 
+  const isLive = (fixture: Fixture): boolean => {
+    const status = fixture.status;
+    const statusShort = fixture.statusShort;
+    return status === 'live' || ['1H', '2H', 'ET', 'BT', 'P', 'HT'].includes(statusShort || '');
+  };
+
+  // Get live fixtures
+  const liveFixtures = fixtures.filter(isLive);
+
   // Group fixtures by league
   const groupedFixtures: GroupedFixtures = fixtures.reduce((acc, fixture) => {
     const league = fixture.league || fixture.leagueName || 'Unknown League';
@@ -255,6 +264,63 @@ const FixturesView: React.FC<FixturesViewProps> = ({ onClose, embedded = false }
            ['1H', 'HT', '2H', 'ET', 'BT', 'P', 'FT', 'AET', 'PEN'].includes(statusShort || '');
   };
 
+  const renderFixtureRow = (fixture: Fixture) => {
+    const score = getScore(fixture);
+    const showScore = shouldShowScore(fixture);
+    const live = isLive(fixture);
+    
+    return (
+      <div 
+        key={fixture.fixtureId || fixture.id} 
+        onClick={() => handleFixtureClick(fixture)}
+        className={`px-4 py-3 border-b border-gray-700/50 last:border-b-0 hover:bg-gray-700/20 transition-colors cursor-pointer ${live ? 'bg-red-500/5' : ''}`}
+      >
+        <div className="flex items-center justify-between gap-4">
+          {/* Time/Status Column */}
+          <div className="flex items-center justify-center w-16 flex-shrink-0">
+            {getStatusDisplay(fixture)}
+          </div>
+
+          {/* Teams Column */}
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center justify-between mb-1">
+              <span className={`text-sm font-medium truncate ${live ? 'text-white' : 'text-white'}`}>
+                {fixture.homeTeamName || fixture.homeTeam}
+              </span>
+              {showScore && (
+                <span className={`text-base font-bold ml-2 ${live ? 'text-red-400' : 'text-white'}`}>
+                  {score.home ?? '-'}
+                </span>
+              )}
+            </div>
+            <div className="flex items-center justify-between">
+              <span className={`text-sm font-medium truncate ${live ? 'text-white' : 'text-white'}`}>
+                {fixture.awayTeamName || fixture.awayTeam}
+              </span>
+              {showScore && (
+                <span className={`text-base font-bold ml-2 ${live ? 'text-red-400' : 'text-white'}`}>
+                  {score.away ?? '-'}
+                </span>
+              )}
+            </div>
+          </div>
+
+          {/* Favorite Button */}
+          <div className="flex-shrink-0">
+            <FavoriteButton
+              fixtureId={Number(fixture.fixtureId || fixture.id)}
+              homeTeam={fixture.homeTeamName || fixture.homeTeam}
+              awayTeam={fixture.awayTeamName || fixture.awayTeam}
+              date={fixture.date || selectedDate.toISOString()}
+              league={fixture.league || fixture.leagueName || ''}
+              size="sm"
+            />
+          </div>
+        </div>
+      </div>
+    );
+  };
+
   return (
     <div className={`${embedded ? '' : 'min-h-screen'} bg-[#1a1a2e]`}>
       <div className="container mx-auto px-4 py-6 max-w-6xl">
@@ -351,6 +417,26 @@ const FixturesView: React.FC<FixturesViewProps> = ({ onClose, embedded = false }
           </div>
         )}
 
+        {/* Live Now Section */}
+        {!loading && !error && liveFixtures.length > 0 && (
+          <div className="mb-4">
+            <div className="bg-gradient-to-r from-red-900/40 to-red-800/20 rounded-lg border border-red-500/30 overflow-hidden">
+              <div className="px-4 py-2.5 flex items-center justify-between bg-red-900/30">
+                <div className="flex items-center gap-2">
+                  <Radio className="w-4 h-4 text-red-500 animate-pulse" />
+                  <span className="text-sm font-bold text-red-400">LIVE NOW</span>
+                  <span className="text-xs text-red-400/70 bg-red-500/20 px-2 py-0.5 rounded-full">
+                    {liveFixtures.length}
+                  </span>
+                </div>
+              </div>
+              <div className="border-t border-red-500/20">
+                {liveFixtures.map(renderFixtureRow)}
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Fixtures List - FlashScore Style */}
         {!loading && !error && fixtures.length > 0 && (
           <div className="space-y-3">
@@ -375,61 +461,7 @@ const FixturesView: React.FC<FixturesViewProps> = ({ onClose, embedded = false }
                 {/* League Fixtures - FlashScore Compact Style */}
                 {expandedLeagues.has(league) && (
                   <div className="border-t border-gray-700">
-                    {leagueFixtures.map((fixture) => {
-                      const score = getScore(fixture);
-                      const showScore = shouldShowScore(fixture);
-                      
-                      return (
-                        <div 
-                          key={fixture.fixtureId || fixture.id} 
-                          onClick={() => handleFixtureClick(fixture)}
-                          className="px-4 py-3 border-b border-gray-700/50 last:border-b-0 hover:bg-gray-700/20 transition-colors cursor-pointer"
-                        >
-                          <div className="flex items-center justify-between gap-4">
-                            {/* Time/Status Column */}
-                            <div className="flex items-center justify-center w-16 flex-shrink-0">
-                              {getStatusDisplay(fixture)}
-                            </div>
-
-                            {/* Teams Column */}
-                            <div className="flex-1 min-w-0">
-                              <div className="flex items-center justify-between mb-1">
-                                <span className="text-white text-sm font-medium truncate">
-                                  {fixture.homeTeamName || fixture.homeTeam}
-                                </span>
-                                {showScore && (
-                                  <span className="text-white text-base font-bold ml-2">
-                                    {score.home ?? '-'}
-                                  </span>
-                                )}
-                              </div>
-                              <div className="flex items-center justify-between">
-                                <span className="text-white text-sm font-medium truncate">
-                                  {fixture.awayTeamName || fixture.awayTeam}
-                                </span>
-                                {showScore && (
-                                  <span className="text-white text-base font-bold ml-2">
-                                    {score.away ?? '-'}
-                                  </span>
-                                )}
-                              </div>
-                            </div>
-
-                            {/* Favorite Button */}
-                            <div className="flex-shrink-0">
-                              <FavoriteButton
-                                fixtureId={Number(fixture.fixtureId || fixture.id)}
-                                homeTeam={fixture.homeTeamName || fixture.homeTeam}
-                                awayTeam={fixture.awayTeamName || fixture.awayTeam}
-                                date={fixture.date || selectedDate.toISOString()}
-                                league={league}
-                                size="sm"
-                              />
-                            </div>
-                          </div>
-                        </div>
-                      );
-                    })}
+                    {leagueFixtures.map(renderFixtureRow)}
                   </div>
                 )}
               </div>
