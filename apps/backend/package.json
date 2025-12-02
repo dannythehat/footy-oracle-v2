@@ -2,7 +2,9 @@
   "name": "footy-oracle-backend",
   "version": "1.0.0",
   "scripts": {
-    "start": "tsx src/server.ts"
+    "start": "tsx src/server.ts",
+    "seed:fixtures": "tsx src/scripts/seedFixtures.ts",
+    "seed:fetch": "tsx src/scripts/fetchFixtures.ts"
   },
   "dependencies": {
     "axios": "^1.6.7",
