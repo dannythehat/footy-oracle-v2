@@ -111,6 +111,14 @@ export async function fetchOdds(fixtureId: number): Promise<any> {
 }
 
 /**
+ * Fetch odds for a specific fixture (alias for fetchOdds)
+ * Used by cron jobs for backward compatibility
+ */
+export async function fetchOddsForFixture(fixtureId: number): Promise<any> {
+  return fetchOdds(fixtureId);
+}
+
+/**
  * Combine fixtures + odds
  */
 export async function fetchFixturesWithOdds(
