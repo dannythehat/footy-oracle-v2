@@ -1,5 +1,6 @@
 import { Router } from "express";
 import { Fixture } from "../models/Fixture.js";
+import { updateLiveScores } from "../services/liveScoresService.js";
 
 const router = Router();
 
@@ -105,19 +106,21 @@ router.get("/", async (req, res) => {
   }
 });
 
-// Refresh scores from API-Football (stub for now)
+// Refresh scores from API-Football
 router.post("/refresh-scores", async (req, res) => {
   try {
     const { date } = req.body;
     
     console.log(`📥 /api/fixtures/refresh-scores hit for date: ${date}`);
     
-    // TODO: Implement actual API-Football score refresh
-    // For now, just return success to prevent frontend errors
+    // Trigger live scores update
+    const result = await updateLiveScores();
     
     return res.json({
       success: true,
-      message: "Score refresh queued",
+      message: `Updated ${result.updated} of ${result.total} live fixtures`,
+      updated: result.updated,
+      total: result.total,
       date
     });
   } catch (err: any) {
@@ -231,8 +234,8 @@ router.get("/:fixtureId/stats", async (req, res) => {
         awayScore: fixture.awayScore || 0,
         status: fixture.status
       },
-      // TODO: Add actual match statistics when available
-      statistics: []
+      // Return actual statistics if available
+      statistics: fixture.statistics || []
     };
 
     console.log(`✅ Returning stats for: ${fixture.homeTeam} vs ${fixture.awayTeam}`);
