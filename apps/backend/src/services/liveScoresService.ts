@@ -73,6 +73,8 @@ export async function fetchLiveFixtures(): Promise<any[]> {
         home: f.goals.home ?? null,
         away: f.goals.away ?? null,
       },
+      homeScore: f.goals.home ?? null,
+      awayScore: f.goals.away ?? null,
     }));
   } catch (error: any) {
     console.error('❌ Error fetching live fixtures:', error.message);
@@ -174,14 +176,17 @@ export async function updateLiveScores(): Promise<{ updated: number; total: numb
         // Fetch detailed statistics
         const statistics = await fetchFixtureStatistics(fixture.fixtureId);
         
-        // Update fixture in database
+        // Update fixture in database with BOTH score formats
         await Fixture.updateOne(
           { fixtureId: fixture.fixtureId },
           {
             $set: {
               status: fixture.status,
+              statusShort: fixture.statusShort,
               'score.home': fixture.score.home,
               'score.away': fixture.score.away,
+              homeScore: fixture.homeScore,  // Top-level field for frontend
+              awayScore: fixture.awayScore,  // Top-level field for frontend
               elapsed: fixture.elapsed,
               statistics: statistics || undefined,
               lastUpdated: new Date(),
@@ -191,7 +196,7 @@ export async function updateLiveScores(): Promise<{ updated: number; total: numb
         );
 
         updated++;
-        console.log(`✅ Updated ${fixture.homeTeam} vs ${fixture.awayTeam} (${fixture.score.home}-${fixture.score.away})`);
+        console.log(`✅ Updated ${fixture.homeTeam} vs ${fixture.awayTeam} (${fixture.homeScore}-${fixture.awayScore})`);
         
         // Rate limiting - wait 100ms between requests
         await new Promise(resolve => setTimeout(resolve, 100));
@@ -242,14 +247,19 @@ export async function updateRecentlyFinishedFixtures(): Promise<{ updated: numbe
         
         if (apiFixture) {
           const newStatus = mapStatus(apiFixture.fixture.status.short);
+          const homeScore = apiFixture.goals.home ?? null;
+          const awayScore = apiFixture.goals.away ?? null;
           
           await Fixture.updateOne(
             { fixtureId: fixture.fixtureId },
             {
               $set: {
                 status: newStatus,
-                'score.home': apiFixture.goals.home ?? null,
-                'score.away': apiFixture.goals.away ?? null,
+                statusShort: apiFixture.fixture.status.short,
+                'score.home': homeScore,
+                'score.away': awayScore,
+                homeScore: homeScore,  // Top-level field for frontend
+                awayScore: awayScore,  // Top-level field for frontend
                 lastUpdated: new Date(),
               }
             }
