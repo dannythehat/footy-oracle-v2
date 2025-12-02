@@ -1,45 +1,24 @@
 import { useQuery } from "@tanstack/react-query";
+import { fixturesApi } from "../services/api";
+import dayjs from "dayjs";
 
-export interface Fixture {
-  fixtureId: number | string;
-  league: string;
-  country: string;
-  kickoff: string;
-  status: string;
-  homeTeam: string;
-  awayTeam: string;
-  homeScore: number | null;
-  awayScore: number | null;
+// Hook to load fixtures for a given date
+// If no date is passed ? defaults to today's date
+export function useFixtures(date?: string) {
+  const queryDate = date || dayjs().format("YYYY-MM-DD");
+
+  return useQuery({
+    queryKey: ["fixtures", queryDate],
+    queryFn: async () => {
+      const res = await fixturesApi.getByDate(queryDate);
+
+      // Backend might return:
+      // { success: true, data: [...] }
+      // OR just an array
+      return res.data || res;
+    },
+    refetchInterval: 60 * 1000, // refresh fixtures every 60 seconds
+  });
 }
 
-const API_BASE =
-  import.meta.env.VITE_API_BASE_URL ??
-  "https://footy-oracle-backend.onrender.com/api";
-
-const fetchFixtures = async (date: string): Promise<Fixture[]> => {
-  const params = new URLSearchParams();
-  if (date) params.set("date", date);
-
-  const res = await fetch(`${API_BASE}/fixtures?${params.toString()}`, {
-    credentials: "include",
-  });
-
-  if (!res.ok) {
-    console.error("Failed to fetch fixtures:", res.status);
-    return [];
-  }
-
-  const data = await res.json();
-
-  if (!Array.isArray(data)) return [];
-
-  // We assume backend already returns normalized objects.
-  return data as Fixture[];
-};
-
-export const useFixtures = (date: string) =>
-  useQuery({
-    queryKey: ["fixtures", date],
-    queryFn: () => fetchFixtures(date),
-    staleTime: 30000,
-  });
+export default useFixtures;
