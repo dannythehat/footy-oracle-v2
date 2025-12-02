@@ -1,12 +1,12 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
-import FixturesPage from "./pages/fixtures";
+import FixturesView from "./components/FixturesView";
 
 export default function App() {
   return (
     <BrowserRouter>
       <Routes>
-        <Route path="/" element={<FixturesPage />} />
-        <Route path="/fixtures" element={<FixturesPage />} />
+        <Route path="/" element={<FixturesView />} />
+        <Route path="/fixtures" element={<FixturesView />} />
       </Routes>
     </BrowserRouter>
   );
