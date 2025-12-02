@@ -14,6 +14,27 @@ interface Market {
 }
 
 const MatchOdds: React.FC<MatchOddsProps> = ({ fixture }) => {
+  // Guard against missing fixture data
+  if (!fixture) {
+    return (
+      <div className="p-4">
+        <div className="bg-red-500/10 border border-red-500/30 rounded-lg p-3">
+          <div className="flex items-start gap-2">
+            <Info className="w-4 h-4 text-red-400 mt-0.5 flex-shrink-0" />
+            <div>
+              <div className="text-xs font-semibold text-red-400 mb-1">
+                No Fixture Data
+              </div>
+              <p className="text-[10px] text-gray-300">
+                Unable to load fixture information.
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   // Define the 4 Footy Oracle markets
   const markets: Market[] = [
     {
@@ -46,6 +67,9 @@ const MatchOdds: React.FC<MatchOddsProps> = ({ fixture }) => {
     }
   ];
 
+  // Check if odds data is available
+  const hasOdds = fixture.odds && typeof fixture.odds === 'object' && Object.keys(fixture.odds).length > 0;
+
   // Find Golden Bet (highest ML probability)
   const getGoldenBet = () => {
     if (!fixture.aiBets) return null;
@@ -67,7 +91,7 @@ const MatchOdds: React.FC<MatchOddsProps> = ({ fixture }) => {
   const goldenBet = getGoldenBet();
 
   const renderMarket = (market: Market) => {
-    const odds = fixture.odds?.[market.oddsKey];
+    const odds = hasOdds ? fixture.odds?.[market.oddsKey] : null;
     const aiData = fixture.aiBets?.[market.aiKey];
     const isGolden = goldenBet === market.id;
 
@@ -143,6 +167,23 @@ const MatchOdds: React.FC<MatchOddsProps> = ({ fixture }) => {
           </div>
         )}
       </div>
+
+      {/* No Odds Warning */}
+      {!hasOdds && (
+        <div className="bg-blue-500/10 border border-blue-500/30 rounded-lg p-3">
+          <div className="flex items-start gap-2">
+            <Info className="w-4 h-4 text-blue-400 mt-0.5 flex-shrink-0" />
+            <div>
+              <div className="text-xs font-semibold text-blue-400 mb-1">
+                No Odds Available Yet
+              </div>
+              <p className="text-[10px] text-gray-300">
+                Odds will be available closer to kickoff time.
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* No AI Data Warning */}
       {!fixture.aiBets && (
