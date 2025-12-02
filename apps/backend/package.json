@@ -10,6 +10,7 @@
     "lint": "eslint src --ext .ts",
     "test": "jest",
     "test:fixtures": "tsx test-fixtures.ts",
+    "test:endpoints": "tsx test-fixtures-endpoints.ts",
     "test:api": "tsx test-api-integration.ts api",
     "test:db": "tsx test-api-integration.ts db",
     "test:all": "tsx test-api-integration.ts all",
@@ -25,7 +26,8 @@
     "openai": "^4.20.1",
     "mongoose": "^8.0.3",
     "ws": "^8.16.0",
-    "tsx": "^4.7.0"
+    "tsx": "^4.7.0",
+    "nodemailer": "^6.9.14"
   },
   "devDependencies": {
     "eslint": "^8.56.0",

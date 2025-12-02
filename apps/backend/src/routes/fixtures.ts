@@ -297,6 +297,65 @@ router.get('/', async (req: Request, res: Response) => {
 
 
 /* ============================================================
+   📌 DISTINCT LEAGUES
+   ============================================================ */
+router.get('/meta/leagues', async (req, res) => {
+  try {
+    const leagues = await Fixture.distinct('league')
+      .maxTimeMS(3000);
+
+    res.json({
+      success: true,
+      data: leagues,
+      count: leagues.length
+    });
+
+  } catch (error: any) {
+    console.error('❌ Error fetching leagues:', error);
+    res.status(500).json({
+      success: false,
+      error: error.message
+    });
+  }
+});
+
+
+/* ============================================================
+   📌 FIXTURE ODDS BY ID
+   ============================================================ */
+router.get('/:id/odds', async (req: Request, res: Response) => {
+  try {
+    const fixture = await Fixture.findOne({ fixtureId: Number(req.params.id) })
+      .select('fixtureId odds')
+      .lean()
+      .maxTimeMS(3000);
+
+    if (!fixture) {
+      return res.status(404).json({
+        success: false,
+        error: 'Fixture not found'
+      });
+    }
+
+    res.json({
+      success: true,
+      data: {
+        fixtureId: fixture.fixtureId,
+        odds: fixture.odds || null
+      }
+    });
+
+  } catch (error: any) {
+    console.error('❌ Error fetching fixture odds:', error);
+    res.status(500).json({
+      success: false,
+      error: error.message
+    });
+  }
+});
+
+
+/* ============================================================
    📌 FIXTURE BY ID - CLEAN FLAT STRUCTURE WITH LOGO
    ============================================================ */
 router.get('/:id', async (req, res) => {
@@ -345,30 +404,6 @@ router.get('/:id', async (req, res) => {
     });
   } catch (error: any) {
     console.error('❌ Error fetching fixture:', error);
-    res.status(500).json({
-      success: false,
-      error: error.message
-    });
-  }
-});
-
-
-/* ============================================================
-   📌 DISTINCT LEAGUES
-   ============================================================ */
-router.get('/meta/leagues', async (req, res) => {
-  try {
-    const leagues = await Fixture.distinct('league')
-      .maxTimeMS(3000);
-
-    res.json({
-      success: true,
-      data: leagues,
-      count: leagues.length
-    });
-
-  } catch (error: any) {
-    console.error('❌ Error fetching leagues:', error);
     res.status(500).json({
       success: false,
       error: error.message

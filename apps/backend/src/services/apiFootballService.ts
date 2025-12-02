@@ -264,11 +264,12 @@ export async function fetchTeamLastFixtures(teamId: number, last: number = 5) {
         away: f.goals.away ?? null,
       },
       league: f.league.name,
+      status: mapStatus(f.fixture.status.short),
     })) || []
   );
 }
 
-/** ⭐ NEW: Live Snapshot (events + stats + score) */
+/** ⭐ NEW: Live Snapshot */
 export async function fetchLiveFixtureSnapshot(fixtureId: number) {
   console.log(`📡 Fetching live fixture snapshot: ${fixtureId}`);
 
