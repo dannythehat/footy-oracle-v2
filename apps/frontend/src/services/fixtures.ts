@@ -1,6 +1,6 @@
-import api from "./api";
+import { fixturesApi } from "./api";
 
-export const getFixturesByDate = async (date) => {
-  const res = await api.get(`/fixtures`, { params: { date } });
-  return res.data.fixtures;
+export const getFixturesByDate = async (date: string) => {
+  const res = await fixturesApi.getByDate(date);
+  return res.fixtures || res.data || res; 
 };
