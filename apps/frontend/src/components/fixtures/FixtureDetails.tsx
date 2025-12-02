@@ -79,9 +79,11 @@ const FixtureDetails = ({ fixture }: { fixture: FixtureSummary }) => {
     homeTeam: fixture.homeTeam.name,
     awayTeam: fixture.awayTeam.name,
     leagueId: fixture.league.id,
+    leagueName: fixture.league.name,
+    league: fixture.league.name,
     season: fixture.league.season,
-    odds: odds,
-    aiBets: odds?.aiBets,
+    odds: odds?.data?.odds,
+    aiBets: odds?.data?.aiBets,
   };
 
   return (
@@ -155,8 +157,8 @@ const FixtureDetails = ({ fixture }: { fixture: FixtureSummary }) => {
         {tab === "h2h" && <MatchH2H fixture={fixtureData} />}
         {tab === "standings" && (
           <MatchStandings
-            leagueId={fixture.league.id}
-            season={fixture.league.season}
+            fixture={fixtureData}
+            standings={standings?.data}
           />
         )}
       </div>
