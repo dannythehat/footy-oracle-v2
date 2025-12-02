@@ -34,7 +34,8 @@ export interface CompleteFixtureData {
       over25Count: number;
     };
   };
-  standings: any;
+  standings: any[];
+  odds: any[];
   homeUpcoming: any[];
   awayUpcoming: any[];
 }
@@ -78,7 +79,8 @@ export async function getCompleteFixtureData(fixtureDoc: any): Promise<CompleteF
       statistics: statistics.status === 'fulfilled' ? statistics.value : null,
       events: events.status === 'fulfilled' ? events.value : [],
       h2h: h2h.status === 'fulfilled' ? h2h.value : { matches: [], stats: { totalMatches: 0, homeWins: 0, awayWins: 0, draws: 0, bttsCount: 0, over25Count: 0 } },
-      standings: standings.status === 'fulfilled' ? standings.value : null,
+      standings: standings.status === 'fulfilled' && standings.value ? standings.value : [],
+      odds: fixtureDoc.odds ? [fixtureDoc.odds] : [],
       homeUpcoming: homeUpcoming.status === 'fulfilled' ? homeUpcoming.value : [],
       awayUpcoming: awayUpcoming.status === 'fulfilled' ? awayUpcoming.value : []
     };
@@ -284,8 +286,9 @@ export async function fetchH2H(homeTeamId: number, awayTeamId: number, last: num
 /**
  * Fetch league standings
  * CRITICAL: Use parameters 'league' and 'season'
+ * Returns empty array [] instead of null when not available
  */
-export async function fetchStandings(leagueId: number, season: number): Promise<any> {
+export async function fetchStandings(leagueId: number, season: number): Promise<any[]> {
   try {
     console.log(`🏆 Fetching standings for league ${leagueId}, season ${season}`);
 
@@ -300,15 +303,15 @@ export async function fetchStandings(leagueId: number, season: number): Promise<
     
     if (!standings) {
       console.log(`ℹ️  No standings available for league ${leagueId}`);
-      return null;
+      return [];
     }
 
     console.log(`✅ Found standings for league ${leagueId}`);
     
-    return standings;
+    return standings.league?.standings || [];
   } catch (error: any) {
     console.error(`❌ Error fetching standings for league ${leagueId}:`, error.message);
-    return null;
+    return [];
   }
 }
 
