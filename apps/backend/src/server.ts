@@ -9,6 +9,7 @@ console.log("?? MONGODB_URI =", process.env.MONGODB_URI);
 (async () => {
   try {
     await mongoose.connect(process.env.MONGODB_URI as string);
+
     console.log("?? Connected to MongoDB:", mongoose.connection.name);
     console.log("?? Collections:", Object.keys(mongoose.connection.collections));
   } catch (err: any) {
