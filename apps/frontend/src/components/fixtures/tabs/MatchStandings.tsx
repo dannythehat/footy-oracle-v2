@@ -40,8 +40,8 @@ const MatchStandings: React.FC<MatchStandingsProps> = ({ fixture }) => {
       <div className="mt-6 bg-gray-800/30 backdrop-blur-sm rounded-xl p-4 border border-gray-700/50">
         <div className="text-center text-gray-500 py-8">
           <Trophy className="w-12 h-12 mx-auto mb-3 opacity-30" />
-          <p className="text-sm">League: {fixture.leagueName || fixture.league}</p>
-          <p className="text-xs mt-1">Season: {fixture.season}</p>
+          <p className="text-sm">League: {fixture?.leagueName || fixture?.league || 'Unknown League'}</p>
+          <p className="text-xs mt-1">Season: {fixture?.season || new Date().getFullYear()}</p>
         </div>
       </div>
     </div>
