@@ -46,6 +46,8 @@ export interface IFixture extends Document {
   status: 'scheduled' | 'live' | 'finished' | 'postponed';
   statusShort?: string; // API-Football status code (1H, 2H, HT, FT, etc.)
   elapsed?: number; // Minutes elapsed in the match
+  homeScore?: number; // Top-level score fields for easy access
+  awayScore?: number; // Top-level score fields for easy access
   score?: {
     home: number;
     away: number;
@@ -151,6 +153,8 @@ const FixtureSchema = new Schema<IFixture>({
   },
   statusShort: String,
   elapsed: Number,
+  homeScore: Number, // Top-level for easy access
+  awayScore: Number, // Top-level for easy access
   score: {
     home: Number,
     away: Number,
