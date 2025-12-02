@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { 
-  Calendar, ChevronLeft, ChevronRight, Clock, RefreshCw,
-  ChevronDown, ChevronUp, Trophy, AlertCircle
+  Calendar, ChevronLeft, ChevronRight, RefreshCw,
+  ChevronDown, ChevronUp, AlertCircle
 } from 'lucide-react';
 import { fixturesApi } from '../services/api';
 import MatchDetailDrawer from './fixtures/MatchDetailDrawer';
@@ -25,6 +25,8 @@ interface Fixture {
   season?: number;
   country?: string;
   status?: string;
+  statusShort?: string;
+  elapsed?: number;
   homeScore?: number;
   awayScore?: number;
   score?: {
@@ -59,9 +61,9 @@ const FixturesView: React.FC<FixturesViewProps> = ({ onClose, embedded = false }
   useEffect(() => {
     fetchFixtures();
     
-    // Auto-refresh every 60 seconds if enabled
+    // Auto-refresh every 30 seconds if enabled
     if (autoRefresh) {
-      const interval = setInterval(fetchFixtures, 60000);
+      const interval = setInterval(fetchFixtures, 30000);
       return () => clearInterval(interval);
     }
   }, [selectedDate, autoRefresh]);
@@ -74,14 +76,13 @@ const FixturesView: React.FC<FixturesViewProps> = ({ onClose, embedded = false }
       const dateStr = selectedDate.toISOString().split('T')[0];
       console.log('Fetching fixtures for:', dateStr);
       
-      // CRITICAL FIX: Refresh scores from API-Football BEFORE fetching from database
+      // Refresh scores from API-Football BEFORE fetching from database
       try {
         console.log('🔄 Refreshing live scores from API...');
         await fixturesApi.refreshScores(dateStr);
         console.log('✅ Scores refreshed successfully');
       } catch (refreshError) {
         console.warn('⚠️ Score refresh failed (continuing with cached data):', refreshError);
-        // Continue even if refresh fails - show cached data
       }
       
       const response = await fixturesApi.getByDate(dateStr);
@@ -127,20 +128,17 @@ const FixturesView: React.FC<FixturesViewProps> = ({ onClose, embedded = false }
 
   const handleFixtureClick = async (fixture: Fixture) => {
     try {
-      // Fetch full fixture details including odds and aiBets
       const response = await fixturesApi.getById(Number(fixture.id || fixture.fixtureId));
       
       if (response.success && response.data) {
         setSelectedFixture(response.data);
         setIsMatchDetailOpen(true);
       } else {
-        // Fallback to basic fixture data
         setSelectedFixture(fixture);
         setIsMatchDetailOpen(true);
       }
     } catch (err) {
       console.error('Error fetching fixture details:', err);
-      // Still open drawer with basic data
       setSelectedFixture(fixture);
       setIsMatchDetailOpen(true);
     }
@@ -148,7 +146,7 @@ const FixturesView: React.FC<FixturesViewProps> = ({ onClose, embedded = false }
 
   const closeMatchDetail = () => {
     setIsMatchDetailOpen(false);
-    setTimeout(() => setSelectedFixture(null), 300); // Clear after animation
+    setTimeout(() => setSelectedFixture(null), 300);
   };
 
   // Group fixtures by league
@@ -162,16 +160,24 @@ const FixturesView: React.FC<FixturesViewProps> = ({ onClose, embedded = false }
   }, {} as GroupedFixtures);
 
   const formatDate = (date: Date) => {
+    const today = new Date();
+    const tomorrow = new Date(today);
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    const yesterday = new Date(today);
+    yesterday.setDate(yesterday.getDate() - 1);
+
+    if (date.toDateString() === today.toDateString()) return 'TODAY';
+    if (date.toDateString() === tomorrow.toDateString()) return 'TOMORROW';
+    if (date.toDateString() === yesterday.toDateString()) return 'YESTERDAY';
+    
     return date.toLocaleDateString('en-GB', { 
-      weekday: 'short', 
       day: 'numeric', 
       month: 'short',
       year: 'numeric'
-    });
+    }).toUpperCase();
   };
 
   const formatTime = (fixture: Fixture) => {
-    // Use time if available, otherwise parse kickoff or date
     if (fixture.time) return fixture.time;
     
     const dateStr = fixture.kickoff || fixture.date;
@@ -183,89 +189,101 @@ const FixturesView: React.FC<FixturesViewProps> = ({ onClose, embedded = false }
     });
   };
 
-  const getStatusBadge = (status?: string) => {
-    if (!status) return null;
-    
-    const statusConfig: Record<string, { label: string; className: string }> = {
-      'scheduled': { label: 'Scheduled', className: 'bg-gray-500' },
-      'NS': { label: 'Not Started', className: 'bg-gray-500' },
-      'live': { label: 'LIVE', className: 'bg-red-500 animate-pulse' },
-      'LIVE': { label: 'LIVE', className: 'bg-red-500 animate-pulse' },
-      '1H': { label: '1st Half', className: 'bg-green-500' },
-      'HT': { label: 'Half Time', className: 'bg-yellow-500' },
-      '2H': { label: '2nd Half', className: 'bg-green-500' },
-      'finished': { label: 'Full Time', className: 'bg-blue-500' },
-      'FT': { label: 'Full Time', className: 'bg-blue-500' },
-      'AET': { label: 'Extra Time', className: 'bg-purple-500' },
-      'PEN': { label: 'Penalties', className: 'bg-purple-500' },
-      'postponed': { label: 'Postponed', className: 'bg-gray-500' },
-      'PST': { label: 'Postponed', className: 'bg-gray-500' },
-      'CANC': { label: 'Cancelled', className: 'bg-red-500' },
-      'ABD': { label: 'Abandoned', className: 'bg-red-500' },
-    };
+  const getStatusDisplay = (fixture: Fixture) => {
+    const status = fixture.status;
+    const statusShort = fixture.statusShort;
+    const elapsed = fixture.elapsed;
 
-    const config = statusConfig[status] || { label: status, className: 'bg-gray-500' };
-    
-    return (
-      <span className={`px-2 py-1 rounded text-xs font-semibold text-white ${config.className}`}>
-        {config.label}
-      </span>
-    );
+    // Live match statuses
+    if (status === 'live' || ['1H', '2H', 'ET', 'BT', 'P'].includes(statusShort || '')) {
+      return (
+        <div className="flex items-center gap-2">
+          <span className="text-red-500 font-bold text-sm">{elapsed}'</span>
+          <div className="w-2 h-2 bg-red-500 rounded-full animate-pulse"></div>
+        </div>
+      );
+    }
+
+    // Half time
+    if (statusShort === 'HT') {
+      return <span className="text-orange-400 font-semibold text-sm">HT</span>;
+    }
+
+    // Finished
+    if (status === 'finished' || statusShort === 'FT') {
+      return <span className="text-gray-500 font-semibold text-sm">FT</span>;
+    }
+
+    // Postponed/Cancelled
+    if (status === 'postponed' || statusShort === 'PST') {
+      return <span className="text-yellow-500 font-semibold text-sm">PST</span>;
+    }
+
+    if (statusShort === 'CANC') {
+      return <span className="text-red-500 font-semibold text-sm">CANC</span>;
+    }
+
+    // Scheduled - show time
+    return <span className="text-gray-400 text-sm">{formatTime(fixture)}</span>;
   };
 
-  const getScoreDisplay = (fixture: Fixture) => {
-    // Check for score object first
+  const getScore = (fixture: Fixture): { home: number | null; away: number | null } => {
+    // Try score object first
     if (fixture.score) {
-      return (
-        <div className="text-lg font-bold text-white">
-          {fixture.score.home ?? 0} - {fixture.score.away ?? 0}
-        </div>
-      );
+      return {
+        home: fixture.score.home ?? null,
+        away: fixture.score.away ?? null
+      };
     }
     
-    // Fallback to individual score fields
-    if (fixture.status && ['live', 'LIVE', '1H', 'HT', '2H', 'finished', 'FT', 'AET', 'PEN'].includes(fixture.status)) {
-      return (
-        <div className="text-lg font-bold text-white">
-          {fixture.homeScore ?? 0} - {fixture.awayScore ?? 0}
-        </div>
-      );
+    // Try individual fields
+    if (fixture.homeScore !== undefined || fixture.awayScore !== undefined) {
+      return {
+        home: fixture.homeScore ?? null,
+        away: fixture.awayScore ?? null
+      };
     }
-    return null;
+
+    return { home: null, away: null };
+  };
+
+  const shouldShowScore = (fixture: Fixture): boolean => {
+    const status = fixture.status;
+    const statusShort = fixture.statusShort;
+    return status === 'live' || 
+           status === 'finished' || 
+           ['1H', 'HT', '2H', 'ET', 'BT', 'P', 'FT', 'AET', 'PEN'].includes(statusShort || '');
   };
 
   return (
-    <div className={`${embedded ? '' : 'min-h-screen'} bg-gradient-to-br from-gray-900 via-purple-900 to-gray-900`}>
-      <div className="container mx-auto px-4 py-8">
+    <div className={`${embedded ? '' : 'min-h-screen'} bg-[#1a1a2e]`}>
+      <div className="container mx-auto px-4 py-6 max-w-6xl">
         {/* Header */}
-        <div className="flex items-center justify-between mb-8">
-          <div className="flex items-center gap-3">
-            <Trophy className="w-8 h-8 text-yellow-400" />
-            <h1 className="text-3xl font-bold text-white">Match Fixtures</h1>
-          </div>
+        <div className="flex items-center justify-between mb-6">
+          <h1 className="text-2xl font-bold text-white">FIXTURES</h1>
           {onClose && (
             <button
               onClick={onClose}
-              className="px-4 py-2 bg-gray-700 hover:bg-gray-600 text-white rounded-lg transition-colors"
+              className="px-4 py-2 bg-gray-700 hover:bg-gray-600 text-white rounded-lg transition-colors text-sm"
             >
               Close
             </button>
           )}
         </div>
 
-        {/* Date Navigation */}
-        <div className="bg-gray-800/50 backdrop-blur-sm rounded-xl p-6 mb-6 border border-gray-700">
-          <div className="flex items-center justify-between">
+        {/* Date Navigation - FlashScore Style */}
+        <div className="bg-[#16213e] rounded-lg p-4 mb-4 border border-gray-700">
+          <div className="flex items-center justify-between mb-3">
             <button
               onClick={() => changeDate(-1)}
               className="p-2 hover:bg-gray-700 rounded-lg transition-colors"
             >
-              <ChevronLeft className="w-6 h-6 text-white" />
+              <ChevronLeft className="w-5 h-5 text-white" />
             </button>
             
-            <div className="flex items-center gap-3">
-              <Calendar className="w-5 h-5 text-purple-400" />
-              <span className="text-xl font-semibold text-white">
+            <div className="flex items-center gap-2">
+              <Calendar className="w-4 h-4 text-gray-400" />
+              <span className="text-lg font-bold text-white">
                 {formatDate(selectedDate)}
               </span>
             </div>
@@ -274,14 +292,14 @@ const FixturesView: React.FC<FixturesViewProps> = ({ onClose, embedded = false }
               onClick={() => changeDate(1)}
               className="p-2 hover:bg-gray-700 rounded-lg transition-colors"
             >
-              <ChevronRight className="w-6 h-6 text-white" />
+              <ChevronRight className="w-5 h-5 text-white" />
             </button>
           </div>
 
-          <div className="flex items-center justify-center gap-4 mt-4">
+          <div className="flex items-center justify-center gap-3">
             <button
               onClick={() => setSelectedDate(new Date())}
-              className="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg transition-colors"
+              className="px-3 py-1.5 bg-[#0f3460] hover:bg-[#1a4d7a] text-white rounded text-sm transition-colors"
             >
               Today
             </button>
@@ -289,20 +307,20 @@ const FixturesView: React.FC<FixturesViewProps> = ({ onClose, embedded = false }
             <button
               onClick={fetchFixtures}
               disabled={loading}
-              className="flex items-center gap-2 px-4 py-2 bg-gray-700 hover:bg-gray-600 text-white rounded-lg transition-colors disabled:opacity-50"
+              className="flex items-center gap-2 px-3 py-1.5 bg-[#0f3460] hover:bg-[#1a4d7a] text-white rounded text-sm transition-colors disabled:opacity-50"
             >
-              <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
+              <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} />
               Refresh
             </button>
 
-            <label className="flex items-center gap-2 text-white">
+            <label className="flex items-center gap-2 text-white text-sm">
               <input
                 type="checkbox"
                 checked={autoRefresh}
                 onChange={(e) => setAutoRefresh(e.target.checked)}
-                className="w-4 h-4"
+                className="w-3.5 h-3.5"
               />
-              Auto-refresh
+              Auto
             </label>
           </div>
         </div>
@@ -310,66 +328,95 @@ const FixturesView: React.FC<FixturesViewProps> = ({ onClose, embedded = false }
         {/* Loading State */}
         {loading && (
           <div className="text-center py-12">
-            <RefreshCw className="w-12 h-12 text-purple-400 animate-spin mx-auto mb-4" />
-            <p className="text-gray-400">Loading fixtures...</p>
+            <RefreshCw className="w-10 h-10 text-blue-400 animate-spin mx-auto mb-3" />
+            <p className="text-gray-400 text-sm">Loading fixtures...</p>
           </div>
         )}
 
         {/* Error State */}
         {error && (
-          <div className="bg-red-500/10 border border-red-500 rounded-xl p-6 mb-6">
-            <div className="flex items-center gap-3">
-              <AlertCircle className="w-6 h-6 text-red-400" />
-              <p className="text-red-400">{error}</p>
+          <div className="bg-red-500/10 border border-red-500 rounded-lg p-4 mb-4">
+            <div className="flex items-center gap-2">
+              <AlertCircle className="w-5 h-5 text-red-400" />
+              <p className="text-red-400 text-sm">{error}</p>
             </div>
           </div>
         )}
 
-        {/* Fixtures List */}
+        {/* No Fixtures */}
         {!loading && !error && fixtures.length === 0 && (
           <div className="text-center py-12">
-            <Calendar className="w-16 h-16 text-gray-600 mx-auto mb-4" />
-            <p className="text-gray-400 text-lg">No fixtures found for this date</p>
+            <Calendar className="w-12 h-12 text-gray-600 mx-auto mb-3" />
+            <p className="text-gray-400">No fixtures for this date</p>
           </div>
         )}
 
+        {/* Fixtures List - FlashScore Style */}
         {!loading && !error && fixtures.length > 0 && (
-          <div className="space-y-4">
+          <div className="space-y-3">
             {Object.entries(groupedFixtures).map(([league, leagueFixtures]) => (
-              <div key={league} className="bg-gray-800/50 backdrop-blur-sm rounded-xl border border-gray-700 overflow-hidden">
-                {/* League Header */}
+              <div key={league} className="bg-[#16213e] rounded-lg border border-gray-700 overflow-hidden">
+                {/* League Header - Compact */}
                 <button
                   onClick={() => toggleLeague(league)}
-                  className="w-full px-6 py-4 flex items-center justify-between hover:bg-gray-700/50 transition-colors"
+                  className="w-full px-4 py-2.5 flex items-center justify-between hover:bg-gray-700/30 transition-colors"
                 >
-                  <div className="flex items-center gap-3">
-                    <Trophy className="w-5 h-5 text-yellow-400" />
-                    <span className="text-lg font-semibold text-white">{league}</span>
-                    <span className="text-sm text-gray-400">({leagueFixtures.length} matches)</span>
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm font-bold text-white">{league}</span>
+                    <span className="text-xs text-gray-500">({leagueFixtures.length})</span>
                   </div>
                   {expandedLeagues.has(league) ? (
-                    <ChevronUp className="w-5 h-5 text-gray-400" />
+                    <ChevronUp className="w-4 h-4 text-gray-400" />
                   ) : (
-                    <ChevronDown className="w-5 h-5 text-gray-400" />
+                    <ChevronDown className="w-4 h-4 text-gray-400" />
                   )}
                 </button>
 
-                {/* League Fixtures */}
+                {/* League Fixtures - FlashScore Compact Style */}
                 {expandedLeagues.has(league) && (
                   <div className="border-t border-gray-700">
-                    {leagueFixtures.map((fixture) => (
-                      <div 
-                        key={fixture.fixtureId || fixture.id} 
-                        onClick={() => handleFixtureClick(fixture)}
-                        className="px-6 py-4 border-b border-gray-700 last:border-b-0 hover:bg-gray-700/30 transition-colors cursor-pointer"
-                      >
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center gap-4 flex-1">
-                            <div className="flex items-center gap-2">
-                              <Clock className="w-4 h-4 text-gray-400" />
-                              <span className="text-sm text-gray-400 w-16">
-                                {formatTime(fixture)}
-                              </span>
+                    {leagueFixtures.map((fixture) => {
+                      const score = getScore(fixture);
+                      const showScore = shouldShowScore(fixture);
+                      
+                      return (
+                        <div 
+                          key={fixture.fixtureId || fixture.id} 
+                          onClick={() => handleFixtureClick(fixture)}
+                          className="px-4 py-3 border-b border-gray-700/50 last:border-b-0 hover:bg-gray-700/20 transition-colors cursor-pointer"
+                        >
+                          <div className="flex items-center justify-between gap-4">
+                            {/* Time/Status Column */}
+                            <div className="flex items-center justify-center w-16 flex-shrink-0">
+                              {getStatusDisplay(fixture)}
+                            </div>
+
+                            {/* Teams Column */}
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center justify-between mb-1">
+                                <span className="text-white text-sm font-medium truncate">
+                                  {fixture.homeTeamName || fixture.homeTeam}
+                                </span>
+                                {showScore && (
+                                  <span className="text-white text-base font-bold ml-2">
+                                    {score.home ?? '-'}
+                                  </span>
+                                )}
+                              </div>
+                              <div className="flex items-center justify-between">
+                                <span className="text-white text-sm font-medium truncate">
+                                  {fixture.awayTeamName || fixture.awayTeam}
+                                </span>
+                                {showScore && (
+                                  <span className="text-white text-base font-bold ml-2">
+                                    {score.away ?? '-'}
+                                  </span>
+                                )}
+                              </div>
+                            </div>
+
+                            {/* Favorite Button */}
+                            <div className="flex-shrink-0">
                               <FavoriteButton
                                 fixtureId={Number(fixture.fixtureId || fixture.id)}
                                 homeTeam={fixture.homeTeamName || fixture.homeTeam}
@@ -379,30 +426,10 @@ const FixturesView: React.FC<FixturesViewProps> = ({ onClose, embedded = false }
                                 size="sm"
                               />
                             </div>
-                            
-                            <div className="flex-1">
-                              <div className="flex items-center justify-between mb-1">
-                                <span className="text-white font-medium">
-                                  {fixture.homeTeamName || fixture.homeTeam}
-                                </span>
-                                {getScoreDisplay(fixture) && (
-                                  <span className="mx-4">{getScoreDisplay(fixture)}</span>
-                                )}
-                              </div>
-                              <div className="flex items-center justify-between">
-                                <span className="text-white font-medium">
-                                  {fixture.awayTeamName || fixture.awayTeam}
-                                </span>
-                              </div>
-                            </div>
-
-                            <div className="flex items-center gap-2">
-                              {getStatusBadge(fixture.status)}
-                            </div>
                           </div>
                         </div>
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
                 )}
               </div>
