@@ -1,10 +1,12 @@
 import React, { useState } from "react";
 import dayjs from "dayjs";
-import { useFixtures } from "../hooks/useFixtures";
+import useFixtures from "../hooks/useFixtures";
 import FixtureDetails, { FixtureSummary } from "../components/fixtures/FixtureDetails";
 
 const FixturesPage = () => {
-  const { data: fixtures, isLoading } = useFixtures();
+  const today = dayjs().format("YYYY-MM-DD");
+
+  const { data: fixtures, isLoading } = useFixtures(today);
   const [selected, setSelected] = useState<FixtureSummary | null>(null);
 
   if (isLoading) {
@@ -15,7 +17,6 @@ const FixturesPage = () => {
     <div className="p-4 text-white flex flex-col gap-4">
       <h1 className="text-xl font-bold">Fixtures</h1>
 
-      {/* Fixture List */}
       <div className="flex flex-col gap-3">
         {fixtures?.map((fx: any) => {
           const kickoff = dayjs(fx.date).format("HH:mm");
@@ -78,7 +79,6 @@ const FixturesPage = () => {
         })}
       </div>
 
-      {/* Fixture Details Drawer */}
       {selected && (
         <div className="fixed bottom-0 left-0 right-0 h-[75vh] bg-slate-950 rounded-t-2xl shadow-xl overflow-y-auto z-50">
           <button
