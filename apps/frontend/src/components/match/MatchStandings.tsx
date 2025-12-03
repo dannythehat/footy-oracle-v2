@@ -1,19 +1,17 @@
-import React from "react";
-
 export default function MatchStandings({ standings }) {
-  if (!standings)
-    return <div className="text-gray-400 text-sm">No standings.</div>;
+  if (!standings) return null;
 
   return (
-    <div className="bg-[#1b1b1b] p-4 rounded-xl mt-4">
-      <h3 className="text-lg font-bold mb-3">League Standings</h3>
+    <div className="p-4 text-white">
+      <h2 className="text-xl font-bold mb-3">League Table</h2>
 
-      {standings.map((t, i) => (
-        <div key={i} className="flex justify-between border-b border-gray-800 py-1">
-          <span>{t.rank}. {t.team}</span>
-          <span className="text-gray-300">{t.points} pts</span>
-        </div>
-      ))}
+      <ul className="space-y-2">
+        {standings.map((t, i) => (
+          <li key={i} className="bg-gray-800 p-2 rounded">
+            {i + 1}. {t.team} — {t.points} pts
+          </li>
+        ))}
+      </ul>
     </div>
   );
 }

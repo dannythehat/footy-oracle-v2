@@ -1,20 +1,18 @@
-import React from "react";
-
 export default function MatchH2H({ h2h }) {
-  if (!h2h)
-    return <div className="text-gray-400 text-sm">No H2H data.</div>;
+  if (!h2h || !h2h.matches) return null;
 
   return (
-    <div className="bg-[#1b1b1b] p-4 rounded-xl mt-4">
-      <h3 className="text-lg font-bold mb-3">Head-to-Head</h3>
+    <div className="p-4 text-white">
+      <h2 className="text-xl font-bold mb-3">Head to Head</h2>
 
-      {h2h.matches?.map((m, i) => (
-        <div key={i} className="border-b border-gray-700 pb-2 mb-2">
-          <div>{m.homeTeam} vs {m.awayTeam}</div>
-          <div className="text-gray-400 text-sm">{m.score.home}-{m.score.away}</div>
-          <div className="text-gray-500 text-xs">{m.league}</div>
-        </div>
-      ))}
+      <ul className="space-y-2">
+        {h2h.matches.map((m, i) => (
+          <li key={i} className="bg-gray-800 p-2 rounded">
+            {m.homeTeam} {m.score.home} - {m.score.away} {m.awayTeam}
+            <div className="opacity-60 text-sm">{m.league}</div>
+          </li>
+        ))}
+      </ul>
     </div>
   );
 }
