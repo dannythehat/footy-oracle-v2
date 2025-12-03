@@ -23,13 +23,32 @@ app.get("/health", (req, res) => {
   res.json({ status: "ok" });
 });
 
-// ROUTES
+// IMPORT ALL ROUTES
 import fixturesRoutes from "./routes/fixtures";
 import adminRoutes from "./routes/admin";
 import notificationsRoutes from "./routes/notifications";
+import goldenBetsRoutes from "./routes/goldenBets";
+import predictionsRoutes from "./routes/predictions";
+import statsRoutes from "./routes/stats";
+import bettingInsightsRoutes from "./routes/bettingInsights";
+import pnlRoutes from "./routes/pnl";
+import liveFixturesRoutes from "./routes/liveFixtures";
+import fixtureDetailsRoutes from "./routes/fixtureDetails";
+import betBuilderRoutes from "./routes/betBuilder";
+import valueBetsRoutes from "./routes/valueBets";
 
+// MOUNT ALL ROUTES
 app.use("/api/fixtures", fixturesRoutes);
 app.use("/api/admin", adminRoutes);
 app.use("/api/notifications", notificationsRoutes);
+app.use("/api/golden-bets", goldenBetsRoutes);
+app.use("/api/predictions", predictionsRoutes);
+app.use("/api/stats", statsRoutes);
+app.use("/api/betting-insights", bettingInsightsRoutes);
+app.use("/api/pnl", pnlRoutes);
+app.use("/api/live-fixtures", liveFixturesRoutes);
+app.use("/api/fixture-details", fixtureDetailsRoutes);
+app.use("/api/bet-builder", betBuilderRoutes);
+app.use("/api/value-bets", valueBetsRoutes);
 
 export default app;
