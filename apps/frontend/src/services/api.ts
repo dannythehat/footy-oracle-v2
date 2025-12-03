@@ -1,53 +1,98 @@
-import { useEffect, useState } from "react";
-import { fixturesApi } from "../services/api";
+import axios from "axios";
 
-export default function MatchPage() {
-  const fixtureId = window.location.pathname.split("/").pop();
+const baseURL =
+  import.meta.env.VITE_API_URL || "https://footy-oracle-backend.onrender.com/api";
 
-  const [fixture, setFixture] = useState<any>(null);
-  const [stats, setStats] = useState<any>(null);
-  const [events, setEvents] = useState<any>(null);
-  const [h2h, setH2h] = useState<any>(null);
+const api = axios.create({
+  baseURL,
+  withCredentials: false,
+});
 
-  useEffect(() => {
-    if (!fixtureId) return;
+type ApiResponse<T> = {
+  success: boolean;
+  data: T;
+};
 
-    // Load main fixture
-    fixturesApi.getById(fixtureId).then((d) => setFixture(d?.data));
+// ---- FIXTURES API ----
+export const fixturesApi = {
+  async getByDate(date: string) {
+    const res = await api.get<ApiResponse<any[]>>("/fixtures", {
+      params: { date },
+    });
+    return res.data.data ?? [];
+  },
 
-    // Load stats
-    fixturesApi.getStats(fixtureId).then((d) => setStats(d?.data));
+  async getById(fixtureId: string | number) {
+    const res = await api.get<ApiResponse<any>>(/fixtures/);
+    return res.data.data ?? null;
+  },
 
-    // Load events
-    fixturesApi.getEvents(fixtureId).then((d) => setEvents(d?.data));
+  async getEvents(fixtureId: string | number) {
+    const res = await api.get<ApiResponse<any[]>>(
+      /fixtures//events
+    );
+    return res.data.data ?? [];
+  },
 
-    // Load h2h
-    fixturesApi.getH2H(fixtureId).then((d) => setH2h(d?.data));
-  }, [fixtureId]);
+  async getStats(fixtureId: string | number) {
+    const res = await api.get<ApiResponse<any>>(
+      /fixtures//stats
+    );
+    return res.data.data ?? null;
+  },
 
-  if (!fixture)
-    return <div style={{ color: "#fff" }}>Loading match...</div>;
+  async getH2H(fixtureId: string | number) {
+    const res = await api.get<ApiResponse<any>>(
+      /fixtures//h2h
+    );
+    return res.data.data ?? null;
+  },
 
-  return (
-    <div style={{ padding: "20px", background: "#111", minHeight: "100vh", color: "#fff" }}>
-      <button onClick={() => (window.location.href = "/")} style={{ marginBottom: 20 }}>
-        ⬅ Back
-      </button>
+  async getStandings(leagueId: number | string, season: number | string) {
+    const res = await api.get<ApiResponse<any>>(
+      /leagues//standings,
+      { params: { season } }
+    );
+    return res.data.data ?? null;
+  },
+};
 
-      <h1>{fixture.homeTeam} vs {fixture.awayTeam}</h1>
-      <p style={{ opacity: 0.7 }}>{fixture.league}</p>
+// ---- BET BUILDER ----
+export const betBuilderApi = {
+  getToday: () => api.get("/bet-builder/today").then((res) => res.data),
+  getHistory: () => api.get("/bet-builder/history").then((res) => res.data),
+};
 
-      {/* EVENTS */}
-      <h2 style={{ marginTop: 40 }}>Events</h2>
-      <pre>{JSON.stringify(events, null, 2)}</pre>
+// ---- GOLDEN BETS ----
+export const goldenBetApi = {
+  getToday: () => api.get("/golden-bets/today").then((res) => res.data),
+};
 
-      {/* STATS */}
-      <h2 style={{ marginTop: 40 }}>Statistics</h2>
-      <pre>{JSON.stringify(stats, null, 2)}</pre>
+// ---- VALUE BETS ----
+export const valueBetApi = {
+  getToday: () => api.get("/value-bets/today").then((res) => res.data),
+};
 
-      {/* H2H */}
-      <h2 style={{ marginTop: 40 }}>Head-to-Head</h2>
-      <pre>{JSON.stringify(h2h, null, 2)}</pre>
-    </div>
-  );
-}
+// ---- BETTING INSIGHTS ----
+export const bettingInsightsApi = {
+  getForFixture: (fixtureId: number) =>
+    api.get(/betting-insights/).then((res) => res.data),
+
+  revealBet: (fixtureId: number, betType: string) =>
+    api
+      .post(/betting-insights//reveal, { betType })
+      .then((res) => res.data),
+};
+
+// ---- LIVE FIXTURES ----
+export const liveFixturesApi = {
+  getLive: () => api.get("/live-fixtures").then((res) => res.data),
+};
+
+// ---- PREDICTIONS ----
+export const predictionsApi = {
+  getForFixture: (fixtureId: number) =>
+    api.get(/predictions/).then((res) => res.data),
+};
+
+export default api;
