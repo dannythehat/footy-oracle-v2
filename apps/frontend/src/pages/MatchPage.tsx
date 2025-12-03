@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { useParams, useNavigate } from "react-router-dom";
 import { fixturesApi } from "../services/api";
 import MatchHeader from "../components/match/MatchHeader";
 import MatchStats from "../components/match/MatchStats";
@@ -10,43 +11,48 @@ import MatchStandings from "../components/match/MatchStandings";
 type TabKey = "overview" | "stats" | "events" | "h2h" | "standings" | "timeline";
 
 export default function MatchPage() {
-  const parts = window.location.pathname.split("/");
-  const fixtureId = parts[parts.length - 1];
+  const { fixtureId } = useParams<{ fixtureId: string }>();
+  const navigate = useNavigate();
+  const id = fixtureId ? Number(fixtureId) : undefined;
 
   const [fixture, setFixture] = useState<any | null>(null);
   const [events, setEvents] = useState<any[]>([]);
-  const [stats, setStats] = useState<any | null>(null);
+  const [stats, setStats] = useState<any[]>([]);
   const [h2h, setH2h] = useState<any | null>(null);
   const [standings, setStandings] = useState<any | null>(null);
   const [activeTab, setActiveTab] = useState<TabKey>("overview");
   const [loading, setLoading] = useState<boolean>(true);
 
   useEffect(() => {
-    if (!fixtureId) return;
+    if (!id || isNaN(id)) return;
 
     async function load() {
       try {
         setLoading(true);
 
-        const base = await fixturesApi.getById(fixtureId);
+        // Get base fixture data
+        const base = await fixturesApi.getById(id);
         setFixture(base);
 
-        const [ev, st, h] = await Promise.all([
-          fixturesApi.getEvents(fixtureId),
-          fixturesApi.getStats(fixtureId),
-          fixturesApi.getH2H(fixtureId),
+        // Get events and stats in parallel
+        const [ev, st] = await Promise.all([
+          fixturesApi.getEvents(id).catch(() => []),
+          fixturesApi.getStats(id).catch(() => []),
         ]);
 
         setEvents(ev || []);
-        setStats(st || null);
-        setH2h(h || null);
+        setStats(st || []);
 
+        // Get H2H if we have team IDs
+        if (base?.homeTeamId && base?.awayTeamId) {
+          const h2hData = await fixturesApi.getH2H(base.homeTeamId, base.awayTeamId).catch(() => null);
+          setH2h(h2hData);
+        }
+
+        // Get standings if we have league and season
         if (base?.leagueId && base?.season) {
-          const table = await fixturesApi.getStandings(
-            base.leagueId,
-            base.season
-          );
-          setStandings(table || null);
+          const table = await fixturesApi.getStandings(base.leagueId, base.season).catch(() => null);
+          setStandings(table);
         }
       } catch (err) {
         console.error("MatchPage load error", err);
@@ -56,7 +62,7 @@ export default function MatchPage() {
     }
 
     load();
-  }, [fixtureId]);
+  }, [id]);
 
   if (loading && !fixture) {
     return (
@@ -107,7 +113,7 @@ export default function MatchPage() {
       }}
     >
       <button
-        onClick={() => (window.location.href = "/")}
+        onClick={() => navigate("/")}
         style={{
           marginBottom: "10px",
           background: "transparent",
@@ -117,7 +123,7 @@ export default function MatchPage() {
           cursor: "pointer",
         }}
       >
-        ? Back to Fixtures
+        ← Back to Fixtures
       </button>
 
       <MatchHeader fixture={fixture} />
@@ -158,20 +164,20 @@ export default function MatchPage() {
       {/* TAB CONTENT */}
       {activeTab === "overview" && (
         <div>
-          <MatchStats stats={stats} />
-          <MatchEvents events={events} />
+          <MatchStats stats={stats ?? []} />
+          <MatchEvents events={events ?? []} />
         </div>
       )}
 
-      {activeTab === "stats" && <MatchStats stats={stats} />}
+      {activeTab === "stats" && <MatchStats stats={stats ?? []} />}
 
-      {activeTab === "events" && <MatchEvents events={events} />}
+      {activeTab === "events" && <MatchEvents events={events ?? []} />}
 
       {activeTab === "timeline" && (
         <MatchTimeline
-          events={events}
-          homeTeam={fixture.homeTeam}
-          awayTeam={fixture.awayTeam}
+          events={events ?? []}
+          homeTeam={fixture?.homeTeam || fixture?.homeTeamName || "Home"}
+          awayTeam={fixture?.awayTeam || fixture?.awayTeamName || "Away"}
         />
       )}
 
@@ -179,11 +185,11 @@ export default function MatchPage() {
 
       {activeTab === "standings" && (
         <MatchStandings
-          league={fixture.league}
-          season={fixture.season}
+          league={fixture?.league || fixture?.leagueName}
+          season={fixture?.season}
           standings={standings}
-          homeTeam={fixture.homeTeam}
-          awayTeam={fixture.awayTeam}
+          homeTeam={fixture?.homeTeam || fixture?.homeTeamName}
+          awayTeam={fixture?.awayTeam || fixture?.awayTeamName}
         />
       )}
     </div>
