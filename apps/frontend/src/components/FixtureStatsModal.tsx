@@ -39,13 +39,7 @@ export const FixtureStatsModal: React.FC<FixtureStatsModalProps> = ({
     setLoading(true);
     setError(null);
     try {
-      const data = await fixturesApi.getFixtureStats(
-        fixtureId,
-        homeTeamId,
-        awayTeamId,
-        leagueId,
-        season
-      );
+      const data = await fixturesApi.getStats(fixtureId);
       setStats(data);
     } catch (err: any) {
       setError(err.message || 'Failed to load stats');
