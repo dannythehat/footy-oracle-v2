@@ -1,19 +1,24 @@
-export default function MatchTimeline({ events }) {
-  if (!events || events.length === 0) return null;
+export default function MatchTimeline({
+  events,
+  homeTeam,
+  awayTeam
+}: {
+  events: any[];
+  homeTeam: string;
+  awayTeam: string;
+}) {
+  if (!events) return null;
 
   return (
-    <div className="p-4 text-white">
-      <h2 className="text-xl font-bold mb-3">Timeline</h2>
+    <div className='text-white'>
+      <div className='font-bold mb-2'>Timeline</div>
 
-      <div className="space-y-3">
-        {events.map((ev, idx) => (
-          <div key={idx} className="flex justify-between bg-gray-800 p-2 rounded">
-            <span>{ev.minute}'</span>
-            <span>{ev.type}</span>
-            <span>{ev.team}</span>
-          </div>
-        ))}
-      </div>
+      {events.map((ev: any, idx: number) => (
+        <div key={idx} className='p-2 bg-gray-800 rounded mb-1'>
+          <div>{ev.minute}' — {ev.type}</div>
+          <div className='opacity-70'>{ev.team} — {ev.player}</div>
+        </div>
+      ))}
     </div>
   );
 }

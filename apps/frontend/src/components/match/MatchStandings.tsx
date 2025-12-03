@@ -1,17 +1,18 @@
-export default function MatchStandings({ standings }) {
+export default function MatchStandings({ standings }: { standings: any }) {
   if (!standings) return null;
 
   return (
-    <div className="p-4 text-white">
-      <h2 className="text-xl font-bold mb-3">League Table</h2>
+    <div className='text-white'>
+      <div className='font-bold mb-2'>Standings</div>
 
-      <ul className="space-y-2">
-        {standings.map((t, i) => (
-          <li key={i} className="bg-gray-800 p-2 rounded">
-            {i + 1}. {t.team} — {t.points} pts
-          </li>
+      <div className='space-y-1'>
+        {(standings || []).map((t: any, i: number) => (
+          <div key={i} className='flex justify-between bg-gray-800 p-2 rounded text-sm'>
+            <span>{t.rank}. {t.team}</span>
+            <span>{t.points} pts</span>
+          </div>
         ))}
-      </ul>
+      </div>
     </div>
   );
 }

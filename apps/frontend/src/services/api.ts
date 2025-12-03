@@ -1,36 +1,27 @@
-import axios from "axios";
+import axios from 'axios';
 
 const api = axios.create({
   baseURL: import.meta.env.VITE_API_URL,
-  withCredentials: false,
+  withCredentials: false
 });
 
-// ---- Fixtures API ----
 export const fixturesApi = {
-  getById: (fixtureId) =>
-    api.get(`/fixtures/${fixtureId}`).then((res) => res.data),
+  getById: (fixtureId: number) =>
+    api.get(/fixtures/).then(r => r.data),
 
-  getStats: (fixtureId) =>
-    api.get(`/fixtures/${fixtureId}/stats`).then((res) => res.data),
+  getStats: (fixtureId: number) =>
+    api.get(/fixtures//stats).then(r => r.data),
 
-  getEvents: (fixtureId) =>
-    api.get(`/fixtures/${fixtureId}/events`).then((res) => res.data),
+  getEvents: (fixtureId: number) =>
+    api.get(/fixtures//events).then(r => r.data),
 
-  getComplete: (fixtureId) =>
-    api.get(`/fixtures/${fixtureId}/complete`).then((res) => res.data),
+  getH2H: (homeId: number, awayId: number) =>
+    api.get(/fixtures/h2h, { params: { homeTeamId: homeId, awayTeamId: awayId }})
+      .then(r => r.data),
 
-  getLive: (fixtureId) =>
-    api.get(`/fixtures/${fixtureId}/live`).then((res) => res.data),
-
-  getH2H: (homeId, awayId) =>
-    api
-      .get(`/fixtures/h2h`, { params: { homeTeamId: homeId, awayTeamId: awayId } })
-      .then((res) => res.data),
-
-  getStandings: (leagueId, season) =>
-    api
-      .get(`/leagues/${leagueId}/standings`, { params: { season } })
-      .then((res) => res.data),
+  getStandings: (leagueId: number, season: number) =>
+    api.get(/leagues//standings, { params: { season }})
+      .then(r => r.data),
 };
 
 export default api;
