@@ -27,6 +27,7 @@ app.get("/health", (req, res) => {
 import fixturesRoutes from "./routes/fixtures";
 import adminRoutes from "./routes/admin";
 import notificationsRoutes from "./routes/notifications";
+import fixtureDetailsRoutes from "./routes/fixtureDetails";
 import goldenBetsRoutes from "./routes/goldenBets";
 import predictionsRoutes from "./routes/predictions";
 import statsRoutes from "./routes/stats";
@@ -43,6 +44,7 @@ app.use("/api", fixtureDetailsRoutes);
 app.use("/api/fixtures", fixturesRoutes);
 app.use("/api/admin", adminRoutes);
 app.use("/api/notifications", notificationsRoutes);
+app.use("/api", fixtureDetailsRoutes);
 app.use("/api/golden-bets", goldenBetsRoutes);
 app.use("/api/predictions", predictionsRoutes);
 app.use("/api/stats", statsRoutes);
