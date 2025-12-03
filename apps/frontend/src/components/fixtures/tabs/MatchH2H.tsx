@@ -45,19 +45,16 @@ const MatchH2H: React.FC<MatchH2HProps> = ({ fixture }) => {
       setLoading(true);
       setError(null);
 
-      const fixtureId = fixture.id || fixture.fixtureId;
       const homeTeamId = fixture.homeTeamId;
       const awayTeamId = fixture.awayTeamId;
 
-      if (!fixtureId || !homeTeamId || !awayTeamId) {
+      if (!homeTeamId || !awayTeamId) {
         throw new Error('Missing required IDs for H2H data');
       }
 
       const response = await fixturesApi.getH2H(
-        Number(fixtureId),
         Number(homeTeamId),
-        Number(awayTeamId),
-        10
+        Number(awayTeamId)
       );
 
       if (response.success && response.data) {
