@@ -1,17 +1,18 @@
 import React from 'react';
-import { BarChart3, TrendingUp, History, Trophy } from 'lucide-react';
+import { BarChart3, TrendingUp, History, Trophy, Activity } from 'lucide-react';
 
 interface MatchDetailTabsProps {
-  activeTab: 'match' | 'odds' | 'h2h' | 'standings';
-  onTabChange: (tab: 'match' | 'odds' | 'h2h' | 'standings') => void;
+  activeTab: 'match' | 'events' | 'odds' | 'h2h' | 'standings';
+  onTabChange: (tab: 'match' | 'events' | 'odds' | 'h2h' | 'standings') => void;
 }
 
 const MatchDetailTabs: React.FC<MatchDetailTabsProps> = ({ activeTab, onTabChange }) => {
   const tabs = [
-    { id: 'match' as const, label: 'Match', icon: BarChart3 },
+    { id: 'match' as const, label: 'Stats', icon: BarChart3 },
+    { id: 'events' as const, label: 'Events', icon: Activity },
     { id: 'odds' as const, label: 'Odds', icon: TrendingUp },
     { id: 'h2h' as const, label: 'H2H', icon: History },
-    { id: 'standings' as const, label: 'Standings', icon: Trophy },
+    { id: 'standings' as const, label: 'Table', icon: Trophy },
   ];
 
   return (
@@ -25,7 +26,7 @@ const MatchDetailTabs: React.FC<MatchDetailTabsProps> = ({ activeTab, onTabChang
             <button
               key={tab.id}
               onClick={() => onTabChange(tab.id)}
-              className={`flex-1 flex items-center justify-center gap-2 py-4 px-4 font-medium transition-all duration-200 relative group ${
+              className={`flex-1 flex items-center justify-center gap-2 py-4 px-2 font-medium transition-all duration-200 relative group ${
                 isActive
                   ? 'text-purple-400'
                   : 'text-gray-400 hover:text-gray-300 hover:-translate-y-0.5'
@@ -45,7 +46,7 @@ const MatchDetailTabs: React.FC<MatchDetailTabsProps> = ({ activeTab, onTabChang
               )}
 
               <Icon className={`w-4 h-4 relative z-10 ${isActive ? 'drop-shadow-lg' : ''}`} />
-              <span className={`text-sm relative z-10 ${isActive ? 'drop-shadow-lg' : ''}`}>{tab.label}</span>
+              <span className={`text-xs sm:text-sm relative z-10 ${isActive ? 'drop-shadow-lg' : ''}`}>{tab.label}</span>
             </button>
           );
         })}
