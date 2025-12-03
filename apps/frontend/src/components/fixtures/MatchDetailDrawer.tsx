@@ -4,6 +4,7 @@ import MatchDetailHeader from './MatchDetailHeader';
 import MatchDetailTabs from './MatchDetailTabs';
 import MatchOdds from './tabs/MatchOdds';
 import MatchStats from './tabs/MatchStats';
+import MatchEvents from './tabs/MatchEvents';
 import MatchH2H from './tabs/MatchH2H';
 import MatchStandings from './tabs/MatchStandings';
 
@@ -13,10 +14,10 @@ interface MatchDetailDrawerProps {
   onClose: () => void;
 }
 
-type TabType = 'match' | 'odds' | 'h2h' | 'standings';
+type TabType = 'match' | 'events' | 'odds' | 'h2h' | 'standings';
 
 const MatchDetailDrawer: React.FC<MatchDetailDrawerProps> = ({ fixture, isOpen, onClose }) => {
-  const [activeTab, setActiveTab] = useState<TabType>('odds');
+  const [activeTab, setActiveTab] = useState<TabType>('events');
 
   if (!isOpen || !fixture) return null;
 
@@ -24,6 +25,8 @@ const MatchDetailDrawer: React.FC<MatchDetailDrawerProps> = ({ fixture, isOpen, 
     switch (activeTab) {
       case 'match':
         return <MatchStats fixture={fixture} />;
+      case 'events':
+        return <MatchEvents fixture={fixture} />;
       case 'odds':
         return <MatchOdds fixture={fixture} />;
       case 'h2h':
@@ -31,7 +34,7 @@ const MatchDetailDrawer: React.FC<MatchDetailDrawerProps> = ({ fixture, isOpen, 
       case 'standings':
         return <MatchStandings fixture={fixture} />;
       default:
-        return <MatchOdds fixture={fixture} />;
+        return <MatchEvents fixture={fixture} />;
     }
   };
 
