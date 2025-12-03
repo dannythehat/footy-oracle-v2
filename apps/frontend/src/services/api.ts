@@ -41,10 +41,28 @@ export const fixturesApi = {
   getStats: (fixtureId: number) =>
     api.get(`/fixtures/${fixtureId}/stats`).then(res => res.data),
 
+  // Get fixture events (goals, cards, substitutions)
+  getEvents: (fixtureId: number) =>
+    api.get(`/fixtures/${fixtureId}/events`).then(res => res.data),
+
+  // Get complete fixture data (all endpoints in one)
+  getComplete: (fixtureId: number) =>
+    api.get(`/fixtures/${fixtureId}/complete`).then(res => res.data),
+
+  // Get live fixture data (fixture + events + stats)
+  getLive: (fixtureId: number) =>
+    api.get(`/fixtures/${fixtureId}/live`).then(res => res.data),
+
   // Get head-to-head
   getH2H: (homeTeamId: number, awayTeamId: number) =>
     api.get(`/fixtures/h2h`, {
       params: { homeTeamId, awayTeamId }
+    }).then(res => res.data),
+
+  // Get league standings
+  getStandings: (leagueId: number, season: number) =>
+    api.get(`/leagues/${leagueId}/standings`, {
+      params: { season }
     }).then(res => res.data),
 
   // Refresh scores
