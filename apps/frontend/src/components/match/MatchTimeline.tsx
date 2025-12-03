@@ -1,13 +1,13 @@
-export default function MatchTimeline({
-  events,
-  homeTeam,
-  awayTeam
-}: {
+interface MatchTimelineProps {
   events: any[];
   homeTeam: string;
   awayTeam: string;
-}) {
-  if (!events) return null;
+}
+
+export default function MatchTimeline({ events, homeTeam, awayTeam }: MatchTimelineProps) {
+  if (!events || events.length === 0) {
+    return <div className='text-white opacity-70'>No timeline events available</div>;
+  }
 
   return (
     <div className='text-white'>
@@ -15,8 +15,8 @@ export default function MatchTimeline({
 
       {events.map((ev: any, idx: number) => (
         <div key={idx} className='p-2 bg-gray-800 rounded mb-1'>
-          <div>{ev.minute}' — {ev.type}</div>
-          <div className='opacity-70'>{ev.team} — {ev.player}</div>
+          <div>{ev.minute || ev.time?.elapsed || '?'}' â€” {ev.type || 'Event'}</div>
+          <div className='opacity-70'>{ev.team || ev.team?.name || ''} â€” {ev.player || ev.player?.name || ''}</div>
         </div>
       ))}
     </div>
