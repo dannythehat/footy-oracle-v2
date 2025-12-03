@@ -38,6 +38,8 @@ import betBuilderRoutes from "./routes/betBuilder";
 import valueBetsRoutes from "./routes/valueBets";
 
 // MOUNT ALL ROUTES
+// NOTE: fixtureDetailsRoutes must be mounted at /api because routes inside already include /fixtures prefix
+app.use("/api", fixtureDetailsRoutes);
 app.use("/api/fixtures", fixturesRoutes);
 app.use("/api/admin", adminRoutes);
 app.use("/api/notifications", notificationsRoutes);
@@ -47,7 +49,6 @@ app.use("/api/stats", statsRoutes);
 app.use("/api/betting-insights", bettingInsightsRoutes);
 app.use("/api/pnl", pnlRoutes);
 app.use("/api/live-fixtures", liveFixturesRoutes);
-app.use("/api/fixture-details", fixtureDetailsRoutes);
 app.use("/api/bet-builder", betBuilderRoutes);
 app.use("/api/value-bets", valueBetsRoutes);
 
