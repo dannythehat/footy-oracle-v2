@@ -54,47 +54,47 @@ export const FixtureStatsModal: React.FC<FixtureStatsModalProps> = ({
   const awayStanding = data?.standings?.find((s: any) => s.team?.id === awayTeamId);
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80">
-      <div className="bg-gray-900 rounded-lg border border-gray-700 max-w-6xl w-full max-h-[90vh] overflow-y-auto">
-        {/* Header */}
-        <div className="sticky top-0 bg-gray-900 border-b border-gray-700 p-4 flex items-center justify-between">
-          <h2 className="text-xl font-bold text-white">
-            {homeTeam} vs {awayTeam}
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/90">
+      <div className="bg-[#0a0a0a] rounded-lg border border-gray-800 max-w-6xl w-full max-h-[90vh] overflow-y-auto">
+        {/* Header - Flat Design */}
+        <div className="sticky top-0 bg-[#0a0a0a] border-b border-gray-800 p-4 flex items-center justify-between">
+          <h2 className="text-lg font-semibold">
+            <span className="text-white">{homeTeam}</span>
+            <span className="text-gray-600 mx-2">vs</span>
+            <span className="text-white">{awayTeam}</span>
           </h2>
           <button
             onClick={onClose}
-            className="p-2 hover:bg-gray-800 rounded transition-colors"
+            className="p-1.5 hover:bg-gray-900 rounded transition-colors"
           >
-            <X className="w-5 h-5 text-gray-400" />
+            <X className="w-5 h-5 text-gray-500" />
           </button>
         </div>
 
         {/* Content */}
-        <div className="p-6">
+        <div className="p-4 space-y-4">
           {loading && (
             <div className="flex items-center justify-center py-12">
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500" />
+              <div className="animate-spin rounded-full h-10 w-10 border-2 border-gray-800 border-t-blue-500" />
             </div>
           )}
 
           {error && (
-            <div className="bg-red-900/20 border border-red-800 rounded-lg p-4 text-red-300">
+            <div className="bg-red-950/30 border border-red-900/50 rounded p-3 text-red-400 text-sm">
               {error}
             </div>
           )}
 
           {data && !loading && (
-            <div className="space-y-6">
-              {/* League Standings */}
+            <div className="space-y-4">
+              {/* League Standings - Compact Boxes */}
               {(homeStanding || awayStanding) && (
                 <div>
-                  <div className="flex items-center gap-2 mb-4">
-                    <Trophy className="w-5 h-5 text-yellow-400" />
-                    <h3 className="text-lg font-semibold text-white">
-                      League Standings
-                    </h3>
+                  <div className="flex items-center gap-2 mb-3">
+                    <Trophy className="w-4 h-4 text-yellow-500" />
+                    <h3 className="text-sm font-semibold text-white">League Standings</h3>
                   </div>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                     {homeStanding && (
                       <StandingCard
                         team={homeTeam}
@@ -113,60 +113,58 @@ export const FixtureStatsModal: React.FC<FixtureStatsModalProps> = ({
                 </div>
               )}
 
-              {/* Head to Head */}
+              {/* Head to Head - Compact */}
               {data.h2h?.matches && data.h2h.matches.length > 0 && (
                 <div>
-                  <div className="flex items-center gap-2 mb-4">
-                    <Users className="w-5 h-5 text-blue-400" />
-                    <h3 className="text-lg font-semibold text-white">
-                      Head to Head
-                    </h3>
+                  <div className="flex items-center gap-2 mb-3">
+                    <Users className="w-4 h-4 text-blue-500" />
+                    <h3 className="text-sm font-semibold text-white">Head to Head</h3>
                   </div>
                   
-                  {/* H2H Stats Summary */}
+                  {/* H2H Stats Summary - Flat Boxes */}
                   {data.h2h.stats && (
-                    <div className="grid grid-cols-3 gap-4 mb-4">
-                      <div className="bg-gray-800 rounded-lg p-3 text-center">
-                        <div className="text-2xl font-bold text-green-400">
+                    <div className="grid grid-cols-3 gap-2 mb-3">
+                      <div className="bg-[#0f0f0f] border border-gray-800 rounded p-2.5 text-center">
+                        <div className="text-xl font-bold text-green-500">
                           {data.h2h.stats.homeWins || 0}
                         </div>
-                        <div className="text-sm text-gray-400">{homeTeam} Wins</div>
+                        <div className="text-xs text-gray-500 mt-0.5">{homeTeam} Wins</div>
                       </div>
-                      <div className="bg-gray-800 rounded-lg p-3 text-center">
-                        <div className="text-2xl font-bold text-gray-400">
+                      <div className="bg-[#0f0f0f] border border-gray-800 rounded p-2.5 text-center">
+                        <div className="text-xl font-bold text-gray-400">
                           {data.h2h.stats.draws || 0}
                         </div>
-                        <div className="text-sm text-gray-400">Draws</div>
+                        <div className="text-xs text-gray-500 mt-0.5">Draws</div>
                       </div>
-                      <div className="bg-gray-800 rounded-lg p-3 text-center">
-                        <div className="text-2xl font-bold text-red-400">
+                      <div className="bg-[#0f0f0f] border border-gray-800 rounded p-2.5 text-center">
+                        <div className="text-xl font-bold text-red-500">
                           {data.h2h.stats.awayWins || 0}
                         </div>
-                        <div className="text-sm text-gray-400">{awayTeam} Wins</div>
+                        <div className="text-xs text-gray-500 mt-0.5">{awayTeam} Wins</div>
                       </div>
                     </div>
                   )}
 
-                  {/* Recent Matches */}
-                  <div className="space-y-2">
+                  {/* Recent Matches - Compact List */}
+                  <div className="space-y-1.5">
                     {data.h2h.matches.slice(0, 5).map((match: any, idx: number) => (
                       <div
                         key={idx}
-                        className="bg-gray-800 rounded-lg p-3 flex items-center justify-between"
+                        className="bg-[#0f0f0f] border border-gray-800 rounded p-2.5 flex items-center justify-between text-sm"
                       >
-                        <div className="flex items-center gap-4">
-                          <span className="text-sm text-gray-400">
-                            {new Date(match.date).toLocaleDateString()}
+                        <div className="flex items-center gap-3">
+                          <span className="text-xs text-gray-600 w-20">
+                            {new Date(match.date).toLocaleDateString('en-GB', { day: '2-digit', month: 'short' })}
                           </span>
-                          <span className="text-white text-sm">
-                            {match.homeTeam} vs {match.awayTeam}
+                          <span className="text-white text-xs">
+                            {match.homeTeam} <span className="text-gray-600">vs</span> {match.awayTeam}
                           </span>
                         </div>
                         <div className="flex items-center gap-2">
-                          <span className="font-bold text-white">
+                          <span className="font-semibold text-white text-sm">
                             {match.score.home} - {match.score.away}
                           </span>
-                          <span className="text-xs text-gray-500">{match.league}</span>
+                          <span className="text-xs text-gray-600">{match.league}</span>
                         </div>
                       </div>
                     ))}
@@ -174,50 +172,48 @@ export const FixtureStatsModal: React.FC<FixtureStatsModalProps> = ({
                 </div>
               )}
 
-              {/* Live Statistics (if available) */}
+              {/* Live Statistics - Compact Side by Side */}
               {data.statistics && (
                 <div>
-                  <div className="flex items-center gap-2 mb-4">
-                    <Target className="w-5 h-5 text-purple-400" />
-                    <h3 className="text-lg font-semibold text-white">
-                      Match Statistics
-                    </h3>
+                  <div className="flex items-center gap-2 mb-3">
+                    <Target className="w-4 h-4 text-purple-500" />
+                    <h3 className="text-sm font-semibold text-white">Match Statistics</h3>
                   </div>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <h4 className="font-semibold text-green-400">{homeTeam}</h4>
-                      <StatRow label="Possession" value={data.statistics.home?.possession || '0%'} />
-                      <StatRow label="Shots" value={data.statistics.home?.totalShots || 0} />
-                      <StatRow label="Shots on Target" value={data.statistics.home?.shotsOnGoal || 0} />
-                      <StatRow label="Corners" value={data.statistics.home?.corners || 0} />
-                      <StatRow label="Fouls" value={data.statistics.home?.fouls || 0} />
-                    </div>
-                    <div className="space-y-2">
-                      <h4 className="font-semibold text-red-400">{awayTeam}</h4>
-                      <StatRow label="Possession" value={data.statistics.away?.possession || '0%'} />
-                      <StatRow label="Shots" value={data.statistics.away?.totalShots || 0} />
-                      <StatRow label="Shots on Target" value={data.statistics.away?.shotsOnGoal || 0} />
-                      <StatRow label="Corners" value={data.statistics.away?.corners || 0} />
-                      <StatRow label="Fouls" value={data.statistics.away?.fouls || 0} />
+                  <div className="bg-[#0f0f0f] border border-gray-800 rounded p-3">
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <h4 className="font-semibold text-green-500 text-sm mb-2">{homeTeam}</h4>
+                        <StatRow label="Possession" value={data.statistics.home?.possession || '0%'} />
+                        <StatRow label="Shots" value={data.statistics.home?.totalShots || 0} />
+                        <StatRow label="On Target" value={data.statistics.home?.shotsOnGoal || 0} />
+                        <StatRow label="Corners" value={data.statistics.home?.corners || 0} />
+                        <StatRow label="Fouls" value={data.statistics.home?.fouls || 0} />
+                      </div>
+                      <div className="space-y-2">
+                        <h4 className="font-semibold text-red-500 text-sm mb-2">{awayTeam}</h4>
+                        <StatRow label="Possession" value={data.statistics.away?.possession || '0%'} />
+                        <StatRow label="Shots" value={data.statistics.away?.totalShots || 0} />
+                        <StatRow label="On Target" value={data.statistics.away?.shotsOnGoal || 0} />
+                        <StatRow label="Corners" value={data.statistics.away?.corners || 0} />
+                        <StatRow label="Fouls" value={data.statistics.away?.fouls || 0} />
+                      </div>
                     </div>
                   </div>
                 </div>
               )}
 
-              {/* Upcoming Fixtures */}
+              {/* Upcoming Fixtures - Compact Cards */}
               {(data.homeUpcoming?.length > 0 || data.awayUpcoming?.length > 0) && (
                 <div>
-                  <div className="flex items-center gap-2 mb-4">
-                    <Calendar className="w-5 h-5 text-cyan-400" />
-                    <h3 className="text-lg font-semibold text-white">
-                      Upcoming Fixtures
-                    </h3>
+                  <div className="flex items-center gap-2 mb-3">
+                    <Calendar className="w-4 h-4 text-cyan-500" />
+                    <h3 className="text-sm font-semibold text-white">Upcoming Fixtures</h3>
                   </div>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                     {data.homeUpcoming?.length > 0 && (
                       <div>
-                        <h4 className="font-semibold text-green-400 mb-2">{homeTeam}</h4>
-                        <div className="space-y-2">
+                        <h4 className="font-semibold text-green-500 text-xs mb-2">{homeTeam}</h4>
+                        <div className="space-y-1.5">
                           {data.homeUpcoming.slice(0, 3).map((fixture: any, idx: number) => (
                             <UpcomingFixtureCard key={idx} fixture={fixture} />
                           ))}
@@ -226,8 +222,8 @@ export const FixtureStatsModal: React.FC<FixtureStatsModalProps> = ({
                     )}
                     {data.awayUpcoming?.length > 0 && (
                       <div>
-                        <h4 className="font-semibold text-red-400 mb-2">{awayTeam}</h4>
-                        <div className="space-y-2">
+                        <h4 className="font-semibold text-red-500 text-xs mb-2">{awayTeam}</h4>
+                        <div className="space-y-1.5">
                           {data.awayUpcoming.slice(0, 3).map((fixture: any, idx: number) => (
                             <UpcomingFixtureCard key={idx} fixture={fixture} />
                           ))}
@@ -245,67 +241,68 @@ export const FixtureStatsModal: React.FC<FixtureStatsModalProps> = ({
   );
 };
 
-// Standing Card Component
+// Standing Card Component - Flat Design
 const StandingCard: React.FC<{ team: string; standing: any; isHome: boolean }> = ({ team, standing, isHome }) => (
-  <div className={`bg-gray-800 rounded-lg p-4 border-l-4 ${isHome ? 'border-green-400' : 'border-red-400'}`}>
-    <div className="flex items-center justify-between mb-3">
-      <h4 className="font-semibold text-white">{team}</h4>
-      <span className="text-2xl font-bold text-blue-400">#{standing.rank}</span>
+  <div className={`bg-[#0f0f0f] border-l-2 ${isHome ? 'border-green-500' : 'border-red-500'} border-r border-t border-b border-gray-800 rounded p-3`}>
+    <div className="flex items-center justify-between mb-2">
+      <span className={`font-semibold text-sm ${isHome ? 'text-green-500' : 'text-red-500'}`}>
+        {team}
+      </span>
+      <span className="text-xs text-gray-600">
+        Position: <span className="text-white font-semibold">{standing.rank}</span>
+      </span>
     </div>
-    <div className="grid grid-cols-3 gap-2 text-sm">
-      <div>
-        <div className="text-gray-400">Played</div>
-        <div className="font-semibold text-white">{standing.all?.played || 0}</div>
+    <div className="grid grid-cols-4 gap-2 text-xs">
+      <div className="text-center">
+        <div className="text-gray-500">Pts</div>
+        <div className="text-white font-semibold mt-0.5">{standing.points}</div>
       </div>
-      <div>
-        <div className="text-gray-400">Points</div>
-        <div className="font-semibold text-white">{standing.points || 0}</div>
+      <div className="text-center">
+        <div className="text-gray-500">W</div>
+        <div className="text-green-400 font-semibold mt-0.5">{standing.all?.win || 0}</div>
       </div>
-      <div>
-        <div className="text-gray-400">GD</div>
-        <div className="font-semibold text-white">{standing.goalsDiff || 0}</div>
+      <div className="text-center">
+        <div className="text-gray-500">D</div>
+        <div className="text-gray-400 font-semibold mt-0.5">{standing.all?.draw || 0}</div>
+      </div>
+      <div className="text-center">
+        <div className="text-gray-500">L</div>
+        <div className="text-red-400 font-semibold mt-0.5">{standing.all?.lose || 0}</div>
       </div>
     </div>
-    <div className="mt-2 text-xs text-gray-400">
-      W: {standing.all?.win || 0} | D: {standing.all?.draw || 0} | L: {standing.all?.lose || 0}
+    <div className="mt-2 pt-2 border-t border-gray-800 flex justify-between text-xs">
+      <span className="text-gray-500">
+        GD: <span className="text-white font-semibold">{standing.goalsDiff > 0 ? '+' : ''}{standing.goalsDiff}</span>
+      </span>
+      <span className="text-gray-500">
+        Form: <span className="text-white font-semibold">{standing.form || 'N/A'}</span>
+      </span>
     </div>
-    {standing.form && (
-      <div className="mt-2 flex gap-1">
-        {standing.form.split('').slice(0, 5).map((result: string, idx: number) => (
-          <span
-            key={idx}
-            className={`w-6 h-6 rounded flex items-center justify-center text-xs font-bold ${
-              result === 'W' ? 'bg-green-600 text-white' :
-              result === 'D' ? 'bg-gray-600 text-white' :
-              'bg-red-600 text-white'
-            }`}
-          >
-            {result}
-          </span>
-        ))}
-      </div>
-    )}
   </div>
 );
 
-// Stat Row Component
+// Stat Row Component - Minimal
 const StatRow: React.FC<{ label: string; value: string | number }> = ({ label, value }) => (
-  <div className="flex justify-between text-sm">
-    <span className="text-gray-400">{label}</span>
+  <div className="flex justify-between items-center text-xs">
+    <span className="text-gray-500">{label}</span>
     <span className="text-white font-semibold">{value}</span>
   </div>
 );
 
-// Upcoming Fixture Card Component
+// Upcoming Fixture Card - Compact
 const UpcomingFixtureCard: React.FC<{ fixture: any }> = ({ fixture }) => (
-  <div className="bg-gray-800 rounded p-2 text-sm">
-    <div className="text-gray-400 text-xs mb-1">
-      {new Date(fixture.date).toLocaleDateString()}
+  <div className="bg-[#0f0f0f] border border-gray-800 rounded p-2 text-xs">
+    <div className="flex items-center justify-between">
+      <div className="flex-1">
+        <div className="text-white font-medium">
+          {fixture.homeTeam} <span className="text-gray-600">vs</span> {fixture.awayTeam}
+        </div>
+        <div className="text-gray-600 text-xs mt-0.5">
+          {new Date(fixture.date).toLocaleDateString('en-GB', { day: '2-digit', month: 'short' })}
+        </div>
+      </div>
+      <div className="text-gray-500 text-xs">{fixture.league}</div>
     </div>
-    <div className="text-white">
-      {fixture.homeTeam} vs {fixture.awayTeam}
-    </div>
-    <div className="text-gray-500 text-xs">{fixture.league}</div>
   </div>
 );
 
