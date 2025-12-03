@@ -34,17 +34,14 @@ import statsRoutes from "./routes/stats";
 import bettingInsightsRoutes from "./routes/bettingInsights";
 import pnlRoutes from "./routes/pnl";
 import liveFixturesRoutes from "./routes/liveFixtures";
-import fixtureDetailsRoutes from "./routes/fixtureDetails";
 import betBuilderRoutes from "./routes/betBuilder";
 import valueBetsRoutes from "./routes/valueBets";
 
-// MOUNT ALL ROUTES
-// NOTE: fixtureDetailsRoutes must be mounted at /api because routes inside already include /fixtures prefix
-app.use("/api", fixtureDetailsRoutes);
+// MOUNT ROUTES
+app.use("/api", fixtureDetailsRoutes);                  // <-- enables /fixtures/:id/events, /stats, /h2h
 app.use("/api/fixtures", fixturesRoutes);
 app.use("/api/admin", adminRoutes);
 app.use("/api/notifications", notificationsRoutes);
-app.use("/api", fixtureDetailsRoutes);
 app.use("/api/golden-bets", goldenBetsRoutes);
 app.use("/api/predictions", predictionsRoutes);
 app.use("/api/stats", statsRoutes);
