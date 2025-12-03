@@ -43,22 +43,12 @@ const MatchStats: React.FC<MatchStatsProps> = ({ fixture }) => {
       setError(null);
 
       const fixtureId = fixture.id || fixture.fixtureId;
-      const homeTeamId = fixture.homeTeamId;
-      const awayTeamId = fixture.awayTeamId;
-      const leagueId = fixture.leagueId || 0; // Default to 0 if missing
-      const season = fixture.season || new Date().getFullYear(); // Default to current year
 
-      if (!fixtureId || !homeTeamId || !awayTeamId) {
+      if (!fixtureId) {
         throw new Error('Missing required IDs for stats');
       }
 
-      const response = await fixturesApi.getFixtureStats(
-        Number(fixtureId),
-        Number(homeTeamId),
-        Number(awayTeamId),
-        Number(leagueId),
-        Number(season)
-      );
+      const response = await fixturesApi.getStats(Number(fixtureId));
 
       if (response.success && response.data) {
         setStats(response.data);
