@@ -1,52 +1,21 @@
-import React from 'react';
+import React from "react";
 
 export default function MatchEvents({ events }) {
-  if (!events || events.length === 0) {
-    return <div style={{ color: '#ccc' }}>No events available</div>;
-  }
-
-  const iconForType = (type) => {
-    if (type === 'goal') return '?';
-    if (type === 'yellow card') return '??';
-    if (type === 'red card') return '??';
-    if (type === 'substitution') return '??';
-    return '•';
-  };
+  if (!events || events.length === 0)
+    return <div className="text-gray-400 text-sm">No events available.</div>;
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-      {events.map((ev, i) => (
-        <div
-          key={i}
-          style={{
-            display: 'flex',
-            justifyContent: ev.teamSide === 'home' ? 'flex-start' : 'flex-end'
-          }}
-        >
-          <div
-            style={{
-              background: '#333',
-              padding: '10px 14px',
-              borderRadius: '6px',
-              maxWidth: '70%'
-            }}
-          >
-            <strong style={{ marginRight: '10px' }}>
-              {iconForType(ev.type)}
-            </strong>
-
-            <strong>{ev.player}</strong>
-
-            <span style={{ opacity: 0.7 }}> — {ev.minute}'</span>
-
-            {ev.detail && (
-              <div style={{ opacity: 0.5, fontSize: '0.9em' }}>
-                {ev.detail}
-              </div>
-            )}
-          </div>
-        </div>
-      ))}
+    <div className="bg-[#1b1b1b] p-4 rounded-xl mt-4">
+      <h3 className="text-lg font-bold mb-3">Events</h3>
+      <ul className="space-y-2">
+        {events.map((ev, i) => (
+          <li key={i} className="flex justify-between border-b border-gray-700 pb-2">
+            <span>{ev.minute}'</span>
+            <span>{ev.team}</span>
+            <span className="text-gray-300">{ev.type}</span>
+          </li>
+        ))}
+      </ul>
     </div>
   );
 }
