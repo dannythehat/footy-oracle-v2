@@ -1,109 +1,53 @@
-import axios from "axios";
+import { useEffect, useState } from "react";
+import { fixturesApi } from "../services/api";
 
-const api = axios.create({
-  baseURL: import.meta.env.VITE_API_URL,
-  withCredentials: false,
-});
+export default function MatchPage() {
+  const fixtureId = window.location.pathname.split("/").pop();
 
-// ---- Fixtures API ----
-export const fixturesApi = {
-  // Get fixtures by date
-  getByDate: (date: string) =>
-    api.get(`/fixtures`, { params: { date } }).then(res => res.data),
+  const [fixture, setFixture] = useState<any>(null);
+  const [stats, setStats] = useState<any>(null);
+  const [events, setEvents] = useState<any>(null);
+  const [h2h, setH2h] = useState<any>(null);
 
-  // Get fixtures by date range
-  getByDateRange: (startDate: string, endDate: string) =>
-    api.get(`/fixtures`, { params: { startDate, endDate } }).then(res => res.data),
+  useEffect(() => {
+    if (!fixtureId) return;
 
-  // Get fixtures with filters
-  getFiltered: (params: {
-    date?: string;
-    startDate?: string;
-    endDate?: string;
-    league?: string;
-    leagueId?: number;
-    status?: 'scheduled' | 'live' | 'finished' | 'postponed';
-    limit?: number;
-    page?: number;
-    sort?: string;
-  }) =>
-    api.get(`/fixtures`, { params }).then(res => res.data),
+    // Load main fixture
+    fixturesApi.getById(fixtureId).then((d) => setFixture(d?.data));
 
-  // Get fixture by ID
-  getById: (fixtureId: number) =>
-    api.get(`/fixtures/${fixtureId}`).then(res => res.data),
+    // Load stats
+    fixturesApi.getStats(fixtureId).then((d) => setStats(d?.data));
 
-  // Get fixture details
-  getDetails: (fixtureId: number) =>
-    api.get(`/fixtures/${fixtureId}`).then(res => res.data),
+    // Load events
+    fixturesApi.getEvents(fixtureId).then((d) => setEvents(d?.data));
 
-  // Get fixture stats
-  getStats: (fixtureId: number) =>
-    api.get(`/fixtures/${fixtureId}/stats`).then(res => res.data),
+    // Load h2h
+    fixturesApi.getH2H(fixtureId).then((d) => setH2h(d?.data));
+  }, [fixtureId]);
 
-  // Get fixture events (goals, cards, substitutions)
-  getEvents: (fixtureId: number) =>
-    api.get(`/fixtures/${fixtureId}/events`).then(res => res.data),
+  if (!fixture)
+    return <div style={{ color: "#fff" }}>Loading match...</div>;
 
-  // Get complete fixture data (all endpoints in one)
-  getComplete: (fixtureId: number) =>
-    api.get(`/fixtures/${fixtureId}/complete`).then(res => res.data),
+  return (
+    <div style={{ padding: "20px", background: "#111", minHeight: "100vh", color: "#fff" }}>
+      <button onClick={() => (window.location.href = "/")} style={{ marginBottom: 20 }}>
+        ⬅ Back
+      </button>
 
-  // Get live fixture data (fixture + events + stats)
-  getLive: (fixtureId: number) =>
-    api.get(`/fixtures/${fixtureId}/live`).then(res => res.data),
+      <h1>{fixture.homeTeam} vs {fixture.awayTeam}</h1>
+      <p style={{ opacity: 0.7 }}>{fixture.league}</p>
 
-  // Get head-to-head
-  getH2H: (homeTeamId: number, awayTeamId: number) =>
-    api.get(`/fixtures/h2h`, {
-      params: { homeTeamId, awayTeamId }
-    }).then(res => res.data),
+      {/* EVENTS */}
+      <h2 style={{ marginTop: 40 }}>Events</h2>
+      <pre>{JSON.stringify(events, null, 2)}</pre>
 
-  // Get league standings
-  getStandings: (leagueId: number, season: number) =>
-    api.get(`/leagues/${leagueId}/standings`, {
-      params: { season }
-    }).then(res => res.data),
+      {/* STATS */}
+      <h2 style={{ marginTop: 40 }}>Statistics</h2>
+      <pre>{JSON.stringify(stats, null, 2)}</pre>
 
-  // Refresh scores
-  refreshScores: (date: string) =>
-    api.post(`/fixtures/refresh-scores`, { date }).then(res => res.data),
-};
-
-// ---- Bet Builder API ----
-export const betBuilderApi = {
-  getToday: () => api.get(`/bet-builders/today`).then(res => res.data),
-  getHistory: () => api.get(`/bet-builders/history`).then(res => res.data),
-};
-
-// ---- Golden Bets ----
-export const goldenBetApi = {
-  getToday: () => api.get(`/golden-bets/today`).then(res => res.data),
-};
-
-// ---- Value Bets ----
-export const valueBetApi = {
-  getToday: () => api.get(`/value-bets/today`).then(res => res.data),
-};
-
-// ---- Betting Insights ----
-export const bettingInsightsApi = {
-  getForFixture: (fixtureId: number) =>
-    api.get(`/betting-insights/${fixtureId}`).then(res => res.data),
-  
-  revealBet: (fixtureId: number, betType: string) =>
-    api.post(`/betting-insights/${fixtureId}/reveal`, { betType }).then(res => res.data),
-};
-
-// ---- Live Fixtures ----
-export const liveFixturesApi = {
-  getLive: () => api.get(`/live-fixtures`).then(res => res.data),
-};
-
-// ---- Predictions ----
-export const predictionsApi = {
-  getForFixture: (fixtureId: number) =>
-    api.get(`/predictions/${fixtureId}`).then(res => res.data),
-};
-
-export default api;
+      {/* H2H */}
+      <h2 style={{ marginTop: 40 }}>Head-to-Head</h2>
+      <pre>{JSON.stringify(h2h, null, 2)}</pre>
+    </div>
+  );
+}
