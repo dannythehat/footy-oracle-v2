@@ -1,3 +1,4 @@
-Trigger: 2025-11-29T03:15:00Z
-This file forces Vercel to detect a change and trigger deployment.
-Latest commit with PostCSS fixes: 516d61e88826b7949c2ddf2277599b545ed5798c
+# Vercel Deployment Trigger
+# Update this file to trigger a new deployment
+# Last updated: 2025-12-03T01:51:00Z
+# Reason: Force deployment with corrected API URL (/api prefix fix)
