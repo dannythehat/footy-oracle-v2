@@ -1,0 +1,3 @@
+Deployment triggered at: 2025-12-03T04:17:48+02:00
+Reason: Fixed app.ts to include ALL routes
+Issue: #76
