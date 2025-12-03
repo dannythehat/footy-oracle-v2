@@ -49,29 +49,43 @@ const BetBuilderHistory: React.FC = () => {
 
   useEffect(() => {
     fetchBetBuilders();
-    fetchStats();
   }, [filter, sortBy]);
 
   const fetchBetBuilders = async () => {
     try {
       setLoading(true);
-      const data = await betBuilderApi.getHistorical();
+      const data = await betBuilderApi.getHistory();
       setBetBuilders(data);
+      
+      // Calculate stats from the data
+      if (data && Array.isArray(data)) {
+        const calculatedStats: BetBuilderStats = {
+          total: data.length,
+          wins: data.filter((b: BetBuilder) => b.status === 'won').length,
+          losses: data.filter((b: BetBuilder) => b.status === 'lost').length,
+          pending: data.filter((b: BetBuilder) => b.status === 'pending' || !b.status).length,
+          settled: data.filter((b: BetBuilder) => b.status === 'won' || b.status === 'lost').length,
+          winRate: 0,
+          avgOdds: 0,
+          totalProfit: 0
+        };
+        
+        const settledBets = data.filter((b: BetBuilder) => b.status === 'won' || b.status === 'lost');
+        if (settledBets.length > 0) {
+          calculatedStats.winRate = (calculatedStats.wins / settledBets.length) * 100;
+          calculatedStats.avgOdds = settledBets.reduce((sum: number, b: BetBuilder) => sum + (b.combinedOdds || 0), 0) / settledBets.length;
+          calculatedStats.totalProfit = data.reduce((sum: number, b: BetBuilder) => sum + (b.profit || 0), 0);
+        }
+        
+        setStats(calculatedStats);
+      }
+      
       setError(null);
     } catch (err) {
       setError('Failed to load bet builder history');
       console.error('Error fetching bet builders:', err);
     } finally {
       setLoading(false);
-    }
-  };
-
-  const fetchStats = async () => {
-    try {
-      const data = await betBuilderApi.getStats();
-      setStats(data);
-    } catch (err) {
-      console.error('Error fetching stats:', err);
     }
   };
 
