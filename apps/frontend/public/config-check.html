@@ -1,0 +1,14 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Config Check</title>
+</head>
+<body>
+    <h1>Footy Oracle Config Check</h1>
+    <pre id="output">Loading...</pre>
+    <script>
+        const output = document.getElementById('output');
+        output.textContent = `VITE_API_URL: ${import.meta.env.VITE_API_URL || 'NOT SET'}`;
+    </script>
+</body>
+</html>
