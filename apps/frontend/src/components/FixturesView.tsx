@@ -58,6 +58,33 @@ const FixturesView: React.FC<FixturesViewProps> = ({ onClose, embedded = false }
   const [selectedFixture, setSelectedFixture] = useState<Fixture | null>(null);
   const [isMatchDetailOpen, setIsMatchDetailOpen] = useState(false);
 
+  // Generate date range: 7 days past, today, 7 days future
+  const generateDateRange = () => {
+    const dates: Date[] = [];
+    const today = new Date();
+    
+    // 7 days in the past
+    for (let i = 7; i > 0; i--) {
+      const date = new Date(today);
+      date.setDate(date.getDate() - i);
+      dates.push(date);
+    }
+    
+    // Today
+    dates.push(new Date(today));
+    
+    // 7 days in the future
+    for (let i = 1; i <= 7; i++) {
+      const date = new Date(today);
+      date.setDate(date.getDate() + i);
+      dates.push(date);
+    }
+    
+    return dates;
+  };
+
+  const dateRange = generateDateRange();
+
   useEffect(() => {
     fetchFixtures();
     
@@ -186,6 +213,18 @@ const FixturesView: React.FC<FixturesViewProps> = ({ onClose, embedded = false }
     }).toUpperCase();
   };
 
+  const formatDateShort = (date: Date) => {
+    const today = new Date();
+    if (date.toDateString() === today.toDateString()) {
+      return 'Today';
+    }
+    
+    return date.toLocaleDateString('en-GB', { 
+      day: 'numeric', 
+      month: 'short'
+    });
+  };
+
   const formatTime = (fixture: Fixture) => {
     if (fixture.time) return fixture.time;
     
@@ -264,6 +303,14 @@ const FixturesView: React.FC<FixturesViewProps> = ({ onClose, embedded = false }
            ['1H', 'HT', '2H', 'ET', 'BT', 'P', 'FT', 'AET', 'PEN'].includes(statusShort || '');
   };
 
+  const isSameDay = (date1: Date, date2: Date) => {
+    return date1.toDateString() === date2.toDateString();
+  };
+
+  const isToday = (date: Date) => {
+    return isSameDay(date, new Date());
+  };
+
   const renderFixtureRow = (fixture: Fixture) => {
     const score = getScore(fixture);
     const showScore = shouldShowScore(fixture);
@@ -337,57 +384,85 @@ const FixturesView: React.FC<FixturesViewProps> = ({ onClose, embedded = false }
           )}
         </div>
 
-        {/* Date Navigation - Flat Design */}
+        {/* Date Range Selector - Horizontal Scroll */}
         <div className="bg-[#0f0f0f] border border-gray-800 rounded p-3 mb-3">
-          <div className="flex items-center justify-between mb-2">
-            <button
-              onClick={() => changeDate(-1)}
-              className="p-1.5 hover:bg-gray-900 rounded transition-colors"
-            >
-              <ChevronLeft className="w-4 h-4 text-white" />
-            </button>
-            
-            <div className="flex items-center gap-2">
-              <Calendar className="w-3.5 h-3.5 text-gray-600" />
-              <span className="text-base font-bold text-white">
-                {formatDate(selectedDate)}
-              </span>
-            </div>
-
-            <button
-              onClick={() => changeDate(1)}
-              className="p-1.5 hover:bg-gray-900 rounded transition-colors"
-            >
-              <ChevronRight className="w-4 h-4 text-white" />
-            </button>
+          <div className="flex items-center gap-2 mb-2">
+            <Calendar className="w-3.5 h-3.5 text-gray-600" />
+            <span className="text-xs font-semibold text-white">Select Date</span>
+          </div>
+          
+          <div className="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-thin scrollbar-thumb-gray-700 scrollbar-track-gray-900">
+            {dateRange.map((date, index) => {
+              const selected = isSameDay(date, selectedDate);
+              const today = isToday(date);
+              
+              return (
+                <button
+                  key={index}
+                  onClick={() => setSelectedDate(date)}
+                  className={`flex-shrink-0 px-3 py-2 rounded text-xs font-medium transition-colors border ${
+                    selected
+                      ? 'bg-blue-600 border-blue-500 text-white'
+                      : today
+                      ? 'bg-gray-800 border-gray-700 text-blue-400'
+                      : 'bg-gray-900 border-gray-800 text-gray-400 hover:bg-gray-800'
+                  }`}
+                >
+                  <div className="text-center">
+                    <div className={`font-semibold ${selected ? 'text-white' : today ? 'text-blue-400' : 'text-gray-300'}`}>
+                      {date.getDate()}
+                    </div>
+                    <div className={`text-xs ${selected ? 'text-blue-200' : 'text-gray-600'}`}>
+                      {date.toLocaleDateString('en-GB', { month: 'short' })}
+                    </div>
+                  </div>
+                </button>
+              );
+            })}
           </div>
 
-          <div className="flex items-center justify-center gap-2">
-            <button
-              onClick={() => setSelectedDate(new Date())}
-              className="px-2.5 py-1 bg-gray-900 hover:bg-gray-800 text-white rounded text-xs transition-colors border border-gray-800"
-            >
-              Today
-            </button>
-            
-            <button
-              onClick={fetchFixtures}
-              disabled={loading}
-              className="flex items-center gap-1.5 px-2.5 py-1 bg-gray-900 hover:bg-gray-800 text-white rounded text-xs transition-colors disabled:opacity-50 border border-gray-800"
-            >
-              <RefreshCw className={`w-3 h-3 ${loading ? 'animate-spin' : ''}`} />
-              Refresh
-            </button>
+          {/* Controls Row */}
+          <div className="flex items-center justify-between mt-2 pt-2 border-t border-gray-800">
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => changeDate(-1)}
+                className="p-1 hover:bg-gray-900 rounded transition-colors"
+              >
+                <ChevronLeft className="w-3.5 h-3.5 text-gray-500" />
+              </button>
+              
+              <span className="text-xs font-semibold text-white">
+                {formatDate(selectedDate)}
+              </span>
 
-            <label className="flex items-center gap-1.5 text-white text-xs">
-              <input
-                type="checkbox"
-                checked={autoRefresh}
-                onChange={(e) => setAutoRefresh(e.target.checked)}
-                className="w-3 h-3"
-              />
-              Auto
-            </label>
+              <button
+                onClick={() => changeDate(1)}
+                className="p-1 hover:bg-gray-900 rounded transition-colors"
+              >
+                <ChevronRight className="w-3.5 h-3.5 text-gray-500" />
+              </button>
+            </div>
+
+            <div className="flex items-center gap-2">
+              <button
+                onClick={fetchFixtures}
+                disabled={loading}
+                className="flex items-center gap-1.5 px-2.5 py-1 bg-gray-900 hover:bg-gray-800 text-white rounded text-xs transition-colors disabled:opacity-50 border border-gray-800"
+              >
+                <RefreshCw className={`w-3 h-3 ${loading ? 'animate-spin' : ''}`} />
+                Refresh
+              </button>
+
+              <label className="flex items-center gap-1.5 text-white text-xs">
+                <input
+                  type="checkbox"
+                  checked={autoRefresh}
+                  onChange={(e) => setAutoRefresh(e.target.checked)}
+                  className="w-3 h-3"
+                />
+                Auto
+              </label>
+            </div>
           </div>
         </div>
 
