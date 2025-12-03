@@ -1,31 +1,70 @@
-import { useEffect, useState } from "react";
-import { fixturesApi } from "../services/api";
+import { useEffect, useState } from 'react';
+import { fixturesApi } from '../services/api';
+import MatchHeader from '../components/match/MatchHeader';
+import MatchStats from '../components/match/MatchStats';
+import MatchEvents from "../components/match/MatchEvents";`nimport MatchTimeline from "../components/match/MatchTimeline";
+import MatchStandings from '../components/match/MatchStandings';
 
-export default function MatchPage() {
-  const fixtureId = window.location.pathname.split("/").pop();
-  const [data, setData] = useState(null);
+export default function MatchPage() { // timeline added
+  const fixtureId = window.location.pathname.split('/').pop();
+
+  const [fixture, setFixture] = useState(null);
+  const [events, setEvents] = useState([]);
+  const [stats, setStats] = useState([]);
+  const [standings, setStandings] = useState([]);
 
   useEffect(() => {
-    fixturesApi.getComplete(fixtureId).then((d) => {
-      console.log("COMPLETE DATA:", d);
-      setData(d?.data || {});
-    });
+    async function load() {
+      const base = await fixturesApi.getById(fixtureId);
+      setFixture(base);
+
+      const ev = await fixturesApi.getEvents(fixtureId);
+      setEvents(ev?.data || []);
+
+      const st = await fixturesApi.getStats(fixtureId);
+      setStats(st?.data?.statistics || []);
+
+      if (base?.leagueId && base?.season) {
+        const table = await fixturesApi.getStandings(base.leagueId, base.season);
+        setStandings(table?.data || []);
+      }
+    }
+    load();
   }, [fixtureId]);
 
-  if (!data) return <div style={{ color: "#fff" }}>Loading...</div>;
+  if (!fixture) return <div style={{ color: '#fff' }}>Loading...</div>;
 
   return (
-    <div style={{ padding: "20px", background: "#111", minHeight: "100vh", color: "#fff" }}>
-      <h2>{data.fixture?.homeTeam} vs {data.fixture?.awayTeam}</h2>
-      <p style={{ opacity: 0.7 }}>{data.fixture?.league}</p>
+    <div style={{ padding: '20px', background: '#111', minHeight: '100vh', color: '#fff' }}>
+      <MatchHeader fixture={fixture} />
 
-      <div style={{ marginTop: "20px" }}>
-        <button onClick={() => (window.location.href = "/")}>? Fixtures</button>
-      </div>
+      <MatchStats stats={stats} />
 
-      <pre style={{ marginTop: "20px", background: "#222", padding: "10px" }}>
-        {JSON.stringify(data, null, 2)}
-      </pre>
+      <MatchEvents events={events} />
+
+      <MatchStandings
+        league={fixture.league}
+        season={fixture.season}
+        standings={standings}
+        homeTeam={fixture.homeTeam}
+        awayTeam={fixture.awayTeam}
+      />
     </div>
   );
 }
+
+      <MatchTimeline
+        events={events}
+        homeTeam={fixture.homeTeam}
+        awayTeam={fixture.awayTeam}
+      />
+
+
+      <MatchLineups lineups={lineups} />
+
+
+      <MatchStats stats={data.stats} />
+
+
+      <MatchStats stats={data.stats} />
+
