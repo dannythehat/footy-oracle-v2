@@ -557,7 +557,6 @@ const FixturesView: React.FC<FixturesViewProps> = ({ onClose, embedded = false }
       </div>
 
       {/* Match Detail Drawer */}
-      {console.log('🎨 Rendering MatchDetailDrawer - isOpen:', isMatchDetailOpen, 'fixture:', selectedFixture)}
       <MatchDetailDrawer
         fixture={selectedFixture}
         isOpen={isMatchDetailOpen}
