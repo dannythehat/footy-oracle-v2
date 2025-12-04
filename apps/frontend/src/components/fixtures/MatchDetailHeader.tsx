@@ -1,25 +1,34 @@
 import React from 'react';
-import { Trophy, MapPin, Calendar, Clock, Radio } from 'lucide-react';
+import { Star, MapPin, Calendar, Clock } from 'lucide-react';
 
 interface MatchDetailHeaderProps {
   fixture: any;
 }
 
 const MatchDetailHeader: React.FC<MatchDetailHeaderProps> = ({ fixture }) => {
-  // Safe null checks
-  if (!fixture) {
-    return null;
-  }
+  if (!fixture) return null;
 
   const formatDate = (dateStr: string | undefined) => {
     if (!dateStr) return 'TBD';
     try {
       const date = new Date(dateStr);
       return date.toLocaleDateString('en-GB', {
-        weekday: 'short',
-        day: 'numeric',
-        month: 'short',
+        day: '2-digit',
+        month: '2-digit',
         year: 'numeric'
+      });
+    } catch {
+      return 'TBD';
+    }
+  };
+
+  const formatTime = (dateStr: string | undefined) => {
+    if (!dateStr) return 'TBD';
+    try {
+      const date = new Date(dateStr);
+      return date.toLocaleTimeString('en-GB', {
+        hour: '2-digit',
+        minute: '2-digit'
       });
     } catch {
       return 'TBD';
@@ -32,13 +41,7 @@ const MatchDetailHeader: React.FC<MatchDetailHeaderProps> = ({ fixture }) => {
     return s.includes('live') || s.includes('1h') || s.includes('2h') || s.includes('ht');
   };
 
-  const isFinished = (status?: string) => {
-    if (!status) return false;
-    return status.toLowerCase().includes('ft') || status.toLowerCase().includes('finished');
-  };
-
   const hasScore = () => {
-    // Check both score object and individual fields
     if (fixture.score && (fixture.score.home !== null || fixture.score.away !== null)) {
       return true;
     }
@@ -60,86 +63,120 @@ const MatchDetailHeader: React.FC<MatchDetailHeaderProps> = ({ fixture }) => {
     return fixture.awayScore ?? '-';
   };
 
-  const getStatusBadge = (status?: string) => {
-    if (!status) return null;
-
-    const statusConfig: Record<string, { label: string; className: string }> = {
-      'scheduled': { label: 'Scheduled', className: 'bg-gray-500 shadow-lg shadow-gray-500/50' },
-      'NS': { label: 'Not Started', className: 'bg-gray-500 shadow-lg shadow-gray-500/50' },
-      'live': { label: 'LIVE', className: 'bg-red-500 animate-pulse shadow-lg shadow-red-500/50' },
-      '1H': { label: '1st Half', className: 'bg-red-500 animate-pulse shadow-lg shadow-red-500/50' },
-      'HT': { label: 'Half Time', className: 'bg-yellow-500 shadow-lg shadow-yellow-500/50' },
-      '2H': { label: '2nd Half', className: 'bg-red-500 animate-pulse shadow-lg shadow-red-500/50' },
-      'finished': { label: 'Full Time', className: 'bg-blue-500 shadow-lg shadow-blue-500/50' },
-      'FT': { label: 'Full Time', className: 'bg-blue-500 shadow-lg shadow-blue-500/50' },
-      'postponed': { label: 'Postponed', className: 'bg-gray-500 shadow-lg shadow-gray-500/50' },
+  const getStatusText = (status?: string) => {
+    if (!status) return 'Scheduled';
+    
+    const statusMap: Record<string, string> = {
+      'NS': 'Not Started',
+      '1H': '1ST HALF',
+      'HT': 'HALF TIME',
+      '2H': '2ND HALF',
+      'FT': 'FULL TIME',
+      'finished': 'FULL TIME',
+      'live': 'LIVE',
     };
 
-    const config = statusConfig[status] || { label: status, className: 'bg-gray-500 shadow-lg shadow-gray-500/50' };
+    return statusMap[status] || status;
+  };
 
-    return (
-      <div className="flex items-center gap-2">
-        {isLive(status) && <Radio className="w-4 h-4 text-red-500 animate-pulse drop-shadow-lg" />}
-        <span className={`px-3 py-1 rounded-full text-xs font-semibold text-white ${config.className} drop-shadow-lg`}>
-          {config.label}
-        </span>
-      </div>
-    );
+  const getHalfTimeScore = () => {
+    if (fixture.score?.halftime) {
+      return `${fixture.score.halftime.home} - ${fixture.score.halftime.away}`;
+    }
+    return null;
   };
 
   return (
-    <div className="px-6 pb-4 border-b border-gray-700/50 shadow-lg">
-      {/* League & Country - Enhanced */}
-      <div className="flex items-center gap-2 mb-4 bg-gradient-to-r from-gray-800/40 to-transparent rounded-lg px-3 py-2 border border-gray-700/30 shadow-lg">
-        <Trophy className="w-4 h-4 text-yellow-400 drop-shadow-lg" />
-        <span className="text-sm text-gray-300 font-medium drop-shadow-lg">
-          {fixture.leagueName || fixture.league?.name || 'Unknown League'}
+    <div className="bg-white px-6 pb-4">
+      {/* Breadcrumb */}
+      <div className="flex items-center gap-2 py-3 text-xs text-gray-500">
+        <span>⚽ FOOTBALL</span>
+        <span>›</span>
+        <span>{fixture.country || fixture.league?.country?.name || 'COUNTRY'}</span>
+        <span>›</span>
+        <span className="text-gray-900 font-medium">
+          {fixture.leagueName || fixture.league?.name || 'LEAGUE'}
         </span>
-        {(fixture.country || fixture.league?.country?.name) && (
-          <>
-            <span className="text-gray-600">•</span>
-            <MapPin className="w-3 h-3 text-gray-400" />
-            <span className="text-sm text-gray-400">{fixture.country || fixture.league?.country?.name}</span>
-          </>
-        )}
       </div>
 
-      {/* Teams & Score - Enhanced */}
+      {/* Match Info */}
       <div className="flex items-center justify-between mb-4">
-        <div className="flex-1">
-          <div className="text-xl font-bold text-white mb-3 drop-shadow-lg">
-            {fixture.homeTeamName || fixture.homeTeam || 'Home Team'}
-          </div>
-          <div className="text-xl font-bold text-white drop-shadow-lg">
-            {fixture.awayTeamName || fixture.awayTeam || 'Away Team'}
+        <div className="flex items-center gap-3">
+          <div className="text-sm text-gray-600">
+            {formatDate(fixture.date || fixture.kickoff)} {formatTime(fixture.date || fixture.kickoff)}
           </div>
         </div>
-
-        {/* Score - Enhanced with depth */}
-        {hasScore() && (
-          <div className="text-center px-8 bg-gradient-to-br from-gray-800/60 to-gray-900/60 rounded-xl py-4 border border-gray-700/50 shadow-xl backdrop-blur-sm">
-            <div className={`text-4xl font-bold drop-shadow-2xl ${isLive(fixture.status) ? 'text-red-400' : 'text-white'}`}>
-              {getHomeScore()}
-            </div>
-            <div className="text-gray-500 text-sm my-2 font-bold">-</div>
-            <div className={`text-4xl font-bold drop-shadow-2xl ${isLive(fixture.status) ? 'text-red-400' : 'text-white'}`}>
-              {getAwayScore()}
-            </div>
-          </div>
-        )}
+        <button className="p-2 hover:bg-gray-100 rounded-full transition-colors">
+          <Star className="w-5 h-5 text-gray-400" />
+        </button>
       </div>
 
-      {/* Match Info - Enhanced */}
-      <div className="flex items-center gap-4 text-sm text-gray-400 flex-wrap">
-        <div className="flex items-center gap-1.5 bg-gray-800/40 px-3 py-1.5 rounded-lg shadow-lg">
-          <Calendar className="w-4 h-4" />
-          <span>{formatDate(fixture.date || fixture.kickoff)}</span>
+      {/* Teams & Score */}
+      <div className="flex items-center justify-between py-4">
+        {/* Home Team */}
+        <div className="flex items-center gap-3 flex-1">
+          <img 
+            src={fixture.homeTeamLogo || '/placeholder-team.png'} 
+            alt={fixture.homeTeamName || fixture.homeTeam}
+            className="w-12 h-12 object-contain"
+            onError={(e) => {
+              (e.target as HTMLImageElement).src = '/placeholder-team.png';
+            }}
+          />
+          <div>
+            <div className="text-lg font-semibold text-gray-900">
+              {fixture.homeTeamName || fixture.homeTeam || 'Home Team'}
+            </div>
+            <div className="text-xs text-gray-500">
+              {fixture.country || fixture.league?.country?.name}
+            </div>
+          </div>
         </div>
-        <div className="flex items-center gap-1.5 bg-gray-800/40 px-3 py-1.5 rounded-lg shadow-lg">
-          <Clock className="w-4 h-4" />
-          <span>{fixture.time || 'TBD'}</span>
+
+        {/* Score */}
+        <div className="text-center px-8">
+          {hasScore() ? (
+            <>
+              <div className={`text-5xl font-bold ${isLive(fixture.status) ? 'text-pink-600' : 'text-gray-900'}`}>
+                {getHomeScore()} - {getAwayScore()}
+              </div>
+              {getHalfTimeScore() && (
+                <div className="text-xs text-gray-500 mt-1">
+                  ({getHalfTimeScore()})
+                </div>
+              )}
+              <div className={`text-xs font-semibold mt-2 ${
+                isLive(fixture.status) ? 'text-pink-600' : 'text-gray-600'
+              }`}>
+                {getStatusText(fixture.status)}
+              </div>
+            </>
+          ) : (
+            <div className="text-2xl font-bold text-gray-400">
+              - : -
+            </div>
+          )}
         </div>
-        {getStatusBadge(fixture.status)}
+
+        {/* Away Team */}
+        <div className="flex items-center gap-3 flex-1 justify-end">
+          <div className="text-right">
+            <div className="text-lg font-semibold text-gray-900">
+              {fixture.awayTeamName || fixture.awayTeam || 'Away Team'}
+            </div>
+            <div className="text-xs text-gray-500">
+              {fixture.country || fixture.league?.country?.name}
+            </div>
+          </div>
+          <img 
+            src={fixture.awayTeamLogo || '/placeholder-team.png'} 
+            alt={fixture.awayTeamName || fixture.awayTeam}
+            className="w-12 h-12 object-contain"
+            onError={(e) => {
+              (e.target as HTMLImageElement).src = '/placeholder-team.png';
+            }}
+          />
+        </div>
       </div>
     </div>
   );
