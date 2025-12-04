@@ -1,0 +1,9 @@
+Deployment triggered at: 2025-12-04T06:19:00Z
+
+This file triggers a Vercel redeployment to fix the fixture click issue.
+The latest code with working MatchDetailDrawer will be deployed.
+
+Expected fixes:
+- Fixture clicks open detail drawer
+- Stats, Events, H2H, Standings tabs load correctly
+- All fixture interactions work properly
