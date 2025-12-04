@@ -19,7 +19,14 @@ type TabType = 'match' | 'events' | 'odds' | 'h2h' | 'standings';
 const MatchDetailDrawer: React.FC<MatchDetailDrawerProps> = ({ fixture, isOpen, onClose }) => {
   const [activeTab, setActiveTab] = useState<TabType>('events');
 
-  if (!isOpen || !fixture) return null;
+  // CRITICAL: Do NOT render until we have valid fixture data
+  // This prevents the drawer from opening with empty {} object
+  if (!isOpen) return null;
+  
+  if (!fixture || (!fixture.fixtureId && !fixture.id)) {
+    console.warn('⚠️ MatchDetailDrawer: No valid fixture data, not rendering');
+    return null;
+  }
 
   const renderTabContent = () => {
     switch (activeTab) {
