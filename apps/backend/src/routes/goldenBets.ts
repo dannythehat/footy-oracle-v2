@@ -19,16 +19,16 @@ router.get('/today', async (req, res) => {
       });
     }
     
-    // Fallback to database
+    // Fallback to database with full 24-hour range
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     
-    const tomorrow = new Date(today);
-    tomorrow.setDate(tomorrow.getDate() + 1);
+    const endOfDay = new Date(today);
+    endOfDay.setHours(23, 59, 59, 999);
     
     const goldenBets = await Prediction.find({
       isGoldenBet: true,
-      date: { $gte: today, $lt: tomorrow },
+      date: { $gte: today, $lte: endOfDay },
     })
       .sort({ confidence: -1 })
       .limit(3);
@@ -37,7 +37,11 @@ router.get('/today', async (req, res) => {
       success: true,
       data: goldenBets,
       count: goldenBets.length,
-      source: 'DATABASE'
+      source: 'DATABASE',
+      dateRange: {
+        from: today.toISOString(),
+        to: endOfDay.toISOString()
+      }
     });
   } catch (error: any) {
     res.status(500).json({
@@ -80,8 +84,16 @@ router.get('/', async (req, res) => {
     
     if (startDate || endDate) {
       query.date = {};
-      if (startDate) query.date.$gte = new Date(startDate as string);
-      if (endDate) query.date.$lte = new Date(endDate as string);
+      if (startDate) {
+        const start = new Date(startDate as string);
+        start.setHours(0, 0, 0, 0);
+        query.date.$gte = start;
+      }
+      if (endDate) {
+        const end = new Date(endDate as string);
+        end.setHours(23, 59, 59, 999);
+        query.date.$lte = end;
+      }
     }
     
     if (result) {
