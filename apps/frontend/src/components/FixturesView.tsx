@@ -158,15 +158,25 @@ const FixturesView: React.FC<FixturesViewProps> = ({ onClose, embedded = false }
     
     try {
       const fixtureId = Number(fixture.id || fixture.fixtureId);
-      console.log('📡 Fetching detailed data for fixture ID:', fixtureId);
+      console.log('📡 Fetching COMPLETE data for fixture ID:', fixtureId);
       
-      const response = await fixturesApi.getById(fixtureId);
+      // Use getComplete to get fixture + stats + events + h2h + standings
+      const response = await fixturesApi.getComplete(fixtureId);
       
       // Extract the actual fixture data
       const fixtureData = response?.data || response;
       
+      console.log('📦 Complete fixture data received:', fixtureData);
+      
       if (fixtureData && (fixtureData.fixtureId || fixtureData.id)) {
-        console.log('✅ Fixture data loaded successfully');
+        console.log('✅ Complete fixture data loaded successfully');
+        console.log('  - League:', fixtureData.leagueName || fixtureData.league);
+        console.log('  - Country:', fixtureData.country);
+        console.log('  - Home Team ID:', fixtureData.homeTeamId);
+        console.log('  - Away Team ID:', fixtureData.awayTeamId);
+        console.log('  - Has Odds:', !!fixtureData.odds);
+        console.log('  - Has AI Bets:', !!fixtureData.aiBets);
+        
         // CRITICAL: Set fixture data FIRST, then open drawer
         setSelectedFixture(fixtureData);
         setIsMatchDetailOpen(true);
@@ -176,7 +186,7 @@ const FixturesView: React.FC<FixturesViewProps> = ({ onClose, embedded = false }
         setIsMatchDetailOpen(true);
       }
     } catch (err) {
-      console.error('❌ Error fetching fixture details:', err);
+      console.error('❌ Error fetching complete fixture details:', err);
       console.log('⚠️ Falling back to original fixture data');
       // Even on error, set the fixture first, then open
       setSelectedFixture(fixture);
