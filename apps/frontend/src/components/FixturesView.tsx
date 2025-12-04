@@ -161,9 +161,15 @@ const FixturesView: React.FC<FixturesViewProps> = ({ onClose, embedded = false }
       const response = await fixturesApi.getById(Number(fixture.id || fixture.fixtureId));
       console.log('✅ Fixture data fetched:', response);
       
-      if (response.success && response.data) {
+      // API service already extracts .data, so response IS the data
+      if (response && response.data) {
         console.log('✅ Setting selected fixture and opening drawer');
         setSelectedFixture(response.data);
+        setIsMatchDetailOpen(true);
+      } else if (response) {
+        // Response might be the fixture data directly
+        console.log('✅ Using response as fixture data');
+        setSelectedFixture(response);
         setIsMatchDetailOpen(true);
       } else {
         console.log('⚠️ No data in response, using original fixture');
@@ -178,7 +184,7 @@ const FixturesView: React.FC<FixturesViewProps> = ({ onClose, embedded = false }
     }
     
     console.log('🎯 isMatchDetailOpen:', true);
-    console.log('🎯 selectedFixture:', fixture);
+    console.log('🎯 selectedFixture set');
   };
 
   const closeMatchDetail = () => {
