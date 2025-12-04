@@ -39,18 +39,26 @@ router.get("/", async (req, res) => {
     if (date) {
       const offsetMinutes = timezoneOffset ? parseInt(timezoneOffset as string) : 0;
       
-      // User's local midnight in UTC
+      // User's local midnight converted to UTC
+      // For GMT+2 (offsetMinutes = -120):
+      // Local: 2025-12-04 00:00:00 GMT+2
+      // UTC: 2025-12-03 22:00:00 UTC
       const start = new Date(date as string);
-      start.setMinutes(start.getMinutes() - offsetMinutes);
+      start.setMinutes(start.getMinutes() + offsetMinutes);
       
-      // User's local 23:59:59 in UTC
+      // User's local 23:59:59 converted to UTC
+      // For GMT+2 (offsetMinutes = -120):
+      // Local: 2025-12-04 23:59:59 GMT+2
+      // UTC: 2025-12-04 21:59:59 UTC
       const end = new Date(date as string);
       end.setDate(end.getDate() + 1);
-      end.setMinutes(end.getMinutes() - offsetMinutes);
+      end.setMinutes(end.getMinutes() + offsetMinutes);
       
       query.date = { $gte: start, $lt: end };
       
-      console.log(`🌍 Timezone-adjusted query: ${start.toISOString()} to ${end.toISOString()}`);
+      console.log(`🌍 Timezone-adjusted query (offset: ${offsetMinutes}min):`);
+      console.log(`   Start: ${start.toISOString()} (user's 00:00:00)`);
+      console.log(`   End:   ${end.toISOString()} (user's 23:59:59)`);
     } else if (startDate || endDate) {
       query.date = {};
       if (startDate) {

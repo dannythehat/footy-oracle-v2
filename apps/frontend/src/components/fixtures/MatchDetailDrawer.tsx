@@ -55,12 +55,12 @@ const MatchDetailDrawer: React.FC<MatchDetailDrawerProps> = ({ fixture, isOpen, 
         onClick={onClose}
       />
 
-      {/* Drawer - Enhanced with depth */}
+      {/* Drawer - Full height with proper scrolling */}
       <div
         className={`fixed bottom-0 left-0 right-0 bg-gradient-to-br from-gray-900 via-purple-900/80 to-gray-900 rounded-t-3xl z-50 transform transition-transform duration-300 ease-out shadow-2xl border-t-2 border-purple-500/30 ${
           isOpen ? 'translate-y-0' : 'translate-y-full'
         }`}
-        style={{ maxHeight: '90vh' }}
+        style={{ height: '95vh' }}
       >
         {/* Glow effect at top */}
         <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-transparent via-purple-500/50 to-transparent"></div>
@@ -78,14 +78,18 @@ const MatchDetailDrawer: React.FC<MatchDetailDrawerProps> = ({ fixture, isOpen, 
           <div className="w-12 h-1.5 bg-gray-600 rounded-full shadow-lg" />
         </div>
 
-        {/* Header */}
-        <MatchDetailHeader fixture={fixture} />
+        {/* Header - Fixed at top */}
+        <div className="flex-shrink-0">
+          <MatchDetailHeader fixture={fixture} />
+        </div>
 
-        {/* Tabs */}
-        <MatchDetailTabs activeTab={activeTab} onTabChange={setActiveTab} />
+        {/* Tabs - Fixed below header */}
+        <div className="flex-shrink-0">
+          <MatchDetailTabs activeTab={activeTab} onTabChange={setActiveTab} />
+        </div>
 
-        {/* Tab Content */}
-        <div className="overflow-y-auto" style={{ maxHeight: 'calc(90vh - 200px)' }}>
+        {/* Tab Content - Scrollable area */}
+        <div className="overflow-y-auto" style={{ height: 'calc(95vh - 220px)' }}>
           {renderTabContent()}
         </div>
       </div>
