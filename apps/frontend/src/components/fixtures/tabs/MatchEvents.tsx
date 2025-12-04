@@ -35,12 +35,17 @@ const MatchEvents: React.FC<MatchEventsProps> = ({ fixture }) => {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (fixture && (fixture.id || fixture.fixtureId)) {
-      fetchEvents();
-    } else {
+    // CRITICAL: Check for valid fixture ID before attempting to fetch
+    const fixtureId = fixture?.id || fixture?.fixtureId;
+    
+    if (!fixtureId) {
+      console.warn('⚠️ MatchEvents: No fixture ID available');
       setError('Missing fixture data');
       setLoading(false);
+      return;
     }
+
+    fetchEvents();
   }, [fixture?.id, fixture?.fixtureId]);
 
   const fetchEvents = async () => {
@@ -49,6 +54,12 @@ const MatchEvents: React.FC<MatchEventsProps> = ({ fixture }) => {
       setError(null);
 
       const fixtureId = fixture.id || fixture.fixtureId;
+
+      if (!fixtureId) {
+        throw new Error('Missing fixture ID');
+      }
+
+      console.log('⚡ Fetching events for fixture:', fixtureId);
       const response = await fixturesApi.getEvents(Number(fixtureId));
 
       if (response.success && response.data) {
