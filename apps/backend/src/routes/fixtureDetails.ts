@@ -12,6 +12,32 @@ import {
 const router = express.Router();
 
 /**
+ * Get head-to-head matches by team IDs (query params)
+ * GET /fixtures/h2h?homeTeamId=123&awayTeamId=456
+ */
+router.get('/fixtures/h2h', async (req: Request, res: Response): Promise<void> => {
+  try {
+    const homeTeamId = Number(req.query.homeTeamId);
+    const awayTeamId = Number(req.query.awayTeamId);
+
+    if (!homeTeamId || !awayTeamId) {
+      res.status(400).json({ error: 'homeTeamId and awayTeamId query parameters are required' });
+      return;
+    }
+
+    const h2hData = await fetchH2H(homeTeamId, awayTeamId);
+
+    res.json({
+      success: true,
+      data: h2hData
+    });
+  } catch (err: any) {
+    console.error('[fixtureDetails] H2H (query) error:', err.message || err);
+    res.status(500).json({ error: 'Failed to fetch H2H data' });
+  }
+});
+
+/**
  * Get complete fixture data (all endpoints in one call)
  * GET /fixtures/:fixtureId/complete
  */
@@ -69,7 +95,7 @@ router.get('/fixtures/:fixtureId', async (req: Request, res: Response): Promise<
 });
 
 /**
- * Get head-to-head matches
+ * Get head-to-head matches by fixture ID
  * GET /fixtures/:fixtureId/h2h
  */
 router.get('/fixtures/:fixtureId/h2h', async (req: Request, res: Response): Promise<void> => {
