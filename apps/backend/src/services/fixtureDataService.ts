@@ -117,6 +117,7 @@ export async function fetchFixtureById(fixtureId: number): Promise<any> {
 /**
  * Fetch fixture statistics (shots, possession, corners, etc.)
  * CRITICAL: Use parameter 'fixture' not 'fixture_id'
+ * Returns data in format matching frontend MatchStats component
  */
 export async function fetchFixtureStatistics(fixtureId: number): Promise<any> {
   try {
@@ -141,26 +142,51 @@ export async function fetchFixtureStatistics(fixtureId: number): Promise<any> {
       return stat?.value;
     };
 
+    const parsePossession = (possessionStr: string | number): number => {
+      if (typeof possessionStr === 'number') return possessionStr;
+      if (typeof possessionStr === 'string') {
+        return parseInt(possessionStr.replace('%', '')) || 0;
+      }
+      return 0;
+    };
+
+    // Transform to match frontend interface:
+    // interface TeamStats {
+    //   shots?: { total: number; on: number };
+    //   corners?: number;
+    //   fouls?: number;
+    //   yellowCards?: number;
+    //   redCards?: number;
+    //   possession?: number;
+    //   attacks?: number;
+    //   dangerousAttacks?: number;
+    // }
     return {
       home: {
-        shotsOnGoal: getStat(homeStats, 'Shots on Goal') || 0,
-        shotsOffGoal: getStat(homeStats, 'Shots off Goal') || 0,
-        totalShots: getStat(homeStats, 'Total Shots') || 0,
-        possession: getStat(homeStats, 'Ball Possession') || '0%',
-        corners: getStat(homeStats, 'Corner Kicks') || 0,
-        fouls: getStat(homeStats, 'Fouls') || 0,
-        yellowCards: getStat(homeStats, 'Yellow Cards') || 0,
-        redCards: getStat(homeStats, 'Red Cards') || 0,
+        shots: {
+          total: parseInt(getStat(homeStats, 'Total Shots')) || 0,
+          on: parseInt(getStat(homeStats, 'Shots on Goal')) || 0,
+        },
+        possession: parsePossession(getStat(homeStats, 'Ball Possession')),
+        corners: parseInt(getStat(homeStats, 'Corner Kicks')) || 0,
+        fouls: parseInt(getStat(homeStats, 'Fouls')) || 0,
+        yellowCards: parseInt(getStat(homeStats, 'Yellow Cards')) || 0,
+        redCards: parseInt(getStat(homeStats, 'Red Cards')) || 0,
+        attacks: parseInt(getStat(homeStats, 'Total attacks')) || 0,
+        dangerousAttacks: parseInt(getStat(homeStats, 'Dangerous attacks')) || 0,
       },
       away: {
-        shotsOnGoal: getStat(awayStats, 'Shots on Goal') || 0,
-        shotsOffGoal: getStat(awayStats, 'Shots off Goal') || 0,
-        totalShots: getStat(awayStats, 'Total Shots') || 0,
-        possession: getStat(awayStats, 'Ball Possession') || '0%',
-        corners: getStat(awayStats, 'Corner Kicks') || 0,
-        fouls: getStat(awayStats, 'Fouls') || 0,
-        yellowCards: getStat(awayStats, 'Yellow Cards') || 0,
-        redCards: getStat(awayStats, 'Red Cards') || 0,
+        shots: {
+          total: parseInt(getStat(awayStats, 'Total Shots')) || 0,
+          on: parseInt(getStat(awayStats, 'Shots on Goal')) || 0,
+        },
+        possession: parsePossession(getStat(awayStats, 'Ball Possession')),
+        corners: parseInt(getStat(awayStats, 'Corner Kicks')) || 0,
+        fouls: parseInt(getStat(awayStats, 'Fouls')) || 0,
+        yellowCards: parseInt(getStat(awayStats, 'Yellow Cards')) || 0,
+        redCards: parseInt(getStat(awayStats, 'Red Cards')) || 0,
+        attacks: parseInt(getStat(awayStats, 'Total attacks')) || 0,
+        dangerousAttacks: parseInt(getStat(awayStats, 'Dangerous attacks')) || 0,
       },
     };
   } catch (error: any) {
@@ -299,84 +325,42 @@ export async function fetchStandings(leagueId: number, season: number): Promise<
       },
     });
 
-    const standings = response.data.response?.[0];
-    
-    if (!standings) {
+    const standings = response.data.response?.[0]?.league?.standings;
+
+    if (!standings || standings.length === 0) {
       console.log(`ℹ️  No standings available for league ${leagueId}`);
-      return [];
+      return [];  // ✅ Return empty array instead of null
     }
 
     console.log(`✅ Found standings for league ${leagueId}`);
-    
-    return standings.league?.standings || [];
+    return standings;
   } catch (error: any) {
     console.error(`❌ Error fetching standings for league ${leagueId}:`, error.message);
-    return [];
+    return [];  // ✅ Return empty array instead of null
   }
 }
 
 /**
- * Fetch team's upcoming fixtures
+ * Fetch upcoming fixtures for a team
  * CRITICAL: Use parameters 'team' and 'next'
  */
 export async function fetchTeamUpcoming(teamId: number, next: number = 5): Promise<any[]> {
   try {
-    console.log(`📅 Fetching next ${next} fixtures for team ${teamId}`);
+    console.log(`📅 Fetching upcoming fixtures for team ${teamId}`);
 
     const response = await apiClient.get('/fixtures', {
       params: {
         team: teamId,  // ✅ CORRECT: 'team' parameter
-        next: next     // ✅ CORRECT: 'next' parameter
+        next: next,    // ✅ CORRECT: 'next' parameter
       },
     });
 
     const fixtures = response.data.response || [];
-    
+
     console.log(`✅ Found ${fixtures.length} upcoming fixtures for team ${teamId}`);
-    
-    return fixtures.map((f: any) => ({
-      fixtureId: f.fixture.id,
-      date: f.fixture.date,
-      homeTeam: f.teams.home.name,
-      awayTeam: f.teams.away.name,
-      league: f.league.name,
-    }));
+    return fixtures;
   } catch (error: any) {
     console.error(`❌ Error fetching upcoming fixtures for team ${teamId}:`, error.message);
     return [];
   }
 }
-
-/**
- * Fetch all live fixtures
- * CRITICAL: Use parameter 'live=all'
- */
-export async function fetchLiveFixtures(): Promise<any[]> {
-  try {
-    console.log('🔴 Fetching all live fixtures');
-
-    const response = await apiClient.get('/fixtures', {
-      params: { live: 'all' }  // ✅ CORRECT: 'live=all' parameter
-    });
-
-    const fixtures = response.data.response || [];
-    
-    console.log(`✅ Found ${fixtures.length} live fixtures`);
-    
-    return fixtures;
-  } catch (error: any) {
-    console.error('❌ Error fetching live fixtures:', error.message);
-    return [];
-  }
-}
-
-export default {
-  getCompleteFixtureData,
-  fetchFixtureById,
-  fetchFixtureStatistics,
-  fetchFixtureEvents,
-  fetchH2H,
-  fetchStandings,
-  fetchTeamUpcoming,
-  fetchLiveFixtures
-};
