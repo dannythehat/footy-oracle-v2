@@ -1,22 +1,20 @@
 import React from 'react';
-import { BarChart3, TrendingUp, History, Trophy, Activity } from 'lucide-react';
+import { BarChart3, TrendingUp, History } from 'lucide-react';
 
 interface MatchDetailTabsProps {
-  activeTab: 'match' | 'events' | 'odds' | 'h2h' | 'standings';
-  onTabChange: (tab: 'match' | 'events' | 'odds' | 'h2h' | 'standings') => void;
+  activeTab: 'summary' | 'odds' | 'h2h';
+  onTabChange: (tab: 'summary' | 'odds' | 'h2h') => void;
 }
 
 const MatchDetailTabs: React.FC<MatchDetailTabsProps> = ({ activeTab, onTabChange }) => {
   const tabs = [
-    { id: 'match' as const, label: 'Stats', icon: BarChart3 },
-    { id: 'events' as const, label: 'Events', icon: Activity },
-    { id: 'odds' as const, label: 'Odds', icon: TrendingUp },
+    { id: 'summary' as const, label: 'SUMMARY', icon: BarChart3 },
+    { id: 'odds' as const, label: 'ODDS', icon: TrendingUp },
     { id: 'h2h' as const, label: 'H2H', icon: History },
-    { id: 'standings' as const, label: 'Table', icon: Trophy },
   ];
 
   return (
-    <div className="sticky top-0 bg-gradient-to-b from-gray-900 to-gray-900/95 backdrop-blur-md border-b border-gray-700/50 z-10 shadow-lg">
+    <div className="bg-white border-b border-gray-200">
       <div className="flex">
         {tabs.map((tab) => {
           const Icon = tab.icon;
@@ -26,27 +24,19 @@ const MatchDetailTabs: React.FC<MatchDetailTabsProps> = ({ activeTab, onTabChang
             <button
               key={tab.id}
               onClick={() => onTabChange(tab.id)}
-              className={`flex-1 flex items-center justify-center gap-2 py-4 px-2 font-medium transition-all duration-200 relative group ${
+              className={`flex items-center justify-center gap-2 py-3 px-6 font-semibold text-sm transition-all relative ${
                 isActive
-                  ? 'text-purple-400'
-                  : 'text-gray-400 hover:text-gray-300 hover:-translate-y-0.5'
+                  ? 'text-pink-600'
+                  : 'text-gray-600 hover:text-gray-900'
               }`}
             >
-              {/* Active indicator with glow */}
+              <Icon className="w-4 h-4" />
+              <span>{tab.label}</span>
+              
+              {/* Active indicator */}
               {isActive && (
-                <>
-                  <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r from-transparent via-purple-400 to-transparent shadow-lg shadow-purple-500/50"></div>
-                  <div className="absolute inset-0 bg-gradient-to-t from-purple-500/10 to-transparent"></div>
-                </>
+                <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-pink-600"></div>
               )}
-
-              {/* Hover effect */}
-              {!isActive && (
-                <div className="absolute inset-0 bg-gradient-to-t from-gray-700/0 to-gray-700/10 opacity-0 group-hover:opacity-100 transition-opacity"></div>
-              )}
-
-              <Icon className={`w-4 h-4 relative z-10 ${isActive ? 'drop-shadow-lg' : ''}`} />
-              <span className={`text-xs sm:text-sm relative z-10 ${isActive ? 'drop-shadow-lg' : ''}`}>{tab.label}</span>
             </button>
           );
         })}
