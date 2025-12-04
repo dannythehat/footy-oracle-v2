@@ -15,7 +15,8 @@ router.get("/", async (req, res) => {
       status, 
       limit = '50', 
       page = '1',
-      sort = 'date'
+      sort = 'date',
+      timezoneOffset // in minutes, e.g., -120 for GMT+2
     } = req.query;
 
     console.log("📥 /api/fixtures hit", { 
@@ -27,18 +28,29 @@ router.get("/", async (req, res) => {
       status, 
       limit, 
       page,
-      sort 
+      sort,
+      timezoneOffset
     });
 
     // Build query
     const query: any = {};
 
-    // Date filtering
+    // Date filtering with timezone support
     if (date) {
+      const offsetMinutes = timezoneOffset ? parseInt(timezoneOffset as string) : 0;
+      
+      // User's local midnight in UTC
       const start = new Date(date as string);
+      start.setMinutes(start.getMinutes() - offsetMinutes);
+      
+      // User's local 23:59:59 in UTC
       const end = new Date(date as string);
       end.setDate(end.getDate() + 1);
+      end.setMinutes(end.getMinutes() - offsetMinutes);
+      
       query.date = { $gte: start, $lt: end };
+      
+      console.log(`🌍 Timezone-adjusted query: ${start.toISOString()} to ${end.toISOString()}`);
     } else if (startDate || endDate) {
       query.date = {};
       if (startDate) {
