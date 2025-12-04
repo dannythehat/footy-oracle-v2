@@ -28,13 +28,17 @@ const MatchStats: React.FC<MatchStatsProps> = ({ fixture }) => {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    // Only require basic fixture data - try to fetch stats even if leagueId/season missing
-    if (fixture && (fixture.id || fixture.fixtureId) && fixture.homeTeamId && fixture.awayTeamId) {
-      fetchStats();
-    } else {
-      setError('Missing required fixture data');
+    // CRITICAL: Check for valid fixture ID before attempting to fetch
+    const fixtureId = fixture?.id || fixture?.fixtureId;
+    
+    if (!fixtureId) {
+      console.warn('⚠️ MatchStats: No fixture ID available');
+      setError('Missing fixture data');
       setLoading(false);
+      return;
     }
+
+    fetchStats();
   }, [fixture?.id, fixture?.fixtureId]);
 
   const fetchStats = async () => {
@@ -45,9 +49,10 @@ const MatchStats: React.FC<MatchStatsProps> = ({ fixture }) => {
       const fixtureId = fixture.id || fixture.fixtureId;
 
       if (!fixtureId) {
-        throw new Error('Missing required IDs for stats');
+        throw new Error('Missing fixture ID');
       }
 
+      console.log('📊 Fetching stats for fixture:', fixtureId);
       const response = await fixturesApi.getStats(Number(fixtureId));
 
       if (response.success && response.data) {
