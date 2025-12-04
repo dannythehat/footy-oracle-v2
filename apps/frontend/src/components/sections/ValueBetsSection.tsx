@@ -44,7 +44,7 @@ export default function ValueBetsSection() {
                 <div className="p-3 rounded-lg bg-black/50 border border-blue-500/20">
                   <Calculator className="w-5 h-5 text-blue-400 mb-2" />
                   <div className="text-xs text-blue-400/70 uppercase tracking-wide mb-1">Math Edge</div>
-                  <div className="text-sm text-zinc-300">AI probability > Bookmaker odds</div>
+                  <div className="text-sm text-zinc-300">AI probability {'>'}  Bookmaker odds</div>
                 </div>
                 <div className="p-3 rounded-lg bg-black/50 border border-blue-500/20">
                   <Brain className="w-5 h-5 text-blue-400 mb-2" />
