@@ -154,24 +154,35 @@ const FixturesView: React.FC<FixturesViewProps> = ({ onClose, embedded = false }
   };
 
   const handleFixtureClick = async (fixture: Fixture) => {
+    console.log('🎯 Fixture clicked!', fixture);
+    console.log('🎯 Fixture ID:', fixture.id || fixture.fixtureId);
+    
     try {
       const response = await fixturesApi.getById(Number(fixture.id || fixture.fixtureId));
+      console.log('✅ Fixture data fetched:', response);
       
       if (response.success && response.data) {
+        console.log('✅ Setting selected fixture and opening drawer');
         setSelectedFixture(response.data);
         setIsMatchDetailOpen(true);
       } else {
+        console.log('⚠️ No data in response, using original fixture');
         setSelectedFixture(fixture);
         setIsMatchDetailOpen(true);
       }
     } catch (err) {
-      console.error('Error fetching fixture details:', err);
+      console.error('❌ Error fetching fixture details:', err);
+      console.log('⚠️ Using original fixture data');
       setSelectedFixture(fixture);
       setIsMatchDetailOpen(true);
     }
+    
+    console.log('🎯 isMatchDetailOpen:', true);
+    console.log('🎯 selectedFixture:', fixture);
   };
 
   const closeMatchDetail = () => {
+    console.log('🚪 Closing match detail drawer');
     setIsMatchDetailOpen(false);
     setTimeout(() => setSelectedFixture(null), 300);
   };
@@ -546,6 +557,7 @@ const FixturesView: React.FC<FixturesViewProps> = ({ onClose, embedded = false }
       </div>
 
       {/* Match Detail Drawer */}
+      {console.log('🎨 Rendering MatchDetailDrawer - isOpen:', isMatchDetailOpen, 'fixture:', selectedFixture)}
       <MatchDetailDrawer
         fixture={selectedFixture}
         isOpen={isMatchDetailOpen}
