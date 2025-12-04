@@ -67,8 +67,12 @@ const MatchOdds: React.FC<MatchOddsProps> = ({ fixture }) => {
     }
   ];
 
-  // Check if odds data is available
-  const hasOdds = fixture.odds && typeof fixture.odds === 'object' && Object.keys(fixture.odds).length > 0;
+  // Check if odds data is available - handle both formats
+  const oddsData = fixture.odds || fixture.bookmakers;
+  const hasOdds = oddsData && (
+    (typeof oddsData === 'object' && Object.keys(oddsData).length > 0) ||
+    (Array.isArray(oddsData) && oddsData.length > 0)
+  );
 
   // Find Golden Bet (highest ML probability)
   const getGoldenBet = () => {
@@ -90,8 +94,44 @@ const MatchOdds: React.FC<MatchOddsProps> = ({ fixture }) => {
 
   const goldenBet = getGoldenBet();
 
+  // Extract bookmaker odds from API format
+  const getBookmakerOdds = (market: Market) => {
+    if (!hasOdds) return null;
+
+    // Handle simple object format {btts: 1.85, over25: 2.10, ...}
+    if (typeof oddsData === 'object' && !Array.isArray(oddsData)) {
+      return oddsData[market.oddsKey] || null;
+    }
+
+    // Handle API-Football format (array of bookmakers)
+    if (Array.isArray(oddsData)) {
+      // Find the first bookmaker with this market
+      for (const bookmaker of oddsData) {
+        if (!bookmaker.bets) continue;
+        
+        for (const bet of bookmaker.bets) {
+          // Match market by name
+          const betName = bet.name?.toLowerCase() || '';
+          const marketLabel = market.label.toLowerCase();
+          
+          if (betName.includes(marketLabel) || 
+              betName.includes(market.shortLabel.toLowerCase()) ||
+              betName.includes(market.oddsKey)) {
+            
+            // Return first value's odd
+            if (bet.values && bet.values.length > 0) {
+              return parseFloat(bet.values[0].odd);
+            }
+          }
+        }
+      }
+    }
+
+    return null;
+  };
+
   const renderMarket = (market: Market) => {
-    const odds = hasOdds ? fixture.odds?.[market.oddsKey] : null;
+    const odds = getBookmakerOdds(market);
     const aiData = fixture.aiBets?.[market.aiKey];
     const isGolden = goldenBet === market.id;
 
@@ -152,6 +192,39 @@ const MatchOdds: React.FC<MatchOddsProps> = ({ fixture }) => {
     );
   };
 
+  // Render all available bookmaker markets
+  const renderAllBookmakerOdds = () => {
+    if (!Array.isArray(oddsData) || oddsData.length === 0) return null;
+
+    return (
+      <div className="mt-6">
+        <h3 className="text-sm font-semibold text-white mb-3">All Available Markets</h3>
+        <div className="space-y-4">
+          {oddsData.map((bookmaker, idx) => (
+            <div key={idx} className="bg-gray-800/30 rounded-lg p-3 border border-gray-700/50">
+              <div className="text-xs font-semibold text-gray-400 mb-2">{bookmaker.name}</div>
+              <div className="space-y-2">
+                {bookmaker.bets?.map((bet: any, betIdx: number) => (
+                  <div key={betIdx} className="bg-gray-900/50 rounded p-2">
+                    <div className="text-xs text-gray-300 mb-1">{bet.name}</div>
+                    <div className="flex flex-wrap gap-2">
+                      {bet.values?.map((value: any, valIdx: number) => (
+                        <div key={valIdx} className="flex items-center gap-1 text-xs">
+                          <span className="text-gray-400">{value.value}:</span>
+                          <span className="text-green-400 font-semibold">{value.odd}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  };
+
   return (
     <div className="p-4 space-y-4">
       {/* Header */}
@@ -206,6 +279,9 @@ const MatchOdds: React.FC<MatchOddsProps> = ({ fixture }) => {
       <div className="grid grid-cols-2 gap-3">
         {markets.map(market => renderMarket(market))}
       </div>
+
+      {/* All Bookmaker Odds */}
+      {renderAllBookmakerOdds()}
 
       {/* AI Reasoning (if available) */}
       {fixture.aiBets?.goldenBet?.reasoning && (
