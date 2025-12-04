@@ -9,8 +9,8 @@ const app = express();
 app.use(cors({
   origin: [
     "https://footy-oracle-v2.vercel.app",
-    "https://footy-oracle-v2-*.vercel.app",
-    "https://footy-oracle-v2-dannys-projects-83c67aed.vercel.app"
+    /https:\/\/footy-oracle-v2-.*\.vercel\.app$/,
+    "http://localhost:5173"
   ],
   methods: ["GET","POST"],
   credentials: false
