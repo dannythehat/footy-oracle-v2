@@ -5,11 +5,23 @@ const api = axios.create({
   withCredentials: false
 });
 
+// Get user's timezone offset in minutes
+const getTimezoneOffset = () => {
+  return new Date().getTimezoneOffset();
+};
+
 // Fixtures API
 export const fixturesApi = {
-  // Get fixtures by date
-  getByDate: (date: string) =>
-    api.get(`/api/fixtures`, { params: { date } }).then(r => r.data),
+  // Get fixtures by date (with timezone support)
+  getByDate: (date: string) => {
+    const timezoneOffset = getTimezoneOffset();
+    return api.get(`/api/fixtures`, { 
+      params: { 
+        date,
+        timezoneOffset 
+      } 
+    }).then(r => r.data);
+  },
 
   // Get fixtures by date range
   getByDateRange: (startDate: string, endDate: string) =>
