@@ -1,17 +1,19 @@
-import React, { ReactNode } from 'react';
+import React, { ReactNode, CSSProperties } from 'react';
 
 interface Premium3DCardProps {
   children: ReactNode;
   className?: string;
   glowColor?: string;
   hoverScale?: boolean;
+  style?: CSSProperties;
 }
 
 export default function Premium3DCard({ 
   children, 
   className = '', 
   glowColor = 'purple',
-  hoverScale = true 
+  hoverScale = true,
+  style = {}
 }: Premium3DCardProps) {
   const glowColors = {
     purple: 'shadow-purple-500/20 hover:shadow-purple-500/40 border-purple-500/30 hover:border-purple-400/60',
@@ -37,6 +39,7 @@ export default function Premium3DCard({
       `}
       style={{
         transformStyle: 'preserve-3d',
+        ...style
       }}
     >
       {/* Animated gradient overlay */}
