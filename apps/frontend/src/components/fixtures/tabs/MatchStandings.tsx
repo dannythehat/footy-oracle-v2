@@ -1,9 +1,30 @@
 import React from 'react';
 import { Trophy, AlertCircle } from 'lucide-react';
 
+interface StandingTeam {
+  rank: number;
+  team: {
+    id: number;
+    name: string;
+    logo: string;
+  };
+  points: number;
+  goalsDiff: number;
+  all: {
+    played: number;
+    win: number;
+    draw: number;
+    lose: number;
+    goals: {
+      for: number;
+      against: number;
+    };
+  };
+}
+
 interface MatchStandingsProps {
   fixture: any;
-  standings?: any[];
+  standings?: StandingTeam[][];
 }
 
 const MatchStandings: React.FC<MatchStandingsProps> = ({ fixture, standings }) => {
@@ -28,8 +49,18 @@ const MatchStandings: React.FC<MatchStandingsProps> = ({ fixture, standings }) =
     );
   }
 
-  // Check if standings data is available and is a non-empty array
-  const hasStandings = standings && Array.isArray(standings) && standings.length > 0;
+  // Extract standings array - API returns nested array [[standings]]
+  const standingsData = standings && Array.isArray(standings) && standings.length > 0 
+    ? (Array.isArray(standings[0]) ? standings[0] : standings)
+    : null;
+
+  const hasStandings = standingsData && standingsData.length > 0;
+
+  const getTeamRowClass = (teamId: number) => {
+    if (teamId === fixture.teams?.home?.id) return 'bg-blue-500/10 border-l-2 border-blue-500';
+    if (teamId === fixture.teams?.away?.id) return 'bg-red-500/10 border-l-2 border-red-500';
+    return '';
+  };
 
   return (
     <div className="p-6">
@@ -39,42 +70,89 @@ const MatchStandings: React.FC<MatchStandingsProps> = ({ fixture, standings }) =
         <h2 className="text-lg font-bold text-white">League Standings</h2>
       </div>
 
-      {/* Coming Soon / No Data Available */}
+      {/* No Data Available */}
       {!hasStandings && (
         <div className="bg-purple-500/10 border border-purple-500/30 rounded-xl p-6">
           <div className="flex items-start gap-3">
             <AlertCircle className="w-5 h-5 text-purple-400 mt-0.5" />
             <div>
               <div className="text-sm font-semibold text-purple-400 mb-2">
-                Coming Soon
+                No Standings Available
               </div>
-              <p className="text-xs text-gray-300 mb-4">
-                League standings will be available soon. This will show the current league table with team positions, points, and recent form.
+              <p className="text-xs text-gray-300">
+                League standings data is not available for this fixture.
               </p>
-              <div className="text-xs text-gray-400">
-                <div className="mb-1">• Current league position</div>
-                <div className="mb-1">• Points and goal difference</div>
-                <div className="mb-1">• Last 5 matches form</div>
-                <div>• Home/Away records</div>
-              </div>
             </div>
           </div>
         </div>
       )}
 
-      {/* Placeholder Table */}
-      <div className="mt-6 bg-gray-800/30 backdrop-blur-sm rounded-xl p-4 border border-gray-700/50">
-        <div className="text-center text-gray-500 py-8">
-          <Trophy className="w-12 h-12 mx-auto mb-3 opacity-30" />
-          <p className="text-sm">League: {fixture?.leagueName || fixture?.league || 'Unknown League'}</p>
-          <p className="text-xs mt-1">Season: {fixture?.season || new Date().getFullYear()}</p>
-          {hasStandings && (
-            <p className="text-xs mt-2 text-purple-400">
-              {standings.length} teams in standings
-            </p>
-          )}
+      {/* Standings Table */}
+      {hasStandings && (
+        <div className="overflow-x-auto rounded-xl border border-gray-700/50">
+          <table className="w-full text-sm">
+            <thead className="bg-gray-800/50 border-b border-gray-700">
+              <tr>
+                <th className="px-3 py-2 text-left text-xs font-semibold text-gray-400">#</th>
+                <th className="px-3 py-2 text-left text-xs font-semibold text-gray-400">Team</th>
+                <th className="px-2 py-2 text-center text-xs font-semibold text-gray-400">P</th>
+                <th className="px-2 py-2 text-center text-xs font-semibold text-gray-400">W</th>
+                <th className="px-2 py-2 text-center text-xs font-semibold text-gray-400">D</th>
+                <th className="px-2 py-2 text-center text-xs font-semibold text-gray-400">L</th>
+                <th className="px-2 py-2 text-center text-xs font-semibold text-gray-400">GF</th>
+                <th className="px-2 py-2 text-center text-xs font-semibold text-gray-400">GA</th>
+                <th className="px-2 py-2 text-center text-xs font-semibold text-gray-400">GD</th>
+                <th className="px-3 py-2 text-center text-xs font-semibold text-gray-400">Pts</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-gray-800/50">
+              {standingsData.map((standing: StandingTeam) => (
+                <tr 
+                  key={standing.team.id}
+                  className={`hover:bg-gray-800/30 transition-colors ${getTeamRowClass(standing.team.id)}`}
+                >
+                  <td className="px-3 py-2 font-medium text-white">{standing.rank}</td>
+                  <td className="px-3 py-2">
+                    <div className="flex items-center gap-2">
+                      <img 
+                        src={standing.team.logo} 
+                        alt={standing.team.name}
+                        className="w-5 h-5 object-contain"
+                        onError={(e) => {
+                          (e.target as HTMLImageElement).style.display = 'none';
+                        }}
+                      />
+                      <span className="text-white text-xs font-medium truncate max-w-[150px]">
+                        {standing.team.name}
+                      </span>
+                    </div>
+                  </td>
+                  <td className="px-2 py-2 text-center text-gray-300">{standing.all.played}</td>
+                  <td className="px-2 py-2 text-center text-green-400">{standing.all.win}</td>
+                  <td className="px-2 py-2 text-center text-yellow-400">{standing.all.draw}</td>
+                  <td className="px-2 py-2 text-center text-red-400">{standing.all.lose}</td>
+                  <td className="px-2 py-2 text-center text-gray-300">{standing.all.goals?.for || 0}</td>
+                  <td className="px-2 py-2 text-center text-gray-300">{standing.all.goals?.against || 0}</td>
+                  <td className={`px-2 py-2 text-center font-medium ${
+                    standing.goalsDiff > 0 ? 'text-green-400' : 
+                    standing.goalsDiff < 0 ? 'text-red-400' : 'text-gray-400'
+                  }`}>
+                    {standing.goalsDiff > 0 ? '+' : ''}{standing.goalsDiff}
+                  </td>
+                  <td className="px-3 py-2 text-center font-bold text-white">{standing.points}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
-      </div>
+      )}
+
+      {/* League Info */}
+      {hasStandings && (
+        <div className="mt-4 text-center text-xs text-gray-500">
+          {fixture?.league?.name || 'League'} • Season {fixture?.league?.season || new Date().getFullYear()}
+        </div>
+      )}
     </div>
   );
 };
