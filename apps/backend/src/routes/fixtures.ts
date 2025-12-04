@@ -106,7 +106,7 @@ router.get("/", async (req, res) => {
   }
 });
 
-// Refresh scores from API-Football
+// Refresh scores from API-Football (primary endpoint)
 router.post("/refresh-scores", async (req, res) => {
   try {
     const { date } = req.body;
@@ -125,6 +125,32 @@ router.post("/refresh-scores", async (req, res) => {
     });
   } catch (err: any) {
     console.error("❌ Refresh scores ERROR:", err.message);
+    return res.status(500).json({
+      success: false,
+      error: err.message || "Server error",
+    });
+  }
+});
+
+// Refresh scores alias (for frontend compatibility)
+router.post("/refresh", async (req, res) => {
+  try {
+    const { date } = req.body;
+    
+    console.log(`📥 /api/fixtures/refresh hit for date: ${date}`);
+    
+    // Trigger live scores update
+    const result = await updateLiveScores();
+    
+    return res.json({
+      success: true,
+      message: `Updated ${result.updated} of ${result.total} live fixtures`,
+      updated: result.updated,
+      total: result.total,
+      date
+    });
+  } catch (err: any) {
+    console.error("❌ Refresh ERROR:", err.message);
     return res.status(500).json({
       success: false,
       error: err.message || "Server error",
