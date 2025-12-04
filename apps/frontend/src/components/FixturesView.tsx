@@ -154,37 +154,34 @@ const FixturesView: React.FC<FixturesViewProps> = ({ onClose, embedded = false }
   };
 
   const handleFixtureClick = async (fixture: Fixture) => {
-    console.log('🎯 Fixture clicked!', fixture);
-    console.log('🎯 Fixture ID:', fixture.id || fixture.fixtureId);
+    console.log('🎯 Fixture clicked:', fixture.homeTeam, 'vs', fixture.awayTeam);
     
     try {
-      const response = await fixturesApi.getById(Number(fixture.id || fixture.fixtureId));
-      console.log('✅ Fixture data fetched:', response);
+      const fixtureId = Number(fixture.id || fixture.fixtureId);
+      console.log('📡 Fetching detailed data for fixture ID:', fixtureId);
       
-      // API service already extracts .data, so response IS the data
-      if (response && response.data) {
-        console.log('✅ Setting selected fixture and opening drawer');
-        setSelectedFixture(response.data);
-        setIsMatchDetailOpen(true);
-      } else if (response) {
-        // Response might be the fixture data directly
-        console.log('✅ Using response as fixture data');
-        setSelectedFixture(response);
+      const response = await fixturesApi.getById(fixtureId);
+      
+      // Extract the actual fixture data
+      const fixtureData = response?.data || response;
+      
+      if (fixtureData && (fixtureData.fixtureId || fixtureData.id)) {
+        console.log('✅ Fixture data loaded successfully');
+        // CRITICAL: Set fixture data FIRST, then open drawer
+        setSelectedFixture(fixtureData);
         setIsMatchDetailOpen(true);
       } else {
-        console.log('⚠️ No data in response, using original fixture');
+        console.warn('⚠️ API returned incomplete data, using original fixture');
         setSelectedFixture(fixture);
         setIsMatchDetailOpen(true);
       }
     } catch (err) {
       console.error('❌ Error fetching fixture details:', err);
-      console.log('⚠️ Using original fixture data');
+      console.log('⚠️ Falling back to original fixture data');
+      // Even on error, set the fixture first, then open
       setSelectedFixture(fixture);
       setIsMatchDetailOpen(true);
     }
-    
-    console.log('🎯 isMatchDetailOpen:', true);
-    console.log('🎯 selectedFixture set');
   };
 
   const closeMatchDetail = () => {
