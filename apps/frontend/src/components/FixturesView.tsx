@@ -6,6 +6,7 @@ import {
 import { fixturesApi } from '../services/api';
 import MatchDetailDrawer from './fixtures/MatchDetailDrawer';
 import { FavoriteButton } from './FavoriteButton';
+import LiveMatchStats from './LiveMatchStats';
 
 interface Fixture {
   fixtureId: string;
@@ -357,6 +358,14 @@ const FixturesView: React.FC<FixturesViewProps> = ({ onClose, embedded = false }
             />
           </div>
         </div>
+
+        {/* Live Stats - Only show for live matches */}
+        {live && (
+          <LiveMatchStats 
+            fixtureId={Number(fixture.fixtureId || fixture.id)} 
+            compact={true}
+          />
+        )}
       </div>
     );
   };
