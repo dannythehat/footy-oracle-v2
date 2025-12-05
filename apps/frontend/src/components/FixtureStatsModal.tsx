@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { X, TrendingUp, Users, Target, Trophy, Calendar } from 'lucide-react';
 import { fixturesApi } from '../services/api';
+import { LeagueLogo } from './LeagueLogo';
+import { TeamLogo } from './TeamLogo';
 
 interface FixtureStatsModalProps {
   isOpen: boolean;
@@ -56,13 +58,17 @@ export const FixtureStatsModal: React.FC<FixtureStatsModalProps> = ({
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/90">
       <div className="bg-[#0a0a0a] rounded-lg border border-gray-800 max-w-6xl w-full max-h-[90vh] overflow-y-auto">
-        {/* Header - Flat Design */}
+        {/* Header with Team Logos */}
         <div className="sticky top-0 bg-[#0a0a0a] border-b border-gray-800 p-4 flex items-center justify-between">
-          <h2 className="text-lg font-semibold">
-            <span className="text-white">{homeTeam}</span>
-            <span className="text-gray-600 mx-2">vs</span>
-            <span className="text-white">{awayTeam}</span>
-          </h2>
+          <div className="flex items-center gap-3">
+            <TeamLogo teamId={homeTeamId} teamName={homeTeam} size="md" />
+            <h2 className="text-lg font-semibold">
+              <span className="text-white">{homeTeam}</span>
+              <span className="text-gray-600 mx-2">vs</span>
+              <span className="text-white">{awayTeam}</span>
+            </h2>
+            <TeamLogo teamId={awayTeamId} teamName={awayTeam} size="md" />
+          </div>
           <button
             onClick={onClose}
             className="p-1.5 hover:bg-gray-900 rounded transition-colors"
@@ -98,6 +104,7 @@ export const FixtureStatsModal: React.FC<FixtureStatsModalProps> = ({
                     {homeStanding && (
                       <StandingCard
                         team={homeTeam}
+                        teamId={homeTeamId}
                         standing={homeStanding}
                         isHome={true}
                       />
@@ -105,6 +112,7 @@ export const FixtureStatsModal: React.FC<FixtureStatsModalProps> = ({
                     {awayStanding && (
                       <StandingCard
                         team={awayTeam}
+                        teamId={awayTeamId}
                         standing={awayStanding}
                         isHome={false}
                       />
@@ -145,7 +153,7 @@ export const FixtureStatsModal: React.FC<FixtureStatsModalProps> = ({
                     </div>
                   )}
 
-                  {/* Recent Matches - Compact List */}
+                  {/* Recent Matches with Team Logos */}
                   <div className="space-y-1.5">
                     {data.h2h.matches.slice(0, 5).map((match: any, idx: number) => (
                       <div
@@ -156,9 +164,13 @@ export const FixtureStatsModal: React.FC<FixtureStatsModalProps> = ({
                           <span className="text-xs text-gray-600 w-20">
                             {new Date(match.date).toLocaleDateString('en-GB', { day: '2-digit', month: 'short' })}
                           </span>
-                          <span className="text-white text-xs">
-                            {match.homeTeam} <span className="text-gray-600">vs</span> {match.awayTeam}
-                          </span>
+                          <div className="flex items-center gap-2">
+                            <TeamLogo teamId={match.homeTeamId} teamName={match.homeTeam} size="sm" />
+                            <span className="text-white text-xs">{match.homeTeam}</span>
+                            <span className="text-gray-600 text-xs">vs</span>
+                            <span className="text-white text-xs">{match.awayTeam}</span>
+                            <TeamLogo teamId={match.awayTeamId} teamName={match.awayTeam} size="sm" />
+                          </div>
                         </div>
                         <div className="flex items-center gap-2">
                           <span className="font-semibold text-white text-sm">
@@ -182,7 +194,10 @@ export const FixtureStatsModal: React.FC<FixtureStatsModalProps> = ({
                   <div className="bg-[#0f0f0f] border border-gray-800 rounded p-3">
                     <div className="grid grid-cols-2 gap-4">
                       <div className="space-y-2">
-                        <h4 className="font-semibold text-green-500 text-sm mb-2">{homeTeam}</h4>
+                        <div className="flex items-center gap-2 mb-2">
+                          <TeamLogo teamId={homeTeamId} teamName={homeTeam} size="sm" />
+                          <h4 className="font-semibold text-green-500 text-sm">{homeTeam}</h4>
+                        </div>
                         <StatRow label="Possession" value={data.statistics.home?.possession || '0%'} />
                         <StatRow label="Shots" value={data.statistics.home?.totalShots || 0} />
                         <StatRow label="On Target" value={data.statistics.home?.shotsOnGoal || 0} />
@@ -190,7 +205,10 @@ export const FixtureStatsModal: React.FC<FixtureStatsModalProps> = ({
                         <StatRow label="Fouls" value={data.statistics.home?.fouls || 0} />
                       </div>
                       <div className="space-y-2">
-                        <h4 className="font-semibold text-red-500 text-sm mb-2">{awayTeam}</h4>
+                        <div className="flex items-center gap-2 mb-2">
+                          <TeamLogo teamId={awayTeamId} teamName={awayTeam} size="sm" />
+                          <h4 className="font-semibold text-red-500 text-sm">{awayTeam}</h4>
+                        </div>
                         <StatRow label="Possession" value={data.statistics.away?.possession || '0%'} />
                         <StatRow label="Shots" value={data.statistics.away?.totalShots || 0} />
                         <StatRow label="On Target" value={data.statistics.away?.shotsOnGoal || 0} />
@@ -202,7 +220,7 @@ export const FixtureStatsModal: React.FC<FixtureStatsModalProps> = ({
                 </div>
               )}
 
-              {/* Upcoming Fixtures - Compact Cards */}
+              {/* Upcoming Fixtures with Team Logos */}
               {(data.homeUpcoming?.length > 0 || data.awayUpcoming?.length > 0) && (
                 <div>
                   <div className="flex items-center gap-2 mb-3">
@@ -212,7 +230,10 @@ export const FixtureStatsModal: React.FC<FixtureStatsModalProps> = ({
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                     {data.homeUpcoming?.length > 0 && (
                       <div>
-                        <h4 className="font-semibold text-green-500 text-xs mb-2">{homeTeam}</h4>
+                        <div className="flex items-center gap-2 mb-2">
+                          <TeamLogo teamId={homeTeamId} teamName={homeTeam} size="sm" />
+                          <h4 className="font-semibold text-green-500 text-xs">{homeTeam}</h4>
+                        </div>
                         <div className="space-y-1.5">
                           {data.homeUpcoming.slice(0, 3).map((fixture: any, idx: number) => (
                             <UpcomingFixtureCard key={idx} fixture={fixture} />
@@ -222,7 +243,10 @@ export const FixtureStatsModal: React.FC<FixtureStatsModalProps> = ({
                     )}
                     {data.awayUpcoming?.length > 0 && (
                       <div>
-                        <h4 className="font-semibold text-red-500 text-xs mb-2">{awayTeam}</h4>
+                        <div className="flex items-center gap-2 mb-2">
+                          <TeamLogo teamId={awayTeamId} teamName={awayTeam} size="sm" />
+                          <h4 className="font-semibold text-red-500 text-xs">{awayTeam}</h4>
+                        </div>
                         <div className="space-y-1.5">
                           {data.awayUpcoming.slice(0, 3).map((fixture: any, idx: number) => (
                             <UpcomingFixtureCard key={idx} fixture={fixture} />
@@ -241,13 +265,16 @@ export const FixtureStatsModal: React.FC<FixtureStatsModalProps> = ({
   );
 };
 
-// Standing Card Component - Flat Design
-const StandingCard: React.FC<{ team: string; standing: any; isHome: boolean }> = ({ team, standing, isHome }) => (
+// Standing Card Component with Team Logo
+const StandingCard: React.FC<{ team: string; teamId: number; standing: any; isHome: boolean }> = ({ team, teamId, standing, isHome }) => (
   <div className={`bg-[#0f0f0f] border-l-2 ${isHome ? 'border-green-500' : 'border-red-500'} border-r border-t border-b border-gray-800 rounded p-3`}>
     <div className="flex items-center justify-between mb-2">
-      <span className={`font-semibold text-sm ${isHome ? 'text-green-500' : 'text-red-500'}`}>
-        {team}
-      </span>
+      <div className="flex items-center gap-2">
+        <TeamLogo teamId={teamId} teamName={team} size="sm" />
+        <span className={`font-semibold text-sm ${isHome ? 'text-green-500' : 'text-red-500'}`}>
+          {team}
+        </span>
+      </div>
       <span className="text-xs text-gray-600">
         Position: <span className="text-white font-semibold">{standing.rank}</span>
       </span>
@@ -289,15 +316,20 @@ const StatRow: React.FC<{ label: string; value: string | number }> = ({ label, v
   </div>
 );
 
-// Upcoming Fixture Card - Compact
+// Upcoming Fixture Card with Team Logos
 const UpcomingFixtureCard: React.FC<{ fixture: any }> = ({ fixture }) => (
   <div className="bg-[#0f0f0f] border border-gray-800 rounded p-2 text-xs">
     <div className="flex items-center justify-between">
       <div className="flex-1">
-        <div className="text-white font-medium">
-          {fixture.homeTeam} <span className="text-gray-600">vs</span> {fixture.awayTeam}
+        <div className="flex items-center gap-2 mb-1">
+          <TeamLogo teamId={fixture.homeTeamId} teamName={fixture.homeTeam} size="sm" />
+          <span className="text-white font-medium">{fixture.homeTeam}</span>
         </div>
-        <div className="text-gray-600 text-xs mt-0.5">
+        <div className="flex items-center gap-2">
+          <TeamLogo teamId={fixture.awayTeamId} teamName={fixture.awayTeam} size="sm" />
+          <span className="text-white font-medium">{fixture.awayTeam}</span>
+        </div>
+        <div className="text-gray-600 text-xs mt-1">
           {new Date(fixture.date).toLocaleDateString('en-GB', { day: '2-digit', month: 'short' })}
         </div>
       </div>
