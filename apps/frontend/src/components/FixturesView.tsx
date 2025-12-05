@@ -62,6 +62,19 @@ const FixturesView: React.FC<FixturesViewProps> = ({ onClose, embedded = false }
   const [selectedFixture, setSelectedFixture] = useState<Fixture | null>(null);
   const [isMatchDetailOpen, setIsMatchDetailOpen] = useState(false);
 
+  // Helper function to format league name with country
+  const formatLeagueName = (fixture: Fixture): string => {
+    const league = fixture.league || fixture.leagueName || 'Unknown League';
+    const country = fixture.country;
+    
+    // If country exists and is not already in the league name, prepend it
+    if (country && !league.toLowerCase().includes(country.toLowerCase())) {
+      return `${country}: ${league}`;
+    }
+    
+    return league;
+  };
+
   // Generate date range: 7 days past, today, 7 days future
   const generateDateRange = () => {
     const dates: Date[] = [];
@@ -122,7 +135,7 @@ const FixturesView: React.FC<FixturesViewProps> = ({ onClose, embedded = false }
         if (expandedLeagues.size === 0) {
           const leagues = new Set<string>(
             response.data
-              .map((f: Fixture) => f.league || f.leagueName)
+              .map((f: Fixture) => formatLeagueName(f))
               .filter((league: string | undefined): league is string => Boolean(league))
           );
           setExpandedLeagues(leagues);
@@ -132,7 +145,7 @@ const FixturesView: React.FC<FixturesViewProps> = ({ onClose, embedded = false }
         const liveFixtures = response.data.filter(isLive);
         const liveLeagues = new Set<string>(
           liveFixtures
-            .map((f: Fixture) => f.league || f.leagueName)
+            .map((f: Fixture) => formatLeagueName(f))
             .filter((league: string | undefined): league is string => Boolean(league))
         );
         setExpandedLiveLeagues(liveLeagues);
@@ -214,9 +227,9 @@ const FixturesView: React.FC<FixturesViewProps> = ({ onClose, embedded = false }
   // Get live fixtures
   const liveFixtures = fixtures.filter(isLive);
 
-  // Group live fixtures by league
+  // Group live fixtures by league (with country)
   const groupedLiveFixtures: GroupedFixtures = liveFixtures.reduce((acc, fixture) => {
-    const league = fixture.league || fixture.leagueName || 'Unknown League';
+    const league = formatLeagueName(fixture);
     if (!acc[league]) {
       acc[league] = [];
     }
@@ -224,9 +237,9 @@ const FixturesView: React.FC<FixturesViewProps> = ({ onClose, embedded = false }
     return acc;
   }, {} as GroupedFixtures);
 
-  // Group fixtures by league
+  // Group fixtures by league (with country)
   const groupedFixtures: GroupedFixtures = fixtures.reduce((acc, fixture) => {
-    const league = fixture.league || fixture.leagueName || 'Unknown League';
+    const league = formatLeagueName(fixture);
     if (!acc[league]) {
       acc[league] = [];
     }
