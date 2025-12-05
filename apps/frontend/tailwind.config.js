@@ -6,6 +6,21 @@ export default {
   ],
   theme: {
     extend: {
+      screens: {
+        'xs': '320px',
+        'sm': '640px',
+        'md': '768px',
+        'lg': '1024px',
+        'xl': '1280px',
+        '2xl': '1536px',
+      },
+      spacing: {
+        'touch': '44px', // Minimum touch target size
+        'safe-top': 'env(safe-area-inset-top)',
+        'safe-bottom': 'env(safe-area-inset-bottom)',
+        'safe-left': 'env(safe-area-inset-left)',
+        'safe-right': 'env(safe-area-inset-right)',
+      },
       animation: {
         'fade-in': 'fadeIn 0.6s ease-out forwards',
         'fade-in-up': 'fadeInUp 0.8s ease-out forwards',
