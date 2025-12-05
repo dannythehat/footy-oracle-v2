@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { 
   Calendar, ChevronLeft, ChevronRight, RefreshCw,
-  ChevronDown, ChevronUp, AlertCircle, Radio
+  ChevronDown, ChevronUp, AlertCircle, Radio, Star
 } from 'lucide-react';
 import { fixturesApi } from '../services/api';
 import MatchDetailDrawer from './fixtures/MatchDetailDrawer';
@@ -9,6 +9,7 @@ import { FavoriteButton } from './FavoriteButton';
 import LiveMatchStats from './LiveMatchStats';
 import { LeagueLogo } from './LeagueLogo';
 import { TeamLogo } from './TeamLogo';
+import { useFavoriteLeagues } from '../hooks/useFavoriteLeagues';
 
 interface Fixture {
   fixtureId: string;
@@ -61,6 +62,9 @@ const FixturesView: React.FC<FixturesViewProps> = ({ onClose, embedded = false }
   // Match Detail Drawer State
   const [selectedFixture, setSelectedFixture] = useState<Fixture | null>(null);
   const [isMatchDetailOpen, setIsMatchDetailOpen] = useState(false);
+
+  // Favorite Leagues Hook
+  const { isFavoriteLeague, toggleFavoriteLeague } = useFavoriteLeagues();
 
   // Helper function to format league name with country
   const formatLeagueName = (fixture: Fixture): string => {
@@ -187,6 +191,11 @@ const FixturesView: React.FC<FixturesViewProps> = ({ onClose, embedded = false }
     setExpandedLiveLeagues(newExpanded);
   };
 
+  const handleLeagueFavoriteClick = (e: React.MouseEvent, league: string, country?: string) => {
+    e.stopPropagation();
+    toggleFavoriteLeague({ leagueName: league, country });
+  };
+
   const handleFixtureClick = async (fixture: Fixture) => {
     try {
       const fixtureId = Number(fixture.id || fixture.fixtureId);
@@ -246,6 +255,18 @@ const FixturesView: React.FC<FixturesViewProps> = ({ onClose, embedded = false }
     acc[league].push(fixture);
     return acc;
   }, {} as GroupedFixtures);
+
+  // Sort leagues: favorites first, then alphabetically
+  const sortLeagues = (leagues: [string, Fixture[]][]): [string, Fixture[]][] => {
+    return leagues.sort(([leagueA], [leagueB]) => {
+      const aIsFavorite = isFavoriteLeague(leagueA);
+      const bIsFavorite = isFavoriteLeague(leagueB);
+      
+      if (aIsFavorite && !bIsFavorite) return -1;
+      if (!aIsFavorite && bIsFavorite) return 1;
+      return leagueA.localeCompare(leagueB);
+    });
+  };
 
   const formatDate = (date: Date) => {
     const today = new Date();
@@ -571,16 +592,17 @@ const FixturesView: React.FC<FixturesViewProps> = ({ onClose, embedded = false }
               
               {/* Live Leagues - Mobile optimized */}
               <div className="space-y-0">
-                {Object.entries(groupedLiveFixtures).map(([league, leagueFixtures]) => {
+                {sortLeagues(Object.entries(groupedLiveFixtures)).map(([league, leagueFixtures]) => {
                   const firstFixture = leagueFixtures[0];
+                  const isFavorite = isFavoriteLeague(league);
                   return (
                     <div key={league} className="border-b border-gray-800 last:border-b-0">
                       {/* Live League Header - Mobile optimized touch target */}
-                      <button
-                        onClick={() => toggleLiveLeague(league)}
-                        className="w-full px-3 py-2 sm:px-2 sm:py-1.5 flex items-center justify-between hover:bg-gray-900/30 active:bg-gray-900/50 transition-colors min-h-[44px] sm:min-h-0"
-                      >
-                        <div className="flex items-center gap-2 sm:gap-1.5">
+                      <div className="w-full px-3 py-2 sm:px-2 sm:py-1.5 flex items-center justify-between hover:bg-gray-900/30 min-h-[44px] sm:min-h-0">
+                        <button
+                          onClick={() => toggleLiveLeague(league)}
+                          className="flex items-center gap-2 sm:gap-1.5 flex-1"
+                        >
                           <LeagueLogo
                             leagueId={firstFixture.leagueId}
                             leagueName={league}
@@ -588,13 +610,26 @@ const FixturesView: React.FC<FixturesViewProps> = ({ onClose, embedded = false }
                           />
                           <span className="text-xs sm:text-[10px] font-semibold text-white">{league}</span>
                           <span className="text-[10px] sm:text-[9px] text-gray-600">({leagueFixtures.length})</span>
+                        </button>
+                        <div className="flex items-center gap-2 sm:gap-1">
+                          <button
+                            onClick={(e) => handleLeagueFavoriteClick(e, league, firstFixture.country)}
+                            className="p-1 hover:bg-gray-800/50 rounded transition-colors"
+                            title={isFavorite ? 'Remove from favorites' : 'Add to favorites'}
+                          >
+                            <Star
+                              className={`w-4 h-4 sm:w-3 sm:h-3 ${isFavorite ? 'text-yellow-400 fill-yellow-400' : 'text-gray-600'}`}
+                            />
+                          </button>
+                          <button onClick={() => toggleLiveLeague(league)}>
+                            {expandedLiveLeagues.has(league) ? (
+                              <ChevronUp className="w-4 h-4 sm:w-3 sm:h-3 text-gray-600" />
+                            ) : (
+                              <ChevronDown className="w-4 h-4 sm:w-3 sm:h-3 text-gray-600" />
+                            )}
+                          </button>
                         </div>
-                        {expandedLiveLeagues.has(league) ? (
-                          <ChevronUp className="w-4 h-4 sm:w-3 sm:h-3 text-gray-600" />
-                        ) : (
-                          <ChevronDown className="w-4 h-4 sm:w-3 sm:h-3 text-gray-600" />
-                        )}
-                      </button>
+                      </div>
 
                       {/* Live League Fixtures */}
                       {expandedLiveLeagues.has(league) && (
@@ -613,16 +648,17 @@ const FixturesView: React.FC<FixturesViewProps> = ({ onClose, embedded = false }
         {/* Fixtures List - Mobile optimized */}
         {!loading && !error && fixtures.length > 0 && (
           <div className="space-y-2 sm:space-y-1.5">
-            {Object.entries(groupedFixtures).map(([league, leagueFixtures]) => {
+            {sortLeagues(Object.entries(groupedFixtures)).map(([league, leagueFixtures]) => {
               const firstFixture = leagueFixtures[0];
+              const isFavorite = isFavoriteLeague(league);
               return (
                 <div key={league} className="bg-[#0f0f0f] border border-gray-800 rounded-lg overflow-hidden">
-                  {/* League Header with Logo - Mobile optimized */}
-                  <button
-                    onClick={() => toggleLeague(league)}
-                    className="w-full px-3 py-2 sm:px-2 sm:py-1.5 flex items-center justify-between hover:bg-gray-900/50 active:bg-gray-900/70 transition-colors min-h-[44px] sm:min-h-0"
-                  >
-                    <div className="flex items-center gap-2 sm:gap-1.5">
+                  {/* League Header with Logo and Star - Mobile optimized */}
+                  <div className="w-full px-3 py-2 sm:px-2 sm:py-1.5 flex items-center justify-between hover:bg-gray-900/50 min-h-[44px] sm:min-h-0">
+                    <button
+                      onClick={() => toggleLeague(league)}
+                      className="flex items-center gap-2 sm:gap-1.5 flex-1"
+                    >
                       <LeagueLogo
                         leagueId={firstFixture.leagueId}
                         leagueName={league}
@@ -630,13 +666,26 @@ const FixturesView: React.FC<FixturesViewProps> = ({ onClose, embedded = false }
                       />
                       <span className="text-xs sm:text-[11px] font-bold text-white">{league}</span>
                       <span className="text-[10px] sm:text-[9px] text-gray-600">({leagueFixtures.length})</span>
+                    </button>
+                    <div className="flex items-center gap-2 sm:gap-1">
+                      <button
+                        onClick={(e) => handleLeagueFavoriteClick(e, league, firstFixture.country)}
+                        className="p-1 hover:bg-gray-800/50 rounded transition-colors"
+                        title={isFavorite ? 'Remove from favorites' : 'Add to favorites'}
+                      >
+                        <Star
+                          className={`w-4 h-4 sm:w-3 sm:h-3 ${isFavorite ? 'text-yellow-400 fill-yellow-400' : 'text-gray-600'}`}
+                        />
+                      </button>
+                      <button onClick={() => toggleLeague(league)}>
+                        {expandedLeagues.has(league) ? (
+                          <ChevronUp className="w-4 h-4 sm:w-3 sm:h-3 text-gray-600" />
+                        ) : (
+                          <ChevronDown className="w-4 h-4 sm:w-3 sm:h-3 text-gray-600" />
+                        )}
+                      </button>
                     </div>
-                    {expandedLeagues.has(league) ? (
-                      <ChevronUp className="w-4 h-4 sm:w-3 sm:h-3 text-gray-600" />
-                    ) : (
-                      <ChevronDown className="w-4 h-4 sm:w-3 sm:h-3 text-gray-600" />
-                    )}
-                  </button>
+                  </div>
 
                   {/* League Fixtures */}
                   {expandedLeagues.has(league) && (
