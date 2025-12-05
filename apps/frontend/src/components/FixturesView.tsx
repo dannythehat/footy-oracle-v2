@@ -7,6 +7,8 @@ import { fixturesApi } from '../services/api';
 import MatchDetailDrawer from './fixtures/MatchDetailDrawer';
 import { FavoriteButton } from './FavoriteButton';
 import LiveMatchStats from './LiveMatchStats';
+import { LeagueLogo } from './LeagueLogo';
+import { TeamLogo } from './TeamLogo';
 
 interface Fixture {
   fixtureId: string;
@@ -51,6 +53,7 @@ const FixturesView: React.FC<FixturesViewProps> = ({ onClose, embedded = false }
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [fixtures, setFixtures] = useState<Fixture[]>([]);
   const [expandedLeagues, setExpandedLeagues] = useState<Set<string>>(new Set());
+  const [expandedLiveLeagues, setExpandedLiveLeagues] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [autoRefresh, setAutoRefresh] = useState(true);
@@ -114,7 +117,8 @@ const FixturesView: React.FC<FixturesViewProps> = ({ onClose, embedded = false }
       
       if (response && response.data) {
         setFixtures(response.data);
-        // Auto-expand all leagues on first load
+        
+        // Auto-expand all regular leagues on first load
         if (expandedLeagues.size === 0) {
           const leagues = new Set<string>(
             response.data
@@ -123,6 +127,15 @@ const FixturesView: React.FC<FixturesViewProps> = ({ onClose, embedded = false }
           );
           setExpandedLeagues(leagues);
         }
+        
+        // Auto-expand all live leagues
+        const liveFixtures = response.data.filter(isLive);
+        const liveLeagues = new Set<string>(
+          liveFixtures
+            .map((f: Fixture) => f.league || f.leagueName)
+            .filter((league: string | undefined): league is string => Boolean(league))
+        );
+        setExpandedLiveLeagues(liveLeagues);
       } else {
         setFixtures([]);
       }
@@ -149,6 +162,16 @@ const FixturesView: React.FC<FixturesViewProps> = ({ onClose, embedded = false }
       newExpanded.add(league);
     }
     setExpandedLeagues(newExpanded);
+  };
+
+  const toggleLiveLeague = (league: string) => {
+    const newExpanded = new Set(expandedLiveLeagues);
+    if (newExpanded.has(league)) {
+      newExpanded.delete(league);
+    } else {
+      newExpanded.add(league);
+    }
+    setExpandedLiveLeagues(newExpanded);
   };
 
   const handleFixtureClick = async (fixture: Fixture) => {
@@ -190,6 +213,16 @@ const FixturesView: React.FC<FixturesViewProps> = ({ onClose, embedded = false }
 
   // Get live fixtures
   const liveFixtures = fixtures.filter(isLive);
+
+  // Group live fixtures by league
+  const groupedLiveFixtures: GroupedFixtures = liveFixtures.reduce((acc, fixture) => {
+    const league = fixture.league || fixture.leagueName || 'Unknown League';
+    if (!acc[league]) {
+      acc[league] = [];
+    }
+    acc[league].push(fixture);
+    return acc;
+  }, {} as GroupedFixtures);
 
   // Group fixtures by league
   const groupedFixtures: GroupedFixtures = fixtures.reduce((acc, fixture) => {
@@ -240,7 +273,7 @@ const FixturesView: React.FC<FixturesViewProps> = ({ onClose, embedded = false }
     if (status === 'live' || ['1H', '2H', 'ET', 'BT', 'P'].includes(statusShort || '')) {
       return (
         <div className="flex items-center gap-1">
-          <span className="text-red-500 font-bold text-[10px]">{elapsed}'</span>
+          <span className="text-red-500 font-bold text-[10px] sm:text-xs">{elapsed}'</span>
           <div className="w-1 h-1 bg-red-500 rounded-full animate-pulse"></div>
         </div>
       );
@@ -248,25 +281,25 @@ const FixturesView: React.FC<FixturesViewProps> = ({ onClose, embedded = false }
 
     // Half time
     if (statusShort === 'HT') {
-      return <span className="text-orange-400 font-semibold text-[10px]">HT</span>;
+      return <span className="text-orange-400 font-semibold text-[10px] sm:text-xs">HT</span>;
     }
 
     // Finished
     if (status === 'finished' || statusShort === 'FT') {
-      return <span className="text-gray-600 font-semibold text-[10px]">FT</span>;
+      return <span className="text-gray-600 font-semibold text-[10px] sm:text-xs">FT</span>;
     }
 
     // Postponed/Cancelled
     if (status === 'postponed' || statusShort === 'PST') {
-      return <span className="text-yellow-500 font-semibold text-[10px]">PST</span>;
+      return <span className="text-yellow-500 font-semibold text-[10px] sm:text-xs">PST</span>;
     }
 
     if (statusShort === 'CANC') {
-      return <span className="text-red-500 font-semibold text-[10px]">CANC</span>;
+      return <span className="text-red-500 font-semibold text-[10px] sm:text-xs">CANC</span>;
     }
 
     // Scheduled - show time
-    return <span className="text-gray-500 text-[10px]">{formatTime(fixture)}</span>;
+    return <span className="text-gray-500 text-[10px] sm:text-xs">{formatTime(fixture)}</span>;
   };
 
   const getScore = (fixture: Fixture): { home: number | null; away: number | null } => {
@@ -314,40 +347,54 @@ const FixturesView: React.FC<FixturesViewProps> = ({ onClose, embedded = false }
       <div 
         key={fixture.fixtureId || fixture.id} 
         onClick={() => handleFixtureClick(fixture)}
-        className={`px-2 py-1.5 border-b border-gray-800/50 last:border-b-0 hover:bg-gray-800/30 transition-colors cursor-pointer ${live ? 'bg-red-950/20' : ''}`}
+        className={`px-3 py-2 sm:px-2 sm:py-1.5 border-b border-gray-800/50 last:border-b-0 hover:bg-gray-800/30 active:bg-gray-800/50 transition-colors cursor-pointer ${live ? 'bg-red-950/20' : ''}`}
       >
-        <div className="flex items-center justify-between gap-2">
-          {/* Time/Status Column */}
-          <div className="flex items-center justify-center w-10 flex-shrink-0">
+        <div className="flex items-center justify-between gap-2 sm:gap-1.5">
+          {/* Time/Status Column - Mobile optimized */}
+          <div className="flex items-center justify-center w-12 sm:w-10 flex-shrink-0">
             {getStatusDisplay(fixture)}
           </div>
 
-          {/* Teams Column */}
+          {/* Teams Column with Logos - Mobile optimized */}
           <div className="flex-1 min-w-0">
-            <div className="flex items-center justify-between mb-0.5">
-              <span className={`text-[11px] font-medium truncate ${live ? 'text-white' : 'text-gray-300'}`}>
-                {fixture.homeTeamName || fixture.homeTeam}
-              </span>
+            <div className="flex items-center justify-between mb-1 sm:mb-0.5">
+              <div className="flex items-center gap-2 sm:gap-1.5 flex-1 min-w-0">
+                <TeamLogo
+                  teamId={fixture.homeTeamId}
+                  teamName={fixture.homeTeamName || fixture.homeTeam}
+                  size="sm"
+                />
+                <span className={`text-xs sm:text-[11px] font-medium truncate ${live ? 'text-white' : 'text-gray-300'}`}>
+                  {fixture.homeTeamName || fixture.homeTeam}
+                </span>
+              </div>
               {showScore && (
-                <span className={`text-xs font-bold ml-2 ${live ? 'text-red-400' : 'text-white'}`}>
+                <span className={`text-sm sm:text-xs font-bold ml-2 ${live ? 'text-red-400' : 'text-white'}`}>
                   {score.home ?? '-'}
                 </span>
               )}
             </div>
             <div className="flex items-center justify-between">
-              <span className={`text-[11px] font-medium truncate ${live ? 'text-white' : 'text-gray-300'}`}>
-                {fixture.awayTeamName || fixture.awayTeam}
-              </span>
+              <div className="flex items-center gap-2 sm:gap-1.5 flex-1 min-w-0">
+                <TeamLogo
+                  teamId={fixture.awayTeamId}
+                  teamName={fixture.awayTeamName || fixture.awayTeam}
+                  size="sm"
+                />
+                <span className={`text-xs sm:text-[11px] font-medium truncate ${live ? 'text-white' : 'text-gray-300'}`}>
+                  {fixture.awayTeamName || fixture.awayTeam}
+                </span>
+              </div>
               {showScore && (
-                <span className={`text-xs font-bold ml-2 ${live ? 'text-red-400' : 'text-white'}`}>
+                <span className={`text-sm sm:text-xs font-bold ml-2 ${live ? 'text-red-400' : 'text-white'}`}>
                   {score.away ?? '-'}
                 </span>
               )}
             </div>
           </div>
 
-          {/* Favorite Button */}
-          <div className="flex-shrink-0">
+          {/* Favorite Button - Mobile optimized touch target */}
+          <div className="flex-shrink-0 min-w-[44px] flex items-center justify-center sm:min-w-0">
             <FavoriteButton
               fixtureId={Number(fixture.fixtureId || fixture.id)}
               homeTeam={fixture.homeTeamName || fixture.homeTeam}
@@ -372,28 +419,29 @@ const FixturesView: React.FC<FixturesViewProps> = ({ onClose, embedded = false }
 
   return (
     <div className={`${embedded ? '' : 'min-h-screen'} bg-[#0a0a0a]`}>
-      <div className="container mx-auto px-2 py-3 max-w-6xl">
-        {/* Compact Header */}
-        <div className="flex items-center justify-between mb-2">
-          <h1 className="text-base font-bold text-white">FIXTURES</h1>
+      <div className="container mx-auto px-3 py-4 sm:px-2 sm:py-3 max-w-6xl">
+        {/* Header - Mobile optimized */}
+        <div className="flex items-center justify-between mb-3 sm:mb-2">
+          <h1 className="text-lg sm:text-base font-bold text-white">FIXTURES</h1>
           {onClose && (
             <button
               onClick={onClose}
-              className="px-2 py-1 bg-gray-900 hover:bg-gray-800 text-white rounded text-xs transition-colors border border-gray-800"
+              className="px-3 py-2 sm:px-2 sm:py-1 bg-gray-900 hover:bg-gray-800 active:bg-gray-700 text-white rounded text-sm sm:text-xs transition-colors border border-gray-800 min-h-[44px] sm:min-h-0"
             >
               Close
             </button>
           )}
         </div>
 
-        {/* Compact Date Selector */}
-        <div className="bg-[#0f0f0f] border border-gray-800 rounded-lg p-2 mb-2">
-          <div className="flex items-center gap-1.5 mb-1.5">
-            <Calendar className="w-3 h-3 text-gray-600" />
-            <span className="text-[10px] font-semibold text-white">SELECT DATE</span>
+        {/* Date Selector - Mobile optimized */}
+        <div className="bg-[#0f0f0f] border border-gray-800 rounded-lg p-3 sm:p-2 mb-3 sm:mb-2">
+          <div className="flex items-center gap-2 sm:gap-1.5 mb-2 sm:mb-1.5">
+            <Calendar className="w-4 h-4 sm:w-3 sm:h-3 text-gray-600" />
+            <span className="text-xs sm:text-[10px] font-semibold text-white">SELECT DATE</span>
           </div>
           
-          <div className="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-thin scrollbar-thumb-gray-700 scrollbar-track-gray-900">
+          {/* Horizontal scroll date picker - Mobile optimized */}
+          <div className="flex items-center gap-2 sm:gap-1.5 overflow-x-auto pb-2 sm:pb-1 scrollbar-thin scrollbar-thumb-gray-700 scrollbar-track-gray-900 -mx-1 px-1">
             {dateRange.map((date, index) => {
               const selected = isSameDay(date, selectedDate);
               const today = isToday(date);
@@ -402,19 +450,19 @@ const FixturesView: React.FC<FixturesViewProps> = ({ onClose, embedded = false }
                 <button
                   key={index}
                   onClick={() => setSelectedDate(date)}
-                  className={`flex-shrink-0 px-2 py-1 rounded text-[10px] font-medium transition-colors border ${
+                  className={`flex-shrink-0 px-3 py-2 sm:px-2 sm:py-1 rounded text-xs sm:text-[10px] font-medium transition-colors border min-h-[44px] sm:min-h-0 ${
                     selected
                       ? 'bg-blue-600 border-blue-500 text-white'
                       : today
                       ? 'bg-gray-800 border-gray-700 text-blue-400'
-                      : 'bg-gray-900 border-gray-800 text-gray-400 hover:bg-gray-800'
+                      : 'bg-gray-900 border-gray-800 text-gray-400 hover:bg-gray-800 active:bg-gray-700'
                   }`}
                 >
                   <div className="text-center">
                     <div className={`font-semibold ${selected ? 'text-white' : today ? 'text-blue-400' : 'text-gray-300'}`}>
                       {date.getDate()}
                     </div>
-                    <div className={`text-[9px] ${selected ? 'text-blue-200' : 'text-gray-600'}`}>
+                    <div className={`text-[10px] sm:text-[9px] ${selected ? 'text-blue-200' : 'text-gray-600'}`}>
                       {date.toLocaleDateString('en-GB', { month: 'short' })}
                     </div>
                   </div>
@@ -423,44 +471,44 @@ const FixturesView: React.FC<FixturesViewProps> = ({ onClose, embedded = false }
             })}
           </div>
 
-          {/* Compact Controls */}
-          <div className="flex items-center justify-between mt-1.5 pt-1.5 border-t border-gray-800">
-            <div className="flex items-center gap-1.5">
+          {/* Controls - Mobile optimized */}
+          <div className="flex items-center justify-between mt-2 sm:mt-1.5 pt-2 sm:pt-1.5 border-t border-gray-800">
+            <div className="flex items-center gap-2 sm:gap-1.5">
               <button
                 onClick={() => changeDate(-1)}
-                className="p-0.5 hover:bg-gray-900 rounded transition-colors"
+                className="p-2 sm:p-0.5 hover:bg-gray-900 active:bg-gray-800 rounded transition-colors min-h-[44px] min-w-[44px] sm:min-h-0 sm:min-w-0 flex items-center justify-center"
               >
-                <ChevronLeft className="w-3 h-3 text-gray-500" />
+                <ChevronLeft className="w-4 h-4 sm:w-3 sm:h-3 text-gray-500" />
               </button>
               
-              <span className="text-[10px] font-semibold text-white">
+              <span className="text-xs sm:text-[10px] font-semibold text-white">
                 {formatDate(selectedDate)}
               </span>
 
               <button
                 onClick={() => changeDate(1)}
-                className="p-0.5 hover:bg-gray-900 rounded transition-colors"
+                className="p-2 sm:p-0.5 hover:bg-gray-900 active:bg-gray-800 rounded transition-colors min-h-[44px] min-w-[44px] sm:min-h-0 sm:min-w-0 flex items-center justify-center"
               >
-                <ChevronRight className="w-3 h-3 text-gray-500" />
+                <ChevronRight className="w-4 h-4 sm:w-3 sm:h-3 text-gray-500" />
               </button>
             </div>
 
-            <div className="flex items-center gap-1.5">
+            <div className="flex items-center gap-2 sm:gap-1.5">
               <button
                 onClick={fetchFixtures}
                 disabled={loading}
-                className="flex items-center gap-1 px-2 py-0.5 bg-gray-900 hover:bg-gray-800 text-white rounded text-[10px] transition-colors disabled:opacity-50 border border-gray-800"
+                className="flex items-center gap-1.5 sm:gap-1 px-3 py-2 sm:px-2 sm:py-0.5 bg-gray-900 hover:bg-gray-800 active:bg-gray-700 text-white rounded text-xs sm:text-[10px] transition-colors disabled:opacity-50 border border-gray-800 min-h-[44px] sm:min-h-0"
               >
-                <RefreshCw className={`w-2.5 h-2.5 ${loading ? 'animate-spin' : ''}`} />
-                Refresh
+                <RefreshCw className={`w-3.5 h-3.5 sm:w-2.5 sm:h-2.5 ${loading ? 'animate-spin' : ''}`} />
+                <span className="hidden sm:inline">Refresh</span>
               </button>
 
-              <label className="flex items-center gap-1 text-white text-[10px]">
+              <label className="flex items-center gap-1.5 sm:gap-1 text-white text-xs sm:text-[10px] min-h-[44px] sm:min-h-0">
                 <input
                   type="checkbox"
                   checked={autoRefresh}
                   onChange={(e) => setAutoRefresh(e.target.checked)}
-                  className="w-2.5 h-2.5"
+                  className="w-4 h-4 sm:w-2.5 sm:h-2.5"
                 />
                 Auto
               </label>
@@ -470,79 +518,122 @@ const FixturesView: React.FC<FixturesViewProps> = ({ onClose, embedded = false }
 
         {/* Loading State */}
         {loading && (
-          <div className="text-center py-6">
-            <RefreshCw className="w-6 h-6 text-blue-500 animate-spin mx-auto mb-1.5" />
-            <p className="text-gray-600 text-[10px]">Loading fixtures...</p>
+          <div className="text-center py-8 sm:py-6">
+            <RefreshCw className="w-8 h-8 sm:w-6 sm:h-6 text-blue-500 animate-spin mx-auto mb-2 sm:mb-1.5" />
+            <p className="text-gray-600 text-xs sm:text-[10px]">Loading fixtures...</p>
           </div>
         )}
 
         {/* Error State */}
         {error && (
-          <div className="bg-red-950/30 border border-red-900/50 rounded-lg p-2 mb-2">
-            <div className="flex items-center gap-1.5">
-              <AlertCircle className="w-3 h-3 text-red-400" />
-              <p className="text-red-400 text-[10px]">{error}</p>
+          <div className="bg-red-950/30 border border-red-900/50 rounded-lg p-3 sm:p-2 mb-3 sm:mb-2">
+            <div className="flex items-center gap-2 sm:gap-1.5">
+              <AlertCircle className="w-4 h-4 sm:w-3 sm:h-3 text-red-400" />
+              <p className="text-red-400 text-xs sm:text-[10px]">{error}</p>
             </div>
           </div>
         )}
 
         {/* No Fixtures */}
         {!loading && !error && fixtures.length === 0 && (
-          <div className="text-center py-6">
-            <Calendar className="w-8 h-8 text-gray-700 mx-auto mb-1.5" />
-            <p className="text-gray-600 text-xs">No fixtures for this date</p>
+          <div className="text-center py-8 sm:py-6">
+            <Calendar className="w-10 h-10 sm:w-8 sm:h-8 text-gray-700 mx-auto mb-2 sm:mb-1.5" />
+            <p className="text-gray-600 text-sm sm:text-xs">No fixtures for this date</p>
           </div>
         )}
 
-        {/* Live Now Section - Compact Box */}
+        {/* Live Now Section - Grouped by League - Mobile optimized */}
         {!loading && !error && liveFixtures.length > 0 && (
-          <div className="mb-2">
+          <div className="mb-3 sm:mb-2">
             <div className="bg-[#0f0f0f] border-l-2 border-red-500 border-r border-t border-b border-gray-800 rounded-lg overflow-hidden">
-              <div className="px-2 py-1.5 flex items-center justify-between bg-red-950/20 border-b border-gray-800">
-                <div className="flex items-center gap-1.5">
-                  <Radio className="w-3 h-3 text-red-500 animate-pulse" />
-                  <span className="text-[10px] font-bold text-red-400">LIVE NOW</span>
-                  <span className="text-[9px] text-red-500 bg-red-950/40 px-1 py-0.5 rounded border border-red-900/50">
+              <div className="px-3 py-2 sm:px-2 sm:py-1.5 flex items-center justify-between bg-red-950/20 border-b border-gray-800">
+                <div className="flex items-center gap-2 sm:gap-1.5">
+                  <Radio className="w-4 h-4 sm:w-3 sm:h-3 text-red-500 animate-pulse" />
+                  <span className="text-xs sm:text-[10px] font-bold text-red-400">LIVE NOW</span>
+                  <span className="text-[10px] sm:text-[9px] text-red-500 bg-red-950/40 px-1.5 py-0.5 sm:px-1 sm:py-0.5 rounded border border-red-900/50">
                     {liveFixtures.length}
                   </span>
                 </div>
               </div>
-              <div>
-                {liveFixtures.map(renderFixtureRow)}
+              
+              {/* Live Leagues - Mobile optimized */}
+              <div className="space-y-0">
+                {Object.entries(groupedLiveFixtures).map(([league, leagueFixtures]) => {
+                  const firstFixture = leagueFixtures[0];
+                  return (
+                    <div key={league} className="border-b border-gray-800 last:border-b-0">
+                      {/* Live League Header - Mobile optimized touch target */}
+                      <button
+                        onClick={() => toggleLiveLeague(league)}
+                        className="w-full px-3 py-2 sm:px-2 sm:py-1.5 flex items-center justify-between hover:bg-gray-900/30 active:bg-gray-900/50 transition-colors min-h-[44px] sm:min-h-0"
+                      >
+                        <div className="flex items-center gap-2 sm:gap-1.5">
+                          <LeagueLogo
+                            leagueId={firstFixture.leagueId}
+                            leagueName={league}
+                            size="sm"
+                          />
+                          <span className="text-xs sm:text-[10px] font-semibold text-white">{league}</span>
+                          <span className="text-[10px] sm:text-[9px] text-gray-600">({leagueFixtures.length})</span>
+                        </div>
+                        {expandedLiveLeagues.has(league) ? (
+                          <ChevronUp className="w-4 h-4 sm:w-3 sm:h-3 text-gray-600" />
+                        ) : (
+                          <ChevronDown className="w-4 h-4 sm:w-3 sm:h-3 text-gray-600" />
+                        )}
+                      </button>
+
+                      {/* Live League Fixtures */}
+                      {expandedLiveLeagues.has(league) && (
+                        <div>
+                          {leagueFixtures.map(renderFixtureRow)}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
               </div>
             </div>
           </div>
         )}
 
-        {/* Fixtures List - Compact Boxes */}
+        {/* Fixtures List - Mobile optimized */}
         {!loading && !error && fixtures.length > 0 && (
-          <div className="space-y-1.5">
-            {Object.entries(groupedFixtures).map(([league, leagueFixtures]) => (
-              <div key={league} className="bg-[#0f0f0f] border border-gray-800 rounded-lg overflow-hidden">
-                {/* League Header - Compact */}
-                <button
-                  onClick={() => toggleLeague(league)}
-                  className="w-full px-2 py-1.5 flex items-center justify-between hover:bg-gray-900/50 transition-colors"
-                >
-                  <div className="flex items-center gap-1.5">
-                    <span className="text-[11px] font-bold text-white">{league}</span>
-                    <span className="text-[9px] text-gray-600">({leagueFixtures.length})</span>
-                  </div>
-                  {expandedLeagues.has(league) ? (
-                    <ChevronUp className="w-3 h-3 text-gray-600" />
-                  ) : (
-                    <ChevronDown className="w-3 h-3 text-gray-600" />
-                  )}
-                </button>
+          <div className="space-y-2 sm:space-y-1.5">
+            {Object.entries(groupedFixtures).map(([league, leagueFixtures]) => {
+              const firstFixture = leagueFixtures[0];
+              return (
+                <div key={league} className="bg-[#0f0f0f] border border-gray-800 rounded-lg overflow-hidden">
+                  {/* League Header with Logo - Mobile optimized */}
+                  <button
+                    onClick={() => toggleLeague(league)}
+                    className="w-full px-3 py-2 sm:px-2 sm:py-1.5 flex items-center justify-between hover:bg-gray-900/50 active:bg-gray-900/70 transition-colors min-h-[44px] sm:min-h-0"
+                  >
+                    <div className="flex items-center gap-2 sm:gap-1.5">
+                      <LeagueLogo
+                        leagueId={firstFixture.leagueId}
+                        leagueName={league}
+                        size="sm"
+                      />
+                      <span className="text-xs sm:text-[11px] font-bold text-white">{league}</span>
+                      <span className="text-[10px] sm:text-[9px] text-gray-600">({leagueFixtures.length})</span>
+                    </div>
+                    {expandedLeagues.has(league) ? (
+                      <ChevronUp className="w-4 h-4 sm:w-3 sm:h-3 text-gray-600" />
+                    ) : (
+                      <ChevronDown className="w-4 h-4 sm:w-3 sm:h-3 text-gray-600" />
+                    )}
+                  </button>
 
-                {/* League Fixtures - Compact */}
-                {expandedLeagues.has(league) && (
-                  <div className="border-t border-gray-800">
-                    {leagueFixtures.map(renderFixtureRow)}
-                  </div>
-                )}
-              </div>
-            ))}
+                  {/* League Fixtures */}
+                  {expandedLeagues.has(league) && (
+                    <div className="border-t border-gray-800">
+                      {leagueFixtures.map(renderFixtureRow)}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
           </div>
         )}
       </div>
