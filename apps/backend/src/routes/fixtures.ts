@@ -1,6 +1,7 @@
 import { Router } from "express";
 import { Fixture } from "../models/Fixture.js";
 import { updateLiveScores } from "../services/liveScoresService.js";
+import { updateTodayOdds, updateFixtureOdds } from "../services/oddsUpdateService.js";
 
 const router = Router();
 
@@ -171,6 +172,67 @@ router.post("/refresh", async (req, res) => {
     });
   } catch (err: any) {
     console.error("❌ Refresh ERROR:", err.message);
+    return res.status(500).json({
+      success: false,
+      error: err.message || "Server error",
+    });
+  }
+});
+
+// Update odds for today's fixtures
+router.post("/update-odds", async (req, res) => {
+  try {
+    console.log(`📥 /api/fixtures/update-odds hit`);
+    
+    // Trigger odds update for today's fixtures
+    const result = await updateTodayOdds();
+    
+    return res.json({
+      success: true,
+      message: `Updated odds for ${result.updated} of ${result.total} fixtures`,
+      updated: result.updated,
+      total: result.total,
+      errors: result.errors
+    });
+  } catch (err: any) {
+    console.error("❌ Update odds ERROR:", err.message);
+    return res.status(500).json({
+      success: false,
+      error: err.message || "Server error",
+    });
+  }
+});
+
+// Update odds for a specific fixture
+router.post("/:fixtureId/update-odds", async (req, res) => {
+  try {
+    const fixtureId = parseInt(req.params.fixtureId);
+    
+    if (!fixtureId) {
+      return res.status(400).json({
+        success: false,
+        error: "Invalid fixture ID"
+      });
+    }
+    
+    console.log(`📥 /api/fixtures/${fixtureId}/update-odds hit`);
+    
+    // Trigger odds update for specific fixture
+    const success = await updateFixtureOdds(fixtureId);
+    
+    if (success) {
+      return res.json({
+        success: true,
+        message: `Updated odds for fixture ${fixtureId}`
+      });
+    } else {
+      return res.json({
+        success: false,
+        message: `No odds available for fixture ${fixtureId}`
+      });
+    }
+  } catch (err: any) {
+    console.error("❌ Update fixture odds ERROR:", err.message);
     return res.status(500).json({
       success: false,
       error: err.message || "Server error",

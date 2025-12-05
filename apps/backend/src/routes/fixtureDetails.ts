@@ -60,9 +60,37 @@ router.get('/fixtures/:fixtureId/complete', async (req: Request, res: Response):
     // Fetch all data using the unified service
     const completeData = await getCompleteFixtureData(fixtureDoc);
 
+    // Merge fixture document data (odds, aiBets) with API data
+    const mergedData = {
+      ...completeData,
+      // Include odds from MongoDB
+      odds: fixtureDoc.odds || {},
+      // Include AI predictions from MongoDB
+      aiBets: fixtureDoc.aiBets || null,
+      // Include basic fixture info
+      fixtureId: fixtureDoc.fixtureId,
+      homeTeam: fixtureDoc.homeTeam,
+      awayTeam: fixtureDoc.awayTeam,
+      homeTeamId: fixtureDoc.homeTeamId,
+      awayTeamId: fixtureDoc.awayTeamId,
+      league: fixtureDoc.league,
+      leagueName: fixtureDoc.league,
+      leagueId: fixtureDoc.leagueId,
+      country: fixtureDoc.country,
+      season: fixtureDoc.season,
+      date: fixtureDoc.date,
+      kickoff: fixtureDoc.date,
+      status: fixtureDoc.status,
+      statusShort: fixtureDoc.statusShort,
+      elapsed: fixtureDoc.elapsed,
+      homeScore: fixtureDoc.homeScore,
+      awayScore: fixtureDoc.awayScore,
+      score: fixtureDoc.score
+    };
+
     res.json({
       success: true,
-      data: completeData
+      data: mergedData
     });
   } catch (err: any) {
     console.error('[fixtureDetails] Complete data error:', err.message || err);
