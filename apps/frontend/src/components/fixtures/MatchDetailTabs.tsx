@@ -24,23 +24,24 @@ const MatchDetailTabs: React.FC<MatchDetailTabsProps> = ({ activeTab, onTabChang
             <button
               key={tab.id}
               onClick={() => onTabChange(tab.id)}
-              className={`flex items-center justify-center gap-2 py-3 px-6 font-semibold text-sm transition-all relative ${
+              className={`flex items-center justify-center gap-2 sm:gap-1.5 py-4 px-6 sm:py-3 sm:px-4 font-semibold text-sm sm:text-xs transition-all relative flex-1 min-h-[56px] sm:min-h-0 ${
                 isActive
                   ? 'text-pink-600'
-                  : 'text-gray-600 hover:text-gray-900'
+                  : 'text-gray-600 hover:text-gray-900 active:bg-gray-50'
               }`}
+              aria-label={tab.label}
+              aria-current={isActive ? 'page' : undefined}
             >
-              <Icon className="w-4 h-4" />
+              <Icon className="w-5 h-5 sm:w-4 sm:h-4" />
               <span>{tab.label}</span>
               
-              {/* Active indicator */}
+              {/* Active indicator - Mobile optimized */}
               {isActive && (
-                <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-pink-600"></div>
+                <div className="absolute bottom-0 left-0 right-0 h-1 sm:h-0.5 bg-pink-600"></div>
               )}
             </button>
           );
-        })}
-      </div>
+        })}\n      </div>
     </div>
   );
 };
