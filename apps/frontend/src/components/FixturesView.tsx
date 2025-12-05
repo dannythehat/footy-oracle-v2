@@ -6,6 +6,8 @@ import {
 import { fixturesApi } from '../services/api';
 import MatchDetailDrawer from './fixtures/MatchDetailDrawer';
 import { FavoriteButton } from './FavoriteButton';
+import { LeagueLogo } from './LeagueLogo';
+import { TeamLogo } from './TeamLogo';
 
 interface Fixture {
   fixtureId: string;
@@ -321,12 +323,19 @@ const FixturesView: React.FC<FixturesViewProps> = ({ onClose, embedded = false }
             {getStatusDisplay(fixture)}
           </div>
 
-          {/* Teams Column */}
+          {/* Teams Column with Logos */}
           <div className="flex-1 min-w-0">
             <div className="flex items-center justify-between mb-0.5">
-              <span className={`text-[11px] font-medium truncate ${live ? 'text-white' : 'text-gray-300'}`}>
-                {fixture.homeTeamName || fixture.homeTeam}
-              </span>
+              <div className="flex items-center gap-1.5 flex-1 min-w-0">
+                <TeamLogo
+                  teamId={fixture.homeTeamId}
+                  teamName={fixture.homeTeamName || fixture.homeTeam}
+                  size="sm"
+                />
+                <span className={`text-[11px] font-medium truncate ${live ? 'text-white' : 'text-gray-300'}`}>
+                  {fixture.homeTeamName || fixture.homeTeam}
+                </span>
+              </div>
               {showScore && (
                 <span className={`text-xs font-bold ml-2 ${live ? 'text-red-400' : 'text-white'}`}>
                   {score.home ?? '-'}
@@ -334,9 +343,16 @@ const FixturesView: React.FC<FixturesViewProps> = ({ onClose, embedded = false }
               )}
             </div>
             <div className="flex items-center justify-between">
-              <span className={`text-[11px] font-medium truncate ${live ? 'text-white' : 'text-gray-300'}`}>
-                {fixture.awayTeamName || fixture.awayTeam}
-              </span>
+              <div className="flex items-center gap-1.5 flex-1 min-w-0">
+                <TeamLogo
+                  teamId={fixture.awayTeamId}
+                  teamName={fixture.awayTeamName || fixture.awayTeam}
+                  size="sm"
+                />
+                <span className={`text-[11px] font-medium truncate ${live ? 'text-white' : 'text-gray-300'}`}>
+                  {fixture.awayTeamName || fixture.awayTeam}
+                </span>
+              </div>
               {showScore && (
                 <span className={`text-xs font-bold ml-2 ${live ? 'text-red-400' : 'text-white'}`}>
                   {score.away ?? '-'}
@@ -505,35 +521,43 @@ const FixturesView: React.FC<FixturesViewProps> = ({ onClose, embedded = false }
           </div>
         )}
 
-        {/* Fixtures List - Compact Boxes */}
+        {/* Fixtures List - Compact Boxes with League Logos */}
         {!loading && !error && fixtures.length > 0 && (
           <div className="space-y-1.5">
-            {Object.entries(groupedFixtures).map(([league, leagueFixtures]) => (
-              <div key={league} className="bg-[#0f0f0f] border border-gray-800 rounded-lg overflow-hidden">
-                {/* League Header - Compact */}
-                <button
-                  onClick={() => toggleLeague(league)}
-                  className="w-full px-2 py-1.5 flex items-center justify-between hover:bg-gray-900/50 transition-colors"
-                >
-                  <div className="flex items-center gap-1.5">
-                    <span className="text-[11px] font-bold text-white">{league}</span>
-                    <span className="text-[9px] text-gray-600">({leagueFixtures.length})</span>
-                  </div>
-                  {expandedLeagues.has(league) ? (
-                    <ChevronUp className="w-3 h-3 text-gray-600" />
-                  ) : (
-                    <ChevronDown className="w-3 h-3 text-gray-600" />
-                  )}
-                </button>
+            {Object.entries(groupedFixtures).map(([league, leagueFixtures]) => {
+              const firstFixture = leagueFixtures[0];
+              return (
+                <div key={league} className="bg-[#0f0f0f] border border-gray-800 rounded-lg overflow-hidden">
+                  {/* League Header with Logo */}
+                  <button
+                    onClick={() => toggleLeague(league)}
+                    className="w-full px-2 py-1.5 flex items-center justify-between hover:bg-gray-900/50 transition-colors"
+                  >
+                    <div className="flex items-center gap-1.5">
+                      <LeagueLogo
+                        leagueId={firstFixture.leagueId}
+                        leagueName={league}
+                        size="sm"
+                      />
+                      <span className="text-[11px] font-bold text-white">{league}</span>
+                      <span className="text-[9px] text-gray-600">({leagueFixtures.length})</span>
+                    </div>
+                    {expandedLeagues.has(league) ? (
+                      <ChevronUp className="w-3 h-3 text-gray-600" />
+                    ) : (
+                      <ChevronDown className="w-3 h-3 text-gray-600" />
+                    )}
+                  </button>
 
-                {/* League Fixtures - Compact */}
-                {expandedLeagues.has(league) && (
-                  <div className="border-t border-gray-800">
-                    {leagueFixtures.map(renderFixtureRow)}
-                  </div>
-                )}
-              </div>
-            ))}
+                  {/* League Fixtures - Compact */}
+                  {expandedLeagues.has(league) && (
+                    <div className="border-t border-gray-800">
+                      {leagueFixtures.map(renderFixtureRow)}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
           </div>
         )}
       </div>
