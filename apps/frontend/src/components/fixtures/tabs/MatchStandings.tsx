@@ -40,7 +40,7 @@ const MatchStandings: React.FC<MatchStandingsProps> = ({ fixture, standings }) =
   }
 
   const standingsData: StandingTeam[] | null = standings && Array.isArray(standings) && standings.length > 0 
-    ? (Array.isArray(standings[0]) ? standings[0] : standings as StandingTeam[])
+    ? (Array.isArray(standings[0]) ? standings[0] : standings.flat())
     : null;
 
   const hasStandings = standingsData && standingsData.length > 0;
