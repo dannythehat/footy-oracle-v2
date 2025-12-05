@@ -1,5 +1,6 @@
 import React from 'react';
 import { Star, MapPin, Calendar, Clock } from 'lucide-react';
+import { TeamLogo } from '../TeamLogo';
 
 interface MatchDetailHeaderProps {
   fixture: any;
@@ -87,94 +88,93 @@ const MatchDetailHeader: React.FC<MatchDetailHeaderProps> = ({ fixture }) => {
   };
 
   return (
-    <div className="bg-white px-6 pb-4">
-      {/* Breadcrumb */}
-      <div className="flex items-center gap-2 py-3 text-xs text-gray-500">
-        <span>⚽ FOOTBALL</span>
+    <div className="bg-white px-4 sm:px-6 pb-4 sm:pb-3">
+      {/* Breadcrumb - Mobile optimized */}
+      <div className="flex items-center gap-2 py-3 sm:py-2 text-xs sm:text-[10px] text-gray-500 overflow-x-auto scrollbar-none">
+        <span className="whitespace-nowrap">⚽ FOOTBALL</span>
         <span>›</span>
-        <span>{fixture.country || fixture.league?.country?.name || 'COUNTRY'}</span>
+        <span className="whitespace-nowrap">{fixture.country || fixture.league?.country?.name || 'COUNTRY'}</span>
         <span>›</span>
-        <span className="text-gray-900 font-medium">
+        <span className="text-gray-900 font-medium whitespace-nowrap truncate">
           {fixture.leagueName || fixture.league?.name || 'LEAGUE'}
         </span>
       </div>
 
-      {/* Match Info */}
-      <div className="flex items-center justify-between mb-4">
-        <div className="flex items-center gap-3">
-          <div className="text-sm text-gray-600">
+      {/* Match Info - Mobile optimized */}
+      <div className="flex items-center justify-between mb-4 sm:mb-3">
+        <div className="flex items-center gap-2 sm:gap-3">
+          <div className="text-sm sm:text-xs text-gray-600">
             {formatDate(fixture.date || fixture.kickoff)} {formatTime(fixture.date || fixture.kickoff)}
           </div>
         </div>
-        <button className="p-2 hover:bg-gray-100 rounded-full transition-colors">
-          <Star className="w-5 h-5 text-gray-400" />
+        <button 
+          className="p-3 sm:p-2 hover:bg-gray-100 active:bg-gray-200 rounded-full transition-colors min-h-[44px] min-w-[44px] sm:min-h-0 sm:min-w-0 flex items-center justify-center"
+          aria-label="Add to favorites"
+        >
+          <Star className="w-5 h-5 sm:w-4 sm:h-4 text-gray-400" />
         </button>
       </div>
 
-      {/* Teams & Score */}
-      <div className="flex items-center justify-between py-4">
-        {/* Home Team */}
-        <div className="flex items-center gap-3 flex-1">
-          <img 
-            src={fixture.homeTeamLogo || '/placeholder-team.png'} 
-            alt={fixture.homeTeamName || fixture.homeTeam}
-            className="w-12 h-12 object-contain"
-            onError={(e) => {
-              (e.target as HTMLImageElement).src = '/placeholder-team.png';
-            }}
+      {/* Teams & Score - Mobile optimized */}
+      <div className="flex items-center justify-between py-4 sm:py-3 gap-2 sm:gap-4">
+        {/* Home Team - Mobile optimized */}
+        <div className="flex items-center gap-3 sm:gap-2 flex-1 min-w-0">
+          <TeamLogo
+            teamId={fixture.homeTeamId}
+            teamName={fixture.homeTeamName || fixture.homeTeam}
+            size="lg"
+            className="flex-shrink-0"
           />
-          <div>
-            <div className="text-lg font-semibold text-gray-900">
+          <div className="min-w-0 flex-1">
+            <div className="text-base sm:text-sm font-semibold text-gray-900 truncate">
               {fixture.homeTeamName || fixture.homeTeam || 'Home Team'}
             </div>
-            <div className="text-xs text-gray-500">
+            <div className="text-xs sm:text-[10px] text-gray-500 truncate">
               {fixture.country || fixture.league?.country?.name}
             </div>
           </div>
         </div>
 
-        {/* Score */}
-        <div className="text-center px-8">
+        {/* Score - Mobile optimized */}
+        <div className="text-center px-4 sm:px-6 flex-shrink-0">
           {hasScore() ? (
             <>
-              <div className={`text-5xl font-bold ${isLive(fixture.status) ? 'text-pink-600' : 'text-gray-900'}`}>
+              <div className={`text-4xl sm:text-3xl font-bold ${isLive(fixture.status) ? 'text-pink-600' : 'text-gray-900'}`}>
                 {getHomeScore()} - {getAwayScore()}
               </div>
               {getHalfTimeScore() && (
-                <div className="text-xs text-gray-500 mt-1">
+                <div className="text-xs sm:text-[10px] text-gray-500 mt-1">
                   ({getHalfTimeScore()})
                 </div>
               )}
-              <div className={`text-xs font-semibold mt-2 ${
+              <div className={`text-xs sm:text-[10px] font-semibold mt-2 sm:mt-1 ${ 
                 isLive(fixture.status) ? 'text-pink-600' : 'text-gray-600'
               }`}>
                 {getStatusText(fixture.status)}
               </div>
             </>
           ) : (
-            <div className="text-2xl font-bold text-gray-400">
+            <div className="text-2xl sm:text-xl font-bold text-gray-400">
               - : -
             </div>
           )}
         </div>
 
-        {/* Away Team */}
-        <div className="flex items-center gap-3 flex-1 justify-end">
-          <div className="text-right">
-            <div className="text-lg font-semibold text-gray-900">
+        {/* Away Team - Mobile optimized */}
+        <div className="flex items-center gap-3 sm:gap-2 flex-1 justify-end min-w-0">
+          <div className="text-right min-w-0 flex-1">
+            <div className="text-base sm:text-sm font-semibold text-gray-900 truncate">
               {fixture.awayTeamName || fixture.awayTeam || 'Away Team'}
             </div>
-            <div className="text-xs text-gray-500">
+            <div className="text-xs sm:text-[10px] text-gray-500 truncate">
               {fixture.country || fixture.league?.country?.name}
             </div>
           </div>
-          <img 
-            src={fixture.awayTeamLogo || '/placeholder-team.png'} 
-            alt={fixture.awayTeamName || fixture.awayTeam}
-            className="w-12 h-12 object-contain"
-            onError={(e) => {
-              (e.target as HTMLImageElement).src = '/placeholder-team.png';
-            }}
+          <TeamLogo
+            teamId={fixture.awayTeamId}
+            teamName={fixture.awayTeamName || fixture.awayTeam}
+            size="lg"
+            className="flex-shrink-0"
           />
         </div>
       </div>
