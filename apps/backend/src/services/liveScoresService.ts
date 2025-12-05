@@ -46,14 +46,14 @@ function mapStatus(short: string): string {
  */
 export async function fetchLiveFixtures(): Promise<any[]> {
   try {
-    console.log('🔴 Fetching live fixtures...');
+    console.log('🔴 Fetching live fixtures from API...');
     
     const response = await apiClient.get('/fixtures', {
       params: { live: 'all' }
     });
 
     const fixtures = response.data.response || [];
-    console.log(`✅ Found ${fixtures.length} live fixtures`);
+    console.log(`✅ Found ${fixtures.length} live fixtures from API`);
     
     return fixtures.map((f: any) => ({
       fixtureId: f.fixture.id,
@@ -154,26 +154,37 @@ export async function fetchFixtureStatistics(fixtureId: number): Promise<any> {
 
 /**
  * Update live scores in database
- * Fetches all live fixtures and updates their scores and statistics
+ * ENHANCED: Now also checks recently finished fixtures to prevent stale 'live' status
  */
 export async function updateLiveScores(): Promise<{ updated: number; total: number }> {
   try {
-    console.log('🔄 Starting live scores update...');
+    console.log('🔄 Starting comprehensive live scores update...');
     
-    // Fetch all currently live fixtures from API
+    // Step 1: Fetch all currently live fixtures from API
     const liveFixtures = await fetchLiveFixtures();
+    console.log(`📊 API reports ${liveFixtures.length} live fixtures`);
+
+    // Step 2: Also check fixtures from last 3 hours in our DB
+    // This catches games that may have finished but are still marked as 'live'
+    const threeHoursAgo = new Date();
+    threeHoursAgo.setHours(threeHoursAgo.getHours() - 3);
     
-    if (liveFixtures.length === 0) {
-      console.log('ℹ️  No live fixtures to update');
-      return { updated: 0, total: 0 };
-    }
+    const recentDbFixtures = await Fixture.find({
+      date: { $gte: threeHoursAgo },
+      status: 'live'
+    }).lean();
+    
+    console.log(`📊 Database has ${recentDbFixtures.length} fixtures marked as 'live' from last 3 hours`);
 
     let updated = 0;
+    const processedIds = new Set<number>();
 
-    // Update each live fixture in database
+    // Step 3: Update all currently live fixtures
     for (const fixture of liveFixtures) {
       try {
-        // Fetch detailed statistics
+        processedIds.add(fixture.fixtureId);
+        
+        // Fetch detailed statistics for live games
         const statistics = await fetchFixtureStatistics(fixture.fixtureId);
         
         // Update fixture in database with BOTH score formats
@@ -185,8 +196,8 @@ export async function updateLiveScores(): Promise<{ updated: number; total: numb
               statusShort: fixture.statusShort,
               'score.home': fixture.score.home,
               'score.away': fixture.score.away,
-              homeScore: fixture.homeScore,  // Top-level field for frontend
-              awayScore: fixture.awayScore,  // Top-level field for frontend
+              homeScore: fixture.homeScore,
+              awayScore: fixture.awayScore,
               elapsed: fixture.elapsed,
               statistics: statistics || undefined,
               lastUpdated: new Date(),
@@ -196,17 +207,67 @@ export async function updateLiveScores(): Promise<{ updated: number; total: numb
         );
 
         updated++;
-        console.log(`✅ Updated ${fixture.homeTeam} vs ${fixture.awayTeam} (${fixture.homeScore}-${fixture.awayScore})`);
+        console.log(`✅ Updated LIVE: ${fixture.homeTeam} vs ${fixture.awayTeam} (${fixture.homeScore}-${fixture.awayScore}) [${fixture.elapsed}']`);
         
-        // Rate limiting - wait 100ms between requests
-        await new Promise(resolve => setTimeout(resolve, 100));
+        // Rate limiting - reduced to 50ms for faster updates
+        await new Promise(resolve => setTimeout(resolve, 50));
       } catch (error: any) {
-        console.error(`❌ Error updating fixture ${fixture.fixtureId}:`, error.message);
+        console.error(`❌ Error updating live fixture ${fixture.fixtureId}:`, error.message);
       }
     }
 
-    console.log(`✅ Live scores update complete: ${updated}/${liveFixtures.length} fixtures updated`);
-    return { updated, total: liveFixtures.length };
+    // Step 4: Check DB fixtures marked as 'live' that aren't in the API's live list
+    // These may have finished and need status update
+    for (const dbFixture of recentDbFixtures) {
+      if (processedIds.has(dbFixture.fixtureId)) {
+        continue; // Already processed above
+      }
+
+      try {
+        // Fetch current status from API
+        const response = await apiClient.get('/fixtures', {
+          params: { id: dbFixture.fixtureId }
+        });
+
+        const apiFixture = response.data.response?.[0];
+        
+        if (apiFixture) {
+          const newStatus = mapStatus(apiFixture.fixture.status.short);
+          const homeScore = apiFixture.goals.home ?? null;
+          const awayScore = apiFixture.goals.away ?? null;
+          
+          // Update if status changed (likely finished)
+          if (dbFixture.status !== newStatus) {
+            await Fixture.updateOne(
+              { fixtureId: dbFixture.fixtureId },
+              {
+                $set: {
+                  status: newStatus,
+                  statusShort: apiFixture.fixture.status.short,
+                  'score.home': homeScore,
+                  'score.away': awayScore,
+                  homeScore: homeScore,
+                  awayScore: awayScore,
+                  lastUpdated: new Date(),
+                }
+              }
+            );
+
+            updated++;
+            console.log(`✅ Updated STATUS: ${dbFixture.homeTeam} vs ${dbFixture.awayTeam} - ${dbFixture.status} → ${newStatus}`);
+          }
+        }
+
+        // Rate limiting
+        await new Promise(resolve => setTimeout(resolve, 50));
+      } catch (error: any) {
+        console.error(`❌ Error checking fixture ${dbFixture.fixtureId}:`, error.message);
+      }
+    }
+
+    const totalChecked = liveFixtures.length + recentDbFixtures.length;
+    console.log(`✅ Live scores update complete: ${updated} fixtures updated (checked ${totalChecked} total)`);
+    return { updated, total: totalChecked };
   } catch (error: any) {
     console.error('❌ Error in updateLiveScores:', error.message);
     return { updated: 0, total: 0 };
@@ -216,7 +277,6 @@ export async function updateLiveScores(): Promise<{ updated: number; total: numb
 /**
  * Update scores for recently finished fixtures (last 6 hours)
  * Ensures final scores are captured for matches that just ended
- * CRITICAL: Checks ALL fixtures, not just ones marked 'live'
  */
 export async function updateRecentlyFinishedFixtures(): Promise<{ updated: number; total: number }> {
   try {
@@ -225,8 +285,7 @@ export async function updateRecentlyFinishedFixtures(): Promise<{ updated: numbe
     const sixHoursAgo = new Date();
     sixHoursAgo.setHours(sixHoursAgo.getHours() - 6);
     
-    // CRITICAL FIX: Find ALL fixtures from last 6 hours, regardless of status
-    // This catches games stuck in 'live' status from yesterday
+    // Find ALL fixtures from last 6 hours, regardless of status
     const recentFixtures = await Fixture.find({
       date: { $gte: sixHoursAgo }
     }).lean();
@@ -266,8 +325,8 @@ export async function updateRecentlyFinishedFixtures(): Promise<{ updated: numbe
                   statusShort: apiFixture.fixture.status.short,
                   'score.home': homeScore,
                   'score.away': awayScore,
-                  homeScore: homeScore,  // Top-level field for frontend
-                  awayScore: awayScore,  // Top-level field for frontend
+                  homeScore: homeScore,
+                  awayScore: awayScore,
                   lastUpdated: new Date(),
                 }
               }
@@ -279,7 +338,7 @@ export async function updateRecentlyFinishedFixtures(): Promise<{ updated: numbe
         }
 
         // Rate limiting
-        await new Promise(resolve => setTimeout(resolve, 100));
+        await new Promise(resolve => setTimeout(resolve, 50));
       } catch (error: any) {
         console.error(`❌ Error updating fixture ${fixture.fixtureId}:`, error.message);
       }
