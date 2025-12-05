@@ -214,20 +214,21 @@ export async function updateLiveScores(): Promise<{ updated: number; total: numb
 }
 
 /**
- * Update scores for recently finished fixtures (last 2 hours)
+ * Update scores for recently finished fixtures (last 6 hours)
  * Ensures final scores are captured for matches that just ended
+ * CRITICAL: Checks ALL fixtures, not just ones marked 'live'
  */
 export async function updateRecentlyFinishedFixtures(): Promise<{ updated: number; total: number }> {
   try {
     console.log('🏁 Updating recently finished fixtures...');
     
-    const twoHoursAgo = new Date();
-    twoHoursAgo.setHours(twoHoursAgo.getHours() - 2);
+    const sixHoursAgo = new Date();
+    sixHoursAgo.setHours(sixHoursAgo.getHours() - 6);
     
-    // Find fixtures that finished in the last 2 hours
+    // CRITICAL FIX: Find ALL fixtures from last 6 hours, regardless of status
+    // This catches games stuck in 'live' status from yesterday
     const recentFixtures = await Fixture.find({
-      status: 'live',
-      date: { $gte: twoHoursAgo }
+      date: { $gte: sixHoursAgo }
     }).lean();
 
     if (recentFixtures.length === 0) {
@@ -235,6 +236,7 @@ export async function updateRecentlyFinishedFixtures(): Promise<{ updated: numbe
       return { updated: 0, total: 0 };
     }
 
+    console.log(`🔍 Checking ${recentFixtures.length} fixtures from last 6 hours...`);
     let updated = 0;
 
     for (const fixture of recentFixtures) {
@@ -250,23 +252,30 @@ export async function updateRecentlyFinishedFixtures(): Promise<{ updated: numbe
           const homeScore = apiFixture.goals.home ?? null;
           const awayScore = apiFixture.goals.away ?? null;
           
-          await Fixture.updateOne(
-            { fixtureId: fixture.fixtureId },
-            {
-              $set: {
-                status: newStatus,
-                statusShort: apiFixture.fixture.status.short,
-                'score.home': homeScore,
-                'score.away': awayScore,
-                homeScore: homeScore,  // Top-level field for frontend
-                awayScore: awayScore,  // Top-level field for frontend
-                lastUpdated: new Date(),
+          // Only update if status or scores changed
+          if (
+            fixture.status !== newStatus ||
+            fixture.homeScore !== homeScore ||
+            fixture.awayScore !== awayScore
+          ) {
+            await Fixture.updateOne(
+              { fixtureId: fixture.fixtureId },
+              {
+                $set: {
+                  status: newStatus,
+                  statusShort: apiFixture.fixture.status.short,
+                  'score.home': homeScore,
+                  'score.away': awayScore,
+                  homeScore: homeScore,  // Top-level field for frontend
+                  awayScore: awayScore,  // Top-level field for frontend
+                  lastUpdated: new Date(),
+                }
               }
-            }
-          );
+            );
 
-          updated++;
-          console.log(`✅ Updated ${fixture.homeTeam} vs ${fixture.awayTeam} - Status: ${newStatus}`);
+            updated++;
+            console.log(`✅ Updated ${fixture.homeTeam} vs ${fixture.awayTeam} - Status: ${fixture.status} → ${newStatus}`);
+          }
         }
 
         // Rate limiting
