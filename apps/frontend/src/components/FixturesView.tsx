@@ -6,6 +6,7 @@ import {
 import { fixturesApi } from '../services/api';
 import MatchDetailDrawer from './fixtures/MatchDetailDrawer';
 import { FavoriteButton } from './FavoriteButton';
+import { LeagueLogo } from './LeagueLogo';
 
 interface Fixture {
   fixtureId: string;
@@ -50,6 +51,7 @@ const FixturesView: React.FC<FixturesViewProps> = ({ onClose, embedded = false }
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [fixtures, setFixtures] = useState<Fixture[]>([]);
   const [expandedLeagues, setExpandedLeagues] = useState<Set<string>>(new Set());
+  const [expandedLiveLeagues, setExpandedLiveLeagues] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [autoRefresh, setAutoRefresh] = useState(true);
@@ -122,6 +124,15 @@ const FixturesView: React.FC<FixturesViewProps> = ({ onClose, embedded = false }
           );
           setExpandedLeagues(leagues);
         }
+        
+        // Auto-expand all live leagues
+        const liveFixtures = response.data.filter(isLive);
+        const liveLeagues = new Set<string>(
+          liveFixtures
+            .map((f: Fixture) => f.league || f.leagueName)
+            .filter((league: string | undefined): league is string => Boolean(league))
+        );
+        setExpandedLiveLeagues(liveLeagues);
       } else {
         setFixtures([]);
       }
@@ -148,6 +159,16 @@ const FixturesView: React.FC<FixturesViewProps> = ({ onClose, embedded = false }
       newExpanded.add(league);
     }
     setExpandedLeagues(newExpanded);
+  };
+
+  const toggleLiveLeague = (league: string) => {
+    const newExpanded = new Set(expandedLiveLeagues);
+    if (newExpanded.has(league)) {
+      newExpanded.delete(league);
+    } else {
+      newExpanded.add(league);
+    }
+    setExpandedLiveLeagues(newExpanded);
   };
 
   const handleFixtureClick = async (fixture: Fixture) => {
@@ -189,6 +210,16 @@ const FixturesView: React.FC<FixturesViewProps> = ({ onClose, embedded = false }
 
   // Get live fixtures
   const liveFixtures = fixtures.filter(isLive);
+
+  // Group live fixtures by league
+  const groupedLiveFixtures: GroupedFixtures = liveFixtures.reduce((acc, fixture) => {
+    const league = fixture.league || fixture.leagueName || 'Unknown League';
+    if (!acc[league]) {
+      acc[league] = [];
+    }
+    acc[league].push(fixture);
+    return acc;
+  }, {} as GroupedFixtures);
 
   // Group fixtures by league
   const groupedFixtures: GroupedFixtures = fixtures.reduce((acc, fixture) => {
@@ -485,7 +516,7 @@ const FixturesView: React.FC<FixturesViewProps> = ({ onClose, embedded = false }
           </div>
         )}
 
-        {/* Live Now Section - Compact Box */}
+        {/* Live Now Section - Grouped by League */}
         {!loading && !error && liveFixtures.length > 0 && (
           <div className="mb-2">
             <div className="bg-[#0f0f0f] border-l-2 border-red-500 border-r border-t border-b border-gray-800 rounded-lg overflow-hidden">
@@ -498,8 +529,43 @@ const FixturesView: React.FC<FixturesViewProps> = ({ onClose, embedded = false }
                   </span>
                 </div>
               </div>
-              <div>
-                {liveFixtures.map(renderFixtureRow)}
+              
+              {/* Live Leagues */}
+              <div className="space-y-0">
+                {Object.entries(groupedLiveFixtures).map(([league, leagueFixtures]) => {
+                  const firstFixture = leagueFixtures[0];
+                  return (
+                    <div key={league} className="border-b border-gray-800 last:border-b-0">
+                      {/* Live League Header */}
+                      <button
+                        onClick={() => toggleLiveLeague(league)}
+                        className="w-full px-2 py-1.5 flex items-center justify-between hover:bg-gray-900/30 transition-colors"
+                      >
+                        <div className="flex items-center gap-1.5">
+                          <LeagueLogo
+                            leagueId={firstFixture.leagueId}
+                            leagueName={league}
+                            size="sm"
+                          />
+                          <span className="text-[10px] font-semibold text-white">{league}</span>
+                          <span className="text-[9px] text-gray-600">({leagueFixtures.length})</span>
+                        </div>
+                        {expandedLiveLeagues.has(league) ? (
+                          <ChevronUp className="w-3 h-3 text-gray-600" />
+                        ) : (
+                          <ChevronDown className="w-3 h-3 text-gray-600" />
+                        )}
+                      </button>
+
+                      {/* Live League Fixtures */}
+                      {expandedLiveLeagues.has(league) && (
+                        <div>
+                          {leagueFixtures.map(renderFixtureRow)}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
               </div>
             </div>
           </div>
@@ -508,32 +574,40 @@ const FixturesView: React.FC<FixturesViewProps> = ({ onClose, embedded = false }
         {/* Fixtures List - Compact Boxes */}
         {!loading && !error && fixtures.length > 0 && (
           <div className="space-y-1.5">
-            {Object.entries(groupedFixtures).map(([league, leagueFixtures]) => (
-              <div key={league} className="bg-[#0f0f0f] border border-gray-800 rounded-lg overflow-hidden">
-                {/* League Header - Compact */}
-                <button
-                  onClick={() => toggleLeague(league)}
-                  className="w-full px-2 py-1.5 flex items-center justify-between hover:bg-gray-900/50 transition-colors"
-                >
-                  <div className="flex items-center gap-1.5">
-                    <span className="text-[11px] font-bold text-white">{league}</span>
-                    <span className="text-[9px] text-gray-600">({leagueFixtures.length})</span>
-                  </div>
-                  {expandedLeagues.has(league) ? (
-                    <ChevronUp className="w-3 h-3 text-gray-600" />
-                  ) : (
-                    <ChevronDown className="w-3 h-3 text-gray-600" />
-                  )}
-                </button>
+            {Object.entries(groupedFixtures).map(([league, leagueFixtures]) => {
+              const firstFixture = leagueFixtures[0];
+              return (
+                <div key={league} className="bg-[#0f0f0f] border border-gray-800 rounded-lg overflow-hidden">
+                  {/* League Header - Compact */}
+                  <button
+                    onClick={() => toggleLeague(league)}
+                    className="w-full px-2 py-1.5 flex items-center justify-between hover:bg-gray-900/50 transition-colors"
+                  >
+                    <div className="flex items-center gap-1.5">
+                      <LeagueLogo
+                        leagueId={firstFixture.leagueId}
+                        leagueName={league}
+                        size="sm"
+                      />
+                      <span className="text-[11px] font-bold text-white">{league}</span>
+                      <span className="text-[9px] text-gray-600">({leagueFixtures.length})</span>
+                    </div>
+                    {expandedLeagues.has(league) ? (
+                      <ChevronUp className="w-3 h-3 text-gray-600" />
+                    ) : (
+                      <ChevronDown className="w-3 h-3 text-gray-600" />
+                    )}
+                  </button>
 
-                {/* League Fixtures - Compact */}
-                {expandedLeagues.has(league) && (
-                  <div className="border-t border-gray-800">
-                    {leagueFixtures.map(renderFixtureRow)}
-                  </div>
-                )}
-              </div>
-            ))}
+                  {/* League Fixtures - Compact */}
+                  {expandedLeagues.has(league) && (
+                    <div className="border-t border-gray-800">
+                      {leagueFixtures.map(renderFixtureRow)}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
           </div>
         )}
       </div>
