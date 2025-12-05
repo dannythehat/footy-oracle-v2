@@ -40,20 +40,23 @@ router.get("/", async (req, res) => {
     if (date) {
       const offsetMinutes = timezoneOffset ? parseInt(timezoneOffset as string) : 0;
       
-      // User's local midnight converted to UTC
-      // For GMT+2 (offsetMinutes = -120):
-      // Local: 2025-12-04 00:00:00 GMT+2
-      // UTC: 2025-12-03 22:00:00 UTC (subtract the offset)
-      const start = new Date(date as string);
-      start.setMinutes(start.getMinutes() - offsetMinutes);
+      // CRITICAL: Convert user's local time to UTC
+      // getTimezoneOffset() returns NEGATIVE for ahead-of-UTC timezones
+      // GMT+2 returns -120 minutes
+      // 
+      // User in GMT+2 selects "Dec 5, 2025"
+      // They want: Dec 5 00:00:00 GMT+2 to Dec 5 23:59:59 GMT+2
+      // In UTC: Dec 4 22:00:00 to Dec 5 21:59:59
+      // 
+      // To convert: UTC = Local + offsetMinutes
+      // Example: Local 00:00 + (-120) = UTC 22:00 previous day ✅
       
-      // User's local 23:59:59 converted to UTC
-      // For GMT+2 (offsetMinutes = -120):
-      // Local: 2025-12-04 23:59:59 GMT+2
-      // UTC: 2025-12-04 21:59:59 UTC (subtract the offset)
+      const start = new Date(date as string);
+      start.setMinutes(start.getMinutes() + offsetMinutes);
+      
       const end = new Date(date as string);
       end.setDate(end.getDate() + 1);
-      end.setMinutes(end.getMinutes() - offsetMinutes);
+      end.setMinutes(end.getMinutes() + offsetMinutes);
       
       query.date = { $gte: start, $lt: end };
       
