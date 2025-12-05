@@ -1,0 +1,77 @@
+--- a/apps/frontend/src/components/FixturesView.tsx
++++ b/apps/frontend/src/components/FixturesView.tsx
+@@ -248,12 +248,13 @@ const FixturesView: React.FC<FixturesViewProps> = ({ onClose, embedded = false
+     })
+   };
+ 
+   const formatTime = (fixture: Fixture) => {
+     if (fixture.time) return fixture.time;
+     
+     const dateStr = fixture.kickoff || fixture.date;
+     if (!dateStr) return 'TBD';
+     
+-    return new Date(dateStr).toLocaleTimeString('en-GB', { 
++    // Use user's locale instead of forcing 'en-GB'
++    return new Date(dateStr).toLocaleTimeString(undefined, { 
+       hour: '2-digit', 
+-      minute: '2-digit' 
++      minute: '2-digit',
++      hour12: false // 24-hour format
+     });
+   };
+ 
+@@ -397,8 +398,13 @@ const FixturesView: React.FC<FixturesViewProps> = ({ onClose, embedded = false
+       <div className="container mx-auto px-3 py-4 max-w-6xl">
+         {/* Header */}
+         <div className="flex items-center justify-between mb-4">
+-          <h1 className="text-xl font-bold text-white">FIXTURES</h1>
++          <div>
++            <h1 className="text-xl font-bold text-white">FIXTURES</h1>
++            <p className="text-xs text-gray-600 mt-0.5">
++              Times shown in {Intl.DateTimeFormat().resolvedOptions().timeZone.replace(/_/g, ' ')}
++            </p>
++          </div>
+           {onClose && (
+             <button
+               onClick={onClose}
+@@ -517,20 +523,35 @@ const FixturesView: React.FC<FixturesViewProps> = ({ onClose, embedded = false
+         )}
+ 
+         {/* Live Now Section - Flat Design */}
+-        {!loading && !error && liveFixtures.length > 0 && (
++        {!loading && !error && fixtures.length > 0 && (
+           <div className="mb-3">
+             <div className="bg-[#0f0f0f] border-l-2 border-red-500 border-r border-t border-b border-gray-800 rounded overflow-hidden">
+               <div className="px-3 py-2 flex items-center justify-between bg-red-950/20 border-b border-gray-800">
+                 <div className="flex items-center gap-2">
+-                  <Radio className="w-3.5 h-3.5 text-red-500 animate-pulse" />
+-                  <span className="text-xs font-bold text-red-400">LIVE NOW</span>
+-                  <span className="text-xs text-red-500 bg-red-950/40 px-1.5 py-0.5 rounded border border-red-900/50">
++                  <Radio className={`w-3.5 h-3.5 ${liveFixtures.length > 0 ? 'text-red-500 animate-pulse' : 'text-gray-600'}`} />
++                  <span className={`text-xs font-bold ${liveFixtures.length > 0 ? 'text-red-400' : 'text-gray-500'}`}>
++                    LIVE NOW
++                  </span>
++                  <span className={`text-xs px-1.5 py-0.5 rounded border ${
++                    liveFixtures.length > 0 
++                      ? 'text-red-500 bg-red-950/40 border-red-900/50' 
++                      : 'text-gray-600 bg-gray-900/40 border-gray-800'
++                  }`}>
+                     {liveFixtures.length}
+                   </span>
+                 </div>
+               </div>
+-              <div>
+-                {liveFixtures.map(renderFixtureRow)}
+-              </div>
++              {liveFixtures.length > 0 ? (
++                <div>
++                  {liveFixtures.map(renderFixtureRow)}
++                </div>
++              ) : (
++                <div className="px-3 py-4 text-center text-gray-600 text-xs">
++                  No live games at the moment
++                </div>
++              )}
+             </div>
+           </div>
+         )}
