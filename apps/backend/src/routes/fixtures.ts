@@ -14,7 +14,7 @@ router.get("/", async (req, res) => {
       league, 
       leagueId,
       status, 
-      limit = '100',  // ✅ INCREASED from 50 to 100
+      limit = '1000',  // ✅ INCREASED default to handle busy days with 600+ games
       page = '1',
       sort = 'date',
       timezoneOffset // in minutes, e.g., -120 for GMT+2
@@ -88,8 +88,8 @@ router.get("/", async (req, res) => {
       query.status = status;
     }
 
-    // Pagination
-    const limitNum = Math.min(parseInt(limit as string) || 100, 100);
+    // Pagination - NO CAP, allow any limit
+    const limitNum = parseInt(limit as string) || 1000;
     const pageNum = parseInt(page as string) || 1;
     const skip = (pageNum - 1) * limitNum;
 
