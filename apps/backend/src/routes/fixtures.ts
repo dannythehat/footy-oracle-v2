@@ -43,17 +43,17 @@ router.get("/", async (req, res) => {
       // User's local midnight converted to UTC
       // For GMT+2 (offsetMinutes = -120):
       // Local: 2025-12-04 00:00:00 GMT+2
-      // UTC: 2025-12-03 22:00:00 UTC
+      // UTC: 2025-12-03 22:00:00 UTC (subtract the offset)
       const start = new Date(date as string);
-      start.setMinutes(start.getMinutes() + offsetMinutes);
+      start.setMinutes(start.getMinutes() - offsetMinutes);
       
       // User's local 23:59:59 converted to UTC
       // For GMT+2 (offsetMinutes = -120):
       // Local: 2025-12-04 23:59:59 GMT+2
-      // UTC: 2025-12-04 21:59:59 UTC
+      // UTC: 2025-12-04 21:59:59 UTC (subtract the offset)
       const end = new Date(date as string);
       end.setDate(end.getDate() + 1);
-      end.setMinutes(end.getMinutes() + offsetMinutes);
+      end.setMinutes(end.getMinutes() - offsetMinutes);
       
       query.date = { $gte: start, $lt: end };
       

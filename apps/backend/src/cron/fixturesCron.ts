@@ -1,6 +1,7 @@
 import cron from 'node-cron';
 import { Fixture } from '../models/Fixture.js';
 import { fetchFixtures, fetchOdds } from '../services/apiFootballService.js';
+import { updateTodayOdds } from '../services/oddsUpdateService.js';
 
 /**
  * Start the fixtures cron: refreshes 7 days back + 7 days forward
@@ -10,6 +11,17 @@ export function startFixturesCron() {
   cron.schedule('0 */2 * * *', async () => {
     console.log('🔄 Running fixtures update cron (every 2 hours)...');
     await loadFixturesWindow();
+  });
+
+  // Update odds daily at 8:00 AM UTC
+  cron.schedule('0 8 * * *', async () => {
+    console.log('💰 Running daily odds update cron (8:00 AM UTC)...');
+    try {
+      const result = await updateTodayOdds();
+      console.log(`✅ Daily odds update complete: ${result.updated}/${result.total} updated, ${result.errors} errors`);
+    } catch (err) {
+      console.error('❌ Daily odds update failed:', err);
+    }
   });
 
   // Run once on startup
@@ -54,6 +66,15 @@ export async function loadFixturesWindow() {
     }
 
     console.log(`✅ Window update complete: ${totalSaved} new, ${totalUpdated} updated`);
+    
+    // After loading fixtures, update odds for today's fixtures
+    console.log('💰 Updating odds for today\'s fixtures...');
+    try {
+      const oddsResult = await updateTodayOdds();
+      console.log(`✅ Odds update complete: ${oddsResult.updated}/${oddsResult.total} updated, ${oddsResult.errors} errors`);
+    } catch (err) {
+      console.error('❌ Odds update failed:', err);
+    }
   } catch (err) {
     console.error('❌ Error loading fixtures window:', err);
   }
