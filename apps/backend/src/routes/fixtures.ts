@@ -14,7 +14,7 @@ router.get("/", async (req, res) => {
       league, 
       leagueId,
       status, 
-      limit = '50', 
+      limit = '100',  // ✅ INCREASED from 50 to 100
       page = '1',
       sort = 'date',
       timezoneOffset // in minutes, e.g., -120 for GMT+2
@@ -89,7 +89,7 @@ router.get("/", async (req, res) => {
     }
 
     // Pagination
-    const limitNum = Math.min(parseInt(limit as string) || 50, 100);
+    const limitNum = Math.min(parseInt(limit as string) || 100, 100);
     const pageNum = parseInt(page as string) || 1;
     const skip = (pageNum - 1) * limitNum;
 
