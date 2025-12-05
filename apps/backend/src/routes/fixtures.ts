@@ -14,7 +14,7 @@ router.get("/", async (req, res) => {
       league, 
       leagueId,
       status, 
-      limit = '1000',  // ✅ INCREASED default to handle busy days with 600+ games
+      limit = '1000',  // ✅ High default to handle busy days with 600+ games
       page = '1',
       sort = 'date',
       timezoneOffset // in minutes, e.g., -120 for GMT+2
@@ -36,33 +36,37 @@ router.get("/", async (req, res) => {
     // Build query
     const query: any = {};
 
-    // Date filtering with timezone support
+    // Date filtering with SIMPLIFIED timezone support
     if (date) {
       const offsetMinutes = timezoneOffset ? parseInt(timezoneOffset as string) : 0;
       
-      // CRITICAL: Convert user's local time to UTC
-      // getTimezoneOffset() returns NEGATIVE for ahead-of-UTC timezones
-      // GMT+2 returns -120 minutes
-      // 
-      // User in GMT+2 selects "Dec 5, 2025"
-      // They want: Dec 5 00:00:00 GMT+2 to Dec 5 23:59:59 GMT+2
-      // In UTC: Dec 4 22:00:00 to Dec 5 21:59:59
-      // 
-      // To convert: UTC = Local - offsetMinutes
-      // Example: Local 00:00 - (-120) = -120min = 22:00 previous day ✅
+      // SIMPLIFIED APPROACH:
+      // 1. Parse the date string as UTC midnight
+      // 2. Subtract the timezone offset to get user's local midnight in UTC
+      // 3. Add 24 hours minus 1ms to get end of day
+      //
+      // Example: User in GMT+2 (offset = -120) selects "2025-12-05"
+      // - Start: 2025-12-05 00:00:00 UTC - (-120 min) = 2025-12-04 22:00:00 UTC
+      // - End: 2025-12-05 00:00:00 UTC - (-120 min) + 24h - 1ms = 2025-12-05 21:59:59.999 UTC
+      // - This captures all fixtures from Dec 5 00:00:00 to 23:59:59.999 in GMT+2
       
-      const start = new Date(date as string);
-      start.setMinutes(start.getMinutes() - offsetMinutes);
+      const dateStr = date as string;
+      const baseDate = new Date(dateStr + 'T00:00:00.000Z'); // Parse as UTC midnight
       
-      const end = new Date(date as string);
-      end.setDate(end.getDate() + 1);
-      end.setMinutes(end.getMinutes() - offsetMinutes);
+      // Calculate start of day in user's timezone (converted to UTC)
+      const start = new Date(baseDate.getTime() - (offsetMinutes * 60 * 1000));
       
-      query.date = { $gte: start, $lt: end };
+      // Calculate end of day in user's timezone (converted to UTC)
+      // Add 24 hours minus 1 millisecond to get 23:59:59.999
+      const end = new Date(start.getTime() + (24 * 60 * 60 * 1000) - 1);
+      
+      query.date = { $gte: start, $lte: end };
       
       console.log(`🌍 Timezone-adjusted query (offset: ${offsetMinutes}min):`);
-      console.log(`   Start: ${start.toISOString()} (user's 00:00:00)`);
-      console.log(`   End:   ${end.toISOString()} (user's 23:59:59)`);
+      console.log(`   User's date: ${dateStr}`);
+      console.log(`   UTC Start: ${start.toISOString()} (user's 00:00:00)`);
+      console.log(`   UTC End:   ${end.toISOString()} (user's 23:59:59.999)`);
+      console.log(`   Range: ${(end.getTime() - start.getTime()) / 1000 / 60 / 60} hours`);
     } else if (startDate || endDate) {
       query.date = {};
       if (startDate) {
@@ -110,6 +114,14 @@ router.get("/", async (req, res) => {
     ]);
 
     console.log(`✅ Found ${fixtures.length} fixtures (${total} total)`);
+    
+    // Debug: Log first and last fixture times if any exist
+    if (fixtures.length > 0) {
+      const firstFixture = fixtures[0] as any;
+      const lastFixture = fixtures[fixtures.length - 1] as any;
+      console.log(`   First fixture: ${new Date(firstFixture.date).toISOString()}`);
+      console.log(`   Last fixture:  ${new Date(lastFixture.date).toISOString()}`);
+    }
 
     return res.json({
       success: true,
