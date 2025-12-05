@@ -48,15 +48,15 @@ router.get("/", async (req, res) => {
       // They want: Dec 5 00:00:00 GMT+2 to Dec 5 23:59:59 GMT+2
       // In UTC: Dec 4 22:00:00 to Dec 5 21:59:59
       // 
-      // To convert: UTC = Local + offsetMinutes
-      // Example: Local 00:00 + (-120) = UTC 22:00 previous day ✅
+      // To convert: UTC = Local - offsetMinutes
+      // Example: Local 00:00 - (-120) = -120min = 22:00 previous day ✅
       
       const start = new Date(date as string);
-      start.setMinutes(start.getMinutes() + offsetMinutes);
+      start.setMinutes(start.getMinutes() - offsetMinutes);
       
       const end = new Date(date as string);
       end.setDate(end.getDate() + 1);
-      end.setMinutes(end.getMinutes() + offsetMinutes);
+      end.setMinutes(end.getMinutes() - offsetMinutes);
       
       query.date = { $gte: start, $lt: end };
       
