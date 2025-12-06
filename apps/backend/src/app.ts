@@ -1,4 +1,5 @@
-import express from "express";
+import express from 'express';
+import debugRouter from './routes/debug.js';
 import cors from "cors";
 import dotenv from "dotenv";
 
@@ -43,6 +44,7 @@ import { startLiveScoresCron } from "./cron/liveScoresCron";
 // MOUNT ROUTES
 app.use("/api", fixtureDetailsRoutes);                  // <-- enables /fixtures/:id/events, /stats, /h2h
 app.use("/api/fixtures", fixturesRoutes);
+app.use('/api/debug', debugRouter);
 app.use("/api/admin", adminRoutes);
 app.use("/api/notifications", notificationsRoutes);
 app.use("/api/golden-bets", goldenBetsRoutes);
@@ -51,6 +53,7 @@ app.use("/api/stats", statsRoutes);
 app.use("/api/betting-insights", bettingInsightsRoutes);
 app.use("/api/pnl", pnlRoutes);
 app.use("/api/live-fixtures", liveFixturesRoutes);
+app.use('/api/debug', debugRouter);
 app.use("/api/bet-builder", betBuilderRoutes);
 app.use("/api/value-bets", valueBetsRoutes);
 
