@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Flag, AlertTriangle } from 'lucide-react';
+import { Flag } from 'lucide-react';
 import { fixturesApi } from '../services/api';
 
 interface LiveMatchStatsProps {
@@ -49,71 +49,71 @@ const LiveMatchStats: React.FC<LiveMatchStatsProps> = ({ fixtureId, compact = fa
     return null;
   }
 
-  // Compact view for fixture cards - ONLY corners and cards
+  // Compact view for fixture cards - ONLY corners and cards with numbered counters
   return (
-    <div className="flex items-center justify-between text-[10px] sm:text-[9px] mt-2 px-2 py-1.5 bg-black/40 rounded border border-purple-900/30">
-      {/* Home Team Stats */}
-      <div className="flex items-center gap-2 sm:gap-1.5">
+    <div className="flex items-center justify-between text-xs mt-2 px-3 py-2 bg-black/40 rounded border border-purple-900/30">
+      {/* Home Team Stats - Left Aligned */}
+      <div className="flex flex-col gap-1.5">
         {/* Corners */}
         {stats.home.corners !== undefined && (
-          <div className="flex items-center gap-1">
-            <Flag className="w-3 h-3 sm:w-2.5 sm:h-2.5 text-purple-400" />
-            <span className="text-purple-300 font-medium">{stats.home.corners}</span>
+          <div className="flex items-center gap-1.5">
+            <Flag className="w-3.5 h-3.5 text-purple-400" />
+            <span className="text-purple-300 font-semibold">
+              Corners ({stats.home.corners || 0})
+            </span>
           </div>
         )}
         
-        {/* Cards */}
-        {(stats.home.yellowCards || stats.home.redCards) ? (
-          <div className="flex items-center gap-1">
-            {stats.home.yellowCards > 0 && (
-              <div className="flex items-center gap-0.5">
-                <div className="w-2 h-2.5 bg-yellow-400 rounded-sm" />
-                {stats.home.yellowCards > 1 && (
-                  <span className="text-yellow-400 font-medium">{stats.home.yellowCards}</span>
-                )}
-              </div>
-            )}
-            {stats.home.redCards > 0 && (
-              <div className="flex items-center gap-0.5 ml-1">
-                <div className="w-2 h-2.5 bg-red-500 rounded-sm" />
-                {stats.home.redCards > 1 && (
-                  <span className="text-red-400 font-medium">{stats.home.redCards}</span>
-                )}
-              </div>
-            )}
+        {/* Yellow Cards */}
+        {stats.home.yellowCards !== undefined && stats.home.yellowCards > 0 && (
+          <div className="flex items-center gap-1.5">
+            <div className="w-2.5 h-3.5 bg-yellow-400 rounded-sm" />
+            <span className="text-yellow-300 font-semibold">
+              Yellow ({stats.home.yellowCards})
+            </span>
           </div>
-        ) : null}
+        )}
+        
+        {/* Red Cards */}
+        {stats.home.redCards !== undefined && stats.home.redCards > 0 && (
+          <div className="flex items-center gap-1.5">
+            <div className="w-2.5 h-3.5 bg-red-500 rounded-sm" />
+            <span className="text-red-300 font-semibold">
+              Red ({stats.home.redCards})
+            </span>
+          </div>
+        )}
       </div>
 
-      {/* Away Team Stats */}
-      <div className="flex items-center gap-2 sm:gap-1.5">
-        {/* Cards */}
-        {(stats.away.yellowCards || stats.away.redCards) ? (
-          <div className="flex items-center gap-1">
-            {stats.away.redCards > 0 && (
-              <div className="flex items-center gap-0.5">
-                {stats.away.redCards > 1 && (
-                  <span className="text-red-400 font-medium">{stats.away.redCards}</span>
-                )}
-                <div className="w-2 h-2.5 bg-red-500 rounded-sm" />
-              </div>
-            )}
-            {stats.away.yellowCards > 0 && (
-              <div className="flex items-center gap-0.5 ml-1">
-                {stats.away.yellowCards > 1 && (
-                  <span className="text-yellow-400 font-medium">{stats.away.yellowCards}</span>
-                )}
-                <div className="w-2 h-2.5 bg-yellow-400 rounded-sm" />
-              </div>
-            )}
-          </div>
-        ) : null}
-        
+      {/* Away Team Stats - Right Aligned */}
+      <div className="flex flex-col gap-1.5 items-end">
         {/* Corners */}
         {stats.away.corners !== undefined && (
-          <div className="flex items-center gap-1">
-            <span className="text-purple-300 font-medium">{stats.away.corners}</span>
-            <Flag className="w-3 h-3 sm:w-2.5 sm:h-2.5 text-purple-400" />
+          <div className="flex items-center gap-1.5">
+            <span className="text-purple-300 font-semibold">
+              Corners ({stats.away.corners || 0})
+            </span>
+            <Flag className="w-3.5 h-3.5 text-purple-400" />
+          </div>
+        )}
+        
+        {/* Yellow Cards */}
+        {stats.away.yellowCards !== undefined && stats.away.yellowCards > 0 && (
+          <div className="flex items-center gap-1.5">
+            <span className="text-yellow-300 font-semibold">
+              Yellow ({stats.away.yellowCards})
+            </span>
+            <div className="w-2.5 h-3.5 bg-yellow-400 rounded-sm" />
+          </div>
+        )}
+        
+        {/* Red Cards */}
+        {stats.away.redCards !== undefined && stats.away.redCards > 0 && (
+          <div className="flex items-center gap-1.5">
+            <span className="text-red-300 font-semibold">
+              Red ({stats.away.redCards})
+            </span>
+            <div className="w-2.5 h-3.5 bg-red-500 rounded-sm" />
           </div>
         )}
       </div>
