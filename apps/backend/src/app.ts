@@ -1,5 +1,5 @@
 import express from 'express';
-import debugRouter from './routes/debug.js';
+import debugRouter from './routes/debug';
 import cors from "cors";
 import dotenv from "dotenv";
 
@@ -64,3 +64,4 @@ startLiveScoresCron();
 console.log("✅ Cron jobs started successfully");
 
 export default app;
+
