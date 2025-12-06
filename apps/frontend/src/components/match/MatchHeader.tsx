@@ -11,13 +11,13 @@ export default function MatchHeader({ fixture }: MatchHeaderProps) {
   const status = fixture.status || fixture.statusShort || '';
 
   return (
-    <div className="text-white p-4 border-b border-gray-800">
-      <h1 className="text-2xl font-bold">
-        {homeTeam} vs {awayTeam}
+    <div className="bg-[#0a0a0a] text-white p-4 border border-gray-800 rounded-lg mb-4">
+      <h1 className="text-2xl font-bold text-white">
+        {homeTeam} <span className="text-purple-500">vs</span> {awayTeam}
       </h1>
 
-      <p className="opacity-70 mt-1">
-        {league} — {status}
+      <p className="text-gray-400 mt-2 text-sm">
+        {league} {status && `• ${status}`}
       </p>
     </div>
   );
