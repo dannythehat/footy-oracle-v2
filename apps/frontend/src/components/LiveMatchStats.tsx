@@ -49,13 +49,16 @@ const LiveMatchStats: React.FC<LiveMatchStatsProps> = ({ fixtureId, compact = fa
     return null;
   }
 
-  const hasHomeStats = (stats.home.corners && stats.home.corners > 0) || 
-                       (stats.home.yellowCards && stats.home.yellowCards > 0) || 
-                       (stats.home.redCards && stats.home.redCards > 0);
-  
-  const hasAwayStats = (stats.away.corners && stats.away.corners > 0) || 
-                       (stats.away.yellowCards && stats.away.yellowCards > 0) || 
-                       (stats.away.redCards && stats.away.redCards > 0);
+  // Convert to numbers to handle API returning strings
+  const homeCorners = Number(stats.home.corners) || 0;
+  const homeYellow = Number(stats.home.yellowCards) || 0;
+  const homeRed = Number(stats.home.redCards) || 0;
+  const awayCorners = Number(stats.away.corners) || 0;
+  const awayYellow = Number(stats.away.yellowCards) || 0;
+  const awayRed = Number(stats.away.redCards) || 0;
+
+  const hasHomeStats = homeCorners > 0 || homeYellow > 0 || homeRed > 0;
+  const hasAwayStats = awayCorners > 0 || awayYellow > 0 || awayRed > 0;
 
   // Don't show the stats bar if no stats exist
   if (!hasHomeStats && !hasAwayStats) {
@@ -68,31 +71,31 @@ const LiveMatchStats: React.FC<LiveMatchStatsProps> = ({ fixtureId, compact = fa
       {/* Home Team Stats - Left Aligned */}
       <div className="flex flex-col gap-1.5">
         {/* Corners - only show if > 0 */}
-        {stats.home.corners !== undefined && stats.home.corners > 0 && (
+        {homeCorners > 0 && (
           <div className="flex items-center gap-1.5">
             <Flag className="w-3.5 h-3.5 text-purple-400" />
             <span className="text-purple-300 font-semibold">
-              Corners ({stats.home.corners})
+              Corners ({homeCorners})
             </span>
           </div>
         )}
         
         {/* Yellow Cards - only show if > 0 */}
-        {stats.home.yellowCards !== undefined && stats.home.yellowCards > 0 && (
+        {homeYellow > 0 && (
           <div className="flex items-center gap-1.5">
             <div className="w-2.5 h-3.5 bg-yellow-400 rounded-sm" />
             <span className="text-yellow-300 font-semibold">
-              Yellow ({stats.home.yellowCards})
+              Yellow ({homeYellow})
             </span>
           </div>
         )}
         
         {/* Red Cards - only show if > 0 */}
-        {stats.home.redCards !== undefined && stats.home.redCards > 0 && (
+        {homeRed > 0 && (
           <div className="flex items-center gap-1.5">
             <div className="w-2.5 h-3.5 bg-red-500 rounded-sm" />
             <span className="text-red-300 font-semibold">
-              Red ({stats.home.redCards})
+              Red ({homeRed})
             </span>
           </div>
         )}
@@ -101,30 +104,30 @@ const LiveMatchStats: React.FC<LiveMatchStatsProps> = ({ fixtureId, compact = fa
       {/* Away Team Stats - Right Aligned */}
       <div className="flex flex-col gap-1.5 items-end">
         {/* Corners - only show if > 0 */}
-        {stats.away.corners !== undefined && stats.away.corners > 0 && (
+        {awayCorners > 0 && (
           <div className="flex items-center gap-1.5">
             <span className="text-purple-300 font-semibold">
-              Corners ({stats.away.corners})
+              Corners ({awayCorners})
             </span>
             <Flag className="w-3.5 h-3.5 text-purple-400" />
           </div>
         )}
         
         {/* Yellow Cards - only show if > 0 */}
-        {stats.away.yellowCards !== undefined && stats.away.yellowCards > 0 && (
+        {awayYellow > 0 && (
           <div className="flex items-center gap-1.5">
             <span className="text-yellow-300 font-semibold">
-              Yellow ({stats.away.yellowCards})
+              Yellow ({awayYellow})
             </span>
             <div className="w-2.5 h-3.5 bg-yellow-400 rounded-sm" />
           </div>
         )}
         
         {/* Red Cards - only show if > 0 */}
-        {stats.away.redCards !== undefined && stats.away.redCards > 0 && (
+        {awayRed > 0 && (
           <div className="flex items-center gap-1.5">
             <span className="text-red-300 font-semibold">
-              Red ({stats.away.redCards})
+              Red ({awayRed})
             </span>
             <div className="w-2.5 h-3.5 bg-red-500 rounded-sm" />
           </div>
