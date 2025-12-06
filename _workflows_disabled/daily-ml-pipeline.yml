@@ -1,0 +1,108 @@
+name: 🚀 Daily ML Pipeline - Golden Betopia
+
+on:
+  schedule:
+    - cron: '0 6 * * *'  # 6 AM UTC = 8 AM Sofia time (Bulgaria)
+  workflow_dispatch:      # Manual trigger
+
+jobs:
+  generate-predictions:
+    runs-on: self-hosted  # Run on your local Windows machine
+    
+    steps:
+      - name: 📥 Checkout footy-oracle-v2
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.PAT_TOKEN }}
+          path: footy-oracle-v2-repo
+      
+      - name: 🤖 Run Daily ML Predictions (Local Machine)
+        shell: powershell
+        run: |
+          Write-Host "🚀 Starting ML predictions on local machine..."
+          Write-Host "📁 Working directory: $(Get-Location)"
+          
+          # Navigate to your local ML system
+          cd C:\Users\Danny\football-betting-ai-system\betopia_v2\scripts
+          
+          # Run the PowerShell script
+          .\run_daily_v26.ps1
+          
+          Write-Host "✅ ML predictions completed"
+      
+      - name: 📤 Copy ML outputs to repo
+        shell: powershell
+        run: |
+          Write-Host "📤 Copying ML outputs to GitHub repo..."
+          
+          # Source: Your local ML outputs
+          $source = "C:\Users\Danny\Documents\GitHub\golden-footy_oracle\shared\ml_outputs\*"
+          
+          # Destination: Checked out repo
+          $dest = "footy-oracle-v2-repo\shared\ml_outputs"
+          
+          # Create destination directory
+          New-Item -ItemType Directory -Force -Path $dest | Out-Null
+          
+          # Copy all JSON files
+          Copy-Item -Path $source -Destination $dest -Force
+          
+          Write-Host "✅ Files copied:"
+          Get-ChildItem $dest | Format-Table Name, Length, LastWriteTime
+      
+      - name: 💾 Commit and push predictions
+        shell: powershell
+        run: |
+          cd footy-oracle-v2-repo
+          
+          git config user.name "Golden Betopia Bot"
+          git config user.email "bot@golden-betopia.com"
+          
+          git add shared/ml_outputs/*
+          
+          $changes = git diff --staged --quiet
+          if ($LASTEXITCODE -ne 0) {
+            $date = Get-Date -Format "yyyy-MM-dd HH:mm"
+            git commit -m "🤖 Daily ML predictions - $date Sofia time"
+            git push
+            Write-Host "✅ Predictions pushed to GitHub"
+          } else {
+            Write-Host "📭 No changes to commit"
+          }
+      
+      - name: 📊 Pipeline Summary
+        if: always()
+        shell: powershell
+        run: |
+          $summary = @"
+          ## 🚀 ML Pipeline Summary
+          
+          **Date:** $(Get-Date -Format "yyyy-MM-dd")
+          **Time:** $(Get-Date -Format "HH:mm:ss") Sofia, Bulgaria
+          **Machine:** $env:COMPUTERNAME
+          **Version:** v26
+          
+          ### Generated Files:
+          "@
+          
+          $outputDir = "C:\Users\Danny\Documents\GitHub\golden-footy_oracle\shared\ml_outputs"
+          
+          if (Test-Path "$outputDir\predictions.json") {
+            $summary += "`n✅ **predictions.json** - Generated"
+          } else {
+            $summary += "`n❌ **predictions.json** - Missing"
+          }
+          
+          if (Test-Path "$outputDir\golden_bets.json") {
+            $summary += "`n✅ **golden_bets.json** - Generated"
+          } else {
+            $summary += "`n❌ **golden_bets.json** - Missing"
+          }
+          
+          if (Test-Path "$outputDir\value_bets.json") {
+            $summary += "`n✅ **value_bets.json** - Generated"
+          } else {
+            $summary += "`n❌ **value_bets.json** - Missing"
+          }
+          
+          $summary | Out-File -FilePath $env:GITHUB_STEP_SUMMARY -Encoding utf8

@@ -1,0 +1,43 @@
+name: 🎲 Generate Test Data
+
+on:
+  workflow_dispatch:  # Manual trigger only
+
+jobs:
+  generate-data:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+      
+      - name: 🐍 Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+      
+      - name: 🎲 Generate test data
+        run: |
+          python ml_training/scripts/generate_test_data.py
+      
+      - name: 💾 Commit test data
+        run: |
+          git config user.name "Test Data Bot"
+          git config user.email "test-bot@footy-oracle.com"
+          git add shared/ml_outputs/*.json
+          git diff --staged --quiet || git commit -m "🎲 Generate test data - $(date +%Y-%m-%d)"
+          git push
+      
+      - name: ✅ Summary
+        run: |
+          echo "## 🎲 Test Data Generated" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Date:** $(date +%Y-%m-%d)" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "✅ predictions.json updated" >> $GITHUB_STEP_SUMMARY
+          echo "✅ golden_bets.json updated" >> $GITHUB_STEP_SUMMARY
+          echo "✅ value_bets.json updated" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "🚀 Frontend should now display data!" >> $GITHUB_STEP_SUMMARY

@@ -1,0 +1,90 @@
+name: 🤖 Daily LM Training Pipeline
+
+on:
+  schedule:
+    - cron: '0 4 * * *'  # 4 AM UTC daily
+  workflow_dispatch:      # Manual trigger
+
+jobs:
+  train-lm-babies:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+      
+      - name: 🐍 Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+          cache: 'pip'
+      
+      - name: 📦 Install dependencies
+        run: |
+          cd ml_training
+          pip install -r requirements.txt
+        continue-on-error: true
+      
+      - name: 📊 Fetch yesterday's fixtures
+        env:
+          API_FOOTBALL_KEY: ${{ secrets.API_FOOTBALL_KEY }}
+        run: |
+          python ml_training/scripts/01_fetch_fixtures.py || echo "⚠️ Fixture fetch failed, continuing..."
+        continue-on-error: true
+      
+      - name: 🔧 Process and merge data
+        run: |
+          python ml_training/scripts/02_process_data.py || echo "⚠️ Data processing failed, continuing..."
+        continue-on-error: true
+      
+      - name: 🤖 Train LM babies
+        run: |
+          python ml_training/scripts/03_train_models.py || echo "⚠️ Training failed, continuing..."
+        continue-on-error: true
+      
+      - name: 📈 Evaluate performance
+        id: evaluate
+        run: |
+          python ml_training/scripts/04_evaluate.py || echo "⚠️ Evaluation failed, continuing..."
+        continue-on-error: true
+      
+      - name: 🚀 Deploy models
+        run: |
+          python ml_training/scripts/05_deploy.py || echo "⚠️ Deployment failed, continuing..."
+        continue-on-error: true
+      
+      - name: 📊 Update Analytics Hub
+        run: |
+          python ml_training/scripts/06_update_analytics_hub.py || echo "⚠️ Analytics update failed, continuing..."
+        continue-on-error: true
+      
+      - name: 💾 Commit updated models and data
+        run: |
+          git config user.name "LM Training Bot"
+          git config user.email "lm-bot@footy-oracle.com"
+          git add ml_training/models/* || true
+          git add ml_training/data/incremental/* || true
+          git add ml_training/data/processed/* || true
+          git add ml_training/logs/* || true
+          git add analytics_hub/metrics/* || true
+          git add shared/ml_outputs/* || true
+          git diff --staged --quiet || git commit -m "🤖 Daily LM training - $(date +%Y-%m-%d)" || echo "Nothing to commit"
+          git push || echo "Nothing to push"
+        continue-on-error: true
+      
+      - name: 📊 Training Summary
+        if: always()
+        run: |
+          echo "## 🤖 LM Training Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Date:** $(date +%Y-%m-%d)" >> $GITHUB_STEP_SUMMARY
+          echo "**Status:** Completed (check individual steps for details)" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "⚠️ **Note:** Some steps may have failed. This is expected during initial setup." >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "📝 **Next Steps:**" >> $GITHUB_STEP_SUMMARY
+          echo "1. Check individual step logs for errors" >> $GITHUB_STEP_SUMMARY
+          echo "2. Ensure API_FOOTBALL_KEY secret is set" >> $GITHUB_STEP_SUMMARY
+          echo "3. Run historical data download first" >> $GITHUB_STEP_SUMMARY

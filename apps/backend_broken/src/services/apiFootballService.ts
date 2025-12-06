@@ -1,0 +1,311 @@
+import axios from "axios";
+
+const API_BASE_URL =
+  process.env.API_FOOTBALL_BASE_URL || "https://v3.football.api-sports.io";
+const API_KEY = process.env.API_FOOTBALL_KEY;
+
+if (!API_KEY) {
+  console.warn("⚠️ API_FOOTBALL_KEY not set!");
+}
+
+const apiClient = axios.create({
+  baseURL: API_BASE_URL,
+  headers: {
+    "x-rapidapi-key": API_KEY,
+    "x-rapidapi-host": "v3.football.api-sports.io",
+  },
+  timeout: 20000,
+});
+
+export interface FixtureData {
+  fixtureId: number;
+  date: string;
+  homeTeam: string;
+  awayTeam: string;
+  homeTeamId: number;
+  awayTeamId: number;
+  league: string;
+  leagueId: number;
+  country: string;
+  season: number;
+  odds?: any;
+  status: string;
+  score?: { home: number | null; away: number | null };
+}
+
+/** MAP STATUS */
+function mapStatus(short: string): string {
+  const liveCodes = ["1H", "2H", "ET", "P", "BT", "HT"];
+  if (short === "FT") return "finished";
+  if (liveCodes.includes(short)) return "live";
+  return "scheduled";
+}
+
+/** Fetch Fixtures by Date */
+export async function fetchFixtures(date: string): Promise<FixtureData[]> {
+  console.log(`📅 Fetching fixtures for ${date}...`);
+
+  const response = await apiClient.get("/fixtures", {
+    params: { date },
+  });
+
+  const list = response.data.response || [];
+
+  return list.map((f: any) => ({
+    fixtureId: f.fixture.id,
+    date: f.fixture.date,
+    homeTeam: f.teams.home.name,
+    awayTeam: f.teams.away.name,
+    homeTeamId: f.teams.home.id,
+    awayTeamId: f.teams.away.id,
+    league: f.league.name,
+    leagueId: f.league.id,
+    country: f.league.country,
+    season: f.league.season,
+    status: mapStatus(f.fixture.status.short),
+    score: {
+      home: f.goals.home ?? null,
+      away: f.goals.away ?? null,
+    },
+  }));
+}
+
+/** Fetch Odds */
+export async function fetchOdds(fixtureId: number): Promise<any> {
+  console.log(`💰 Odds for ${fixtureId}`);
+
+  const response = await apiClient.get("/odds", {
+    params: {
+      fixture: fixtureId,
+      bookmaker: 8,
+    },
+  });
+
+  const res = response.data.response[0];
+  if (!res) return null;
+
+  const bets = res.bookmakers?.[0]?.bets || [];
+
+  function get(bid: number, value: string) {
+    const market = bets.find((b: any) => b.id === bid);
+    return market?.values?.find((v: any) => v.value === value)?.odd;
+  }
+
+  return {
+    homeWin: get(1, "Home"),
+    draw: get(1, "Draw"),
+    awayWin: get(1, "Away"),
+    btts: get(8, "Yes"),
+    over25: get(5, "Over 2.5"),
+    under25: get(5, "Under 2.5"),
+    over95corners: get(12, "Over 9.5"),
+    over35cards: get(11, "Over 3.5"),
+  };
+}
+
+/** Fetch H2H */
+export async function fetchH2H(
+  homeTeamId: number,
+  awayTeamId: number,
+  last: number = 10
+) {
+  console.log(`🔄 Fetching H2H: ${homeTeamId} vs ${awayTeamId}`);
+
+  const response = await apiClient.get("/fixtures/headtohead", {
+    params: {
+      h2h: `${homeTeamId}-${awayTeamId}`,
+      last,
+    },
+  });
+
+  const matches = response.data.response || [];
+
+  const transformed = matches.map((m: any) => ({
+    date: m.fixture.date,
+    homeTeam: m.teams.home.name,
+    awayTeam: m.teams.away.name,
+    score: {
+      home: m.goals.home ?? 0,
+      away: m.goals.away ?? 0,
+    },
+    league: m.league.name,
+  }));
+
+  let homeWins = 0,
+    awayWins = 0,
+    draws = 0,
+    btts = 0,
+    over25 = 0;
+
+  transformed.forEach((m: any) => {
+    const h = m.score.home;
+    const a = m.score.away;
+
+    if (h > a) homeWins++;
+    else if (a > h) awayWins++;
+    else draws++;
+
+    if (h > 0 && a > 0) btts++;
+    if (h + a > 2.5) over25++;
+  });
+
+  return {
+    matches: transformed,
+    stats: {
+      totalMatches: transformed.length,
+      homeWins,
+      awayWins,
+      draws,
+      bttsCount: btts,
+      over25Count: over25,
+    },
+  };
+}
+
+/** Fetch Team Stats */
+export async function fetchTeamStats(
+  teamId: number,
+  leagueId: number,
+  season: number
+) {
+  console.log(`📊 Fetching team stats: ${teamId} in league ${leagueId}`);
+
+  const response = await apiClient.get("/teams/statistics", {
+    params: {
+      team: teamId,
+      league: leagueId,
+      season,
+    },
+  });
+
+  const data = response.data.response;
+  if (!data) throw new Error("No statistics available");
+
+  return {
+    form: data.form,
+    fixtures: data.fixtures,
+    goals: data.goals,
+    cleanSheets: data.clean_sheet,
+  };
+}
+
+/** Fetch Fixture Stats */
+export async function fetchFixtureStats(
+  fixtureId: number,
+  homeTeamId: number,
+  awayTeamId: number,
+  leagueId: number,
+  season: number
+) {
+  console.log(`📈 Fetching fixture stats for ${fixtureId}`);
+
+  const response = await apiClient.get("/fixtures/statistics", {
+    params: {
+      fixture: fixtureId,
+    },
+  });
+
+  const stats = response.data.response;
+
+  if (!stats || stats.length < 2)
+    throw new Error("Statistics not available yet");
+
+  const getStat = (teamStats: any, type: string) =>
+    teamStats?.statistics?.find((s: any) => s.type === type)?.value;
+
+  const homeStats = stats.find((s: any) => s.team.id === homeTeamId);
+  const awayStats = stats.find((s: any) => s.team.id === awayTeamId);
+
+  return {
+    home: {
+      shots: {
+        total: getStat(homeStats, "Total Shots") || 0,
+        on: getStat(homeStats, "Shots on Goal") || 0,
+      },
+      possession: parseInt(getStat(homeStats, "Ball Possession") || "0"),
+      corners: getStat(homeStats, "Corner Kicks") || 0,
+      fouls: getStat(homeStats, "Fouls") || 0,
+      yellowCards: getStat(homeStats, "Yellow Cards") || 0,
+      redCards: getStat(homeStats, "Red Cards") || 0,
+    },
+    away: {
+      shots: {
+        total: getStat(awayStats, "Total Shots") || 0,
+        on: getStat(awayStats, "Shots on Goal") || 0,
+      },
+      possession: parseInt(getStat(awayStats, "Ball Possession") || "0"),
+      corners: getStat(awayStats, "Corner Kicks") || 0,
+      fouls: getStat(awayStats, "Fouls") || 0,
+      yellowCards: getStat(awayStats, "Yellow Cards") || 0,
+      redCards: getStat(awayStats, "Red Cards") || 0,
+    },
+  };
+}
+
+/** Fetch Team Last Fixtures */
+export async function fetchTeamLastFixtures(teamId: number, last: number = 5) {
+  console.log(`🔙 Fetching last ${last} fixtures for team ${teamId}`);
+
+  const response = await apiClient.get("/fixtures", {
+    params: {
+      team: teamId,
+      last,
+    },
+  });
+
+  return (
+    response.data.response?.map((f: any) => ({
+      fixtureId: f.fixture.id,
+      date: f.fixture.date,
+      homeTeam: f.teams.home.name,
+      awayTeam: f.teams.away.name,
+      score: {
+        home: f.goals.home ?? null,
+        away: f.goals.away ?? null,
+      },
+      league: f.league.name,
+      status: mapStatus(f.fixture.status.short),
+    })) || []
+  );
+}
+
+/** ⭐ NEW: Live Snapshot */
+export async function fetchLiveFixtureSnapshot(fixtureId: number) {
+  console.log(`📡 Fetching live fixture snapshot: ${fixtureId}`);
+
+  const response = await apiClient.get("/fixtures", {
+    params: { id: fixtureId },
+  });
+
+  const match = response.data.response?.[0];
+  if (!match) return null;
+
+  return {
+    fixtureId,
+    status: match.fixture.status.short,
+    elapsed: match.fixture.status.elapsed || 0,
+    referee: match.fixture.referee,
+    venue: match.fixture.venue,
+    score: match.goals,
+    events: match.events || [],
+    statistics: match.statistics || [],
+    lineups: match.lineups || [],
+  };
+}
+
+/** ⭐ NEW: League Standings */
+export async function fetchLeagueStandings(
+  leagueId: number,
+  season: number
+) {
+  console.log(`📊 Fetching standings for league ${leagueId}`);
+
+  const response = await apiClient.get("/standings", {
+    params: {
+      league: leagueId,
+      season,
+    },
+  });
+
+  return response.data.response?.[0]?.league?.standings?.[0] || [];
+}
