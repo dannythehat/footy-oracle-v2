@@ -597,15 +597,19 @@ const FixturesView: React.FC<FixturesViewProps> = ({ onClose, embedded = false }
                 </div>
               </div>
               
-              {/* Live Leagues - Mobile optimized */}
+              {/* Live Leagues - Mobile optimized with enhanced borders */}
               <div className="space-y-0">
-                {sortLeagues(Object.entries(groupedLiveFixtures)).map(([league, leagueFixtures]) => {
+                {sortLeagues(Object.entries(groupedLiveFixtures)).map(([league, leagueFixtures], index, array) => {
                   const firstFixture = leagueFixtures[0];
                   const isFavorite = isFavoriteLeague(league);
+                  const isLast = index === array.length - 1;
                   return (
-                    <div key={league} className="border-b border-gray-800 last:border-b-0">
+                    <div 
+                      key={league} 
+                      className={`${!isLast ? 'border-b-2 border-purple-900/50 mb-2' : ''}`}
+                    >
                       {/* Live League Header - Mobile optimized touch target */}
-                      <div className="w-full px-3 py-2 sm:px-2 sm:py-1.5 flex items-center justify-between hover:bg-gray-900/30 min-h-[44px] sm:min-h-0">
+                      <div className="w-full px-3 py-2 sm:px-2 sm:py-1.5 flex items-center justify-between hover:bg-gray-900/30 min-h-[44px] sm:min-h-0 bg-gradient-to-r from-purple-950/20 to-transparent">
                         <button
                           onClick={() => toggleLiveLeague(league)}
                           className="flex items-center gap-2 sm:gap-1.5 flex-1"
