@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+﻿import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { fixturesApi } from "../services/api";
 import MatchHeader from "../components/match/MatchHeader";
@@ -139,7 +139,7 @@ export default function MatchPage() {
             <button
               key={t.key}
               onClick={() => setActiveTab(t.key)}
-              className={px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-all }
+              className={`px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-all ${ activeTab === t.key ? "bg-purple-600 text-white border border-purple-500 shadow-lg shadow-purple-500/50" : t.key === "livepitch" ? "bg-red-600/20 text-red-400 border border-red-500/50 hover:bg-red-600/30 hover:text-red-300 animate-pulse" : "bg-gray-900 text-gray-400 border border-gray-800 hover:bg-gray-800 hover:text-gray-300" }`}
             >
               {t.label}
             </button>
