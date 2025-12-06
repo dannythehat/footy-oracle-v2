@@ -52,12 +52,16 @@ export default function MatchPage() {
         setStats(st || []);
 
         if (base?.homeTeamId && base?.awayTeamId) {
-          const h2hData = await fixturesApi.getH2H(base.homeTeamId, base.awayTeamId).catch(() => null);
+          const h2hData = await fixturesApi
+            .getH2H(base.homeTeamId, base.awayTeamId)
+            .catch(() => null);
           setH2h(h2hData);
         }
 
         if (base?.leagueId && base?.season) {
-          const table = await fixturesApi.getStandings(base.leagueId, base.season).catch(() => null);
+          const table = await fixturesApi
+            .getStandings(base.leagueId, base.season)
+            .catch(() => null);
           setStandings(table);
         }
       } finally {
@@ -119,6 +123,7 @@ export default function MatchPage() {
   return (
     <div className="min-h-screen bg-[#0a0a0a] text-white p-5">
       <div className="max-w-6xl mx-auto">
+
         <button
           onClick={() => navigate("/")}
           className="mb-4 flex items-center gap-2 text-gray-400 hover:text-purple-400 transition-colors text-sm"
@@ -134,7 +139,7 @@ export default function MatchPage() {
             <button
               key={t.key}
               onClick={() => setActiveTab(t.key)}
-              className={px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-colors }
+              className={px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-all }
             >
               {t.label}
             </button>
