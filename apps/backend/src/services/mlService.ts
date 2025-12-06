@@ -1,4 +1,4 @@
-﻿import fs from "fs";
+import fs from "fs";
 import path from "path";
 
 /** Simple Types **/
@@ -27,27 +27,28 @@ export interface ValueBet extends MLPrediction {
   profitLoss?: number;
 }
 
-/** LOAD ML JSON LOCALLY **/
-const ML_OUTPUTS_PATH = path.join(process.cwd(), "public", "ml_outputs");
+/** Determine ML folder path **/
+const ML_DIR =
+  process.env.ML_OUTPUTS_LOCAL_PATH ||
+  path.join(process.cwd(), "public", "ml_outputs");
 
-function loadLocalJSON(filename: string): any {
+function loadLocalJSON(filename: string): any | null {
   try {
-    const filePath = path.join(ML_OUTPUTS_PATH, filename);
+    const filePath = path.join(ML_DIR, filename);
 
     if (!fs.existsSync(filePath)) {
-      console.error("ML JSON missing:", filePath);
+      console.error("ML file missing:", filePath);
       return null;
     }
 
-    const raw = fs.readFileSync(filePath, "utf8");
-    return JSON.parse(raw);
-  } catch (e) {
-    console.error("JSON parse error:", filename, e);
+    const data = fs.readFileSync(filePath, "utf-8");
+    return JSON.parse(data);
+  } catch (err) {
+    console.error("ML JSON read error:", err);
     return null;
   }
 }
 
-/** MAP OUTCOMES **/
 function mapOutcome(raw: string) {
   const k = (raw || "").toLowerCase();
 
@@ -58,8 +59,10 @@ function mapOutcome(raw: string) {
   if (k.includes("btts")) return { market: "BTTS", prediction: "Yes" };
   if (k.includes("over_2_5") || k.includes("over25"))
     return { market: "Over/Under 2.5", prediction: "Over 2.5" };
+
   if (k.includes("over_9_5"))
     return { market: "Total Corners", prediction: "Over 9.5" };
+
   if (k.includes("over_3_5"))
     return { market: "Total Cards", prediction: "Over 3.5" };
 
@@ -67,17 +70,18 @@ function mapOutcome(raw: string) {
 }
 
 /** LOAD PREDICTIONS **/
-export function loadMLPredictions(): MLPrediction[] {
-  const json =
+export async function loadMLPredictions(): Promise<MLPrediction[]> {
+  const body =
     loadLocalJSON("ai_predictions.json") ||
-    loadLocalJSON("predictions_today.json") ||
     loadLocalJSON("predictions.json");
 
-  if (!json) return [];
+  if (!body) return [];
 
-  const raw = Array.isArray(json)
-    ? json
-    : json.predictions || [];
+  const raw = Array.isArray(body)
+    ? body
+    : Array.isArray(body.predictions)
+    ? body.predictions
+    : [];
 
   return raw.map((x: any, i: number) => {
     const predicted = x.predicted_outcome || x.prediction || "home_win";
@@ -96,36 +100,35 @@ export function loadMLPredictions(): MLPrediction[] {
 
     return {
       fixtureId: Number(x.fixture_id || i + 1),
-      homeTeam: x.home_team || "",
-      awayTeam: x.away_team || "",
-      league: x.league || "",
+      homeTeam: x.home_team || "Home",
+      awayTeam: x.away_team || "Away",
+      league: x.league || "Unknown League",
       market: mp.market,
       prediction: mp.prediction,
-      confidence: conf <= 1 ? conf * 100 : conf
+      confidence: conf <= 1 ? conf * 100 : conf,
     };
   });
 }
 
 /** LOAD GOLDEN BETS **/
-export function loadGoldenBets(): GoldenBet[] {
-  const json = loadLocalJSON("golden_bets.json");
-  if (!json) return [];
+export async function loadGoldenBets(): Promise<GoldenBet[]> {
+  const body = loadLocalJSON("golden_bets.json");
+  if (!body) return [];
 
-  const raw = Array.isArray(json)
-    ? json
-    : json.golden_bets || [];
+  const raw = Array.isArray(body)
+    ? body
+    : Array.isArray(body.golden_bets)
+    ? body.golden_bets
+    : [];
 
   return raw.map((x: any, i: number) => {
     const predicted = x.bet_type || x.prediction || "home_win";
     const mp = mapOutcome(predicted);
 
-    const conf =
-      typeof x.confidence === "number"
-        ? x.confidence
-        : 0.7;
+    const conf = typeof x.confidence === "number" ? x.confidence : 0.7;
 
     return {
-      fixtureId: Number(x.fixture_id || i + 1),
+      fixtureId: Number(x.fixture_id || x.match_id || i + 1),
       homeTeam: x.home_team || "",
       awayTeam: x.away_team || "",
       league: x.league || "",
@@ -133,21 +136,23 @@ export function loadGoldenBets(): GoldenBet[] {
       prediction: mp.prediction,
       confidence: conf <= 1 ? conf * 100 : conf,
       odds: x.odds || x.bookmaker_odds || 0,
-      aiExplanation: x.ai_explanation || "",
+      aiExplanation: x.ai_explanation || x.reasoning || "",
       result: x.result,
-      profitLoss: x.profit_loss
+      profitLoss: x.profit_loss,
     };
   });
 }
 
 /** LOAD VALUE BETS **/
-export function loadValueBets(): ValueBet[] {
-  const json = loadLocalJSON("value_bets.json");
-  if (!json) return [];
+export async function loadValueBets(): Promise<ValueBet[]> {
+  const body = loadLocalJSON("value_bets.json");
+  if (!body) return [];
 
-  const raw = Array.isArray(json)
-    ? json
-    : json.value_bets || [];
+  const raw = Array.isArray(body)
+    ? body
+    : Array.isArray(body.value_bets)
+    ? body.value_bets
+    : [];
 
   return raw.map((x: any, i: number) => {
     const predicted = x.bet_type || x.prediction || "";
@@ -161,18 +166,18 @@ export function loadValueBets(): ValueBet[] {
         : 0.5;
 
     return {
-      fixtureId: Number(x.fixture_id || i + 1),
+      fixtureId: Number(x.fixture_id || x.match_id || i + 1),
       homeTeam: x.home_team || "",
       awayTeam: x.away_team || "",
       league: x.league || "",
       market: mp.market,
       prediction: mp.prediction,
       confidence: prob <= 1 ? prob * 100 : prob,
-      odds: x.odds || 0,
+      odds: x.odds || x.bookmaker_odds || 0,
       expectedValue: x.expected_value || 0,
-      aiExplanation: x.ai_explanation || "",
+      aiExplanation: x.ai_explanation || x.reasoning || "",
       result: x.result,
-      profitLoss: x.profit_loss
+      profitLoss: x.profit_loss,
     };
   });
 }
