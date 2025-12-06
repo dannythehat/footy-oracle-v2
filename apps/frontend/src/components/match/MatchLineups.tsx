@@ -1,13 +1,23 @@
-export default function MatchLineups({ lineups }) {
-  if (!lineups) return null;
+﻿import React from "react";
+
+interface MatchLineupsProps {
+  lineups?: any;
+}
+
+const MatchLineups: React.FC<MatchLineupsProps> = ({ lineups }) => {
+  if (!lineups) {
+    return (
+      <div className="p-4 text-gray-400">
+        Lineups not available.
+      </div>
+    );
+  }
 
   return (
-    <div className="p-4 text-white">
-      <h2 className="text-xl font-bold mb-3">Lineups</h2>
-
-      <pre className="bg-gray-800 p-3 rounded">
-        {JSON.stringify(lineups, null, 2)}
-      </pre>
+    <div className="p-4 text-gray-200">
+      <pre>{JSON.stringify(lineups, null, 2)}</pre>
     </div>
   );
-}
+};
+
+export default MatchLineups;

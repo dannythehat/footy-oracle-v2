@@ -1,5 +1,5 @@
-import { useQuery } from "@tanstack/react-query";
-import apiClient from "../services/api";
+﻿import { useQuery } from "@tanstack/react-query";
+import { fixturesApi } from "../services/api";
 
 export interface NormalizedFixture {
   id: number;
@@ -19,7 +19,7 @@ export const useFixtures = (date: string) => {
   return useQuery({
     queryKey: ["fixtures", date],
     queryFn: async () => {
-      const res = await apiClient.get(`/fixtures?date=${date}`);
+      const res = await fixturesApi.getByDate(`/fixtures?date=${date}`);
 
       const raw = res.data?.data ?? [];
 
@@ -41,3 +41,5 @@ export const useFixtures = (date: string) => {
     },
   });
 };
+
+

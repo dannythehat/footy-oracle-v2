@@ -1,39 +1,28 @@
-import { useEffect, useState } from 'react';
-import { fixturesApi } from '../services/api';
-import FixtureRow from '../components/FixtureRow';
+﻿import React from "react";
+import { useQuery } from "@tanstack/react-query";
+import { fixturesApi } from "../services/api";
+import FixtureRow from "../components/FixtureRow";
+import { FixtureSummary } from "../types/fixtures";
 
-export default function FixturesPage() {
-  const [fixtures, setFixtures] = useState([]);
-  const [loading, setLoading] = useState(true);
+const FixturesPage: React.FC = () => {
+  const { data, isLoading } = useQuery({
+    queryKey: ["fixtures-today"],
+    queryFn: () => fixturesApi.getByDate(new Date().toISOString().slice(0, 10)),
+  });
 
-  const today = new Date().toISOString().slice(0, 10);
-
-  useEffect(() => {
-    fixturesApi.getByDate(today).then((res) => {
-      setFixtures(res.data || []);
-      setLoading(false);
-    });
-  }, [today]);
-
-  if (loading) {
-    return (
-      <div style={{ background: '#111', color: '#fff', minHeight: '100vh', padding: '20px' }}>
-        Loading fixtures...
-      </div>
-    );
+  if (isLoading) {
+    return <div className="p-4 text-gray-300">Loading fixtures…</div>;
   }
 
+  const fixtures: FixtureSummary[] = data ?? [];
+
   return (
-    <div style={{ background: '#111', minHeight: '100vh', padding: '20px', color: '#fff' }}>
-      <h2 style={{ marginBottom: '15px' }}>Today's Fixtures</h2>
-
-      {fixtures.length === 0 && (
-        <div>No fixtures found for today.</div>
-      )}
-
-      {fixtures.map((fx) => (
+    <div className="p-4 space-y-2">
+      {fixtures.map((fx: FixtureSummary) => (
         <FixtureRow key={fx.fixtureId} fixture={fx} />
       ))}
     </div>
   );
-}
+};
+
+export default FixturesPage;
