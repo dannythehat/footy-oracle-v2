@@ -56,6 +56,7 @@ const FixturesView: React.FC<FixturesViewProps> = ({ onClose, embedded = false }
   const [expandedLeagues, setExpandedLeagues] = useState<Set<string>>(new Set());
   const [expandedLiveLeagues, setExpandedLiveLeagues] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [autoRefresh, setAutoRefresh] = useState(true);
   
@@ -107,18 +108,22 @@ const FixturesView: React.FC<FixturesViewProps> = ({ onClose, embedded = false }
   const dateRange = generateDateRange();
 
   useEffect(() => {
-    fetchFixtures();
+    fetchFixtures(true);
     
     // Auto-refresh every 30 seconds if enabled
     if (autoRefresh) {
-      const interval = setInterval(fetchFixtures, 30000);
+      const interval = setInterval(() => fetchFixtures(false), 30000);
       return () => clearInterval(interval);
     }
   }, [selectedDate, autoRefresh]);
 
-  const fetchFixtures = async () => {
+  const fetchFixtures = async (showLoading: boolean = true) => {
     try {
-      setLoading(true);
+      if (showLoading) {
+        setLoading(true);
+      } else {
+        setRefreshing(true);
+      }
       setError(null);
       
       const dateStr = selectedDate.toISOString().split('T')[0];
@@ -162,6 +167,7 @@ const FixturesView: React.FC<FixturesViewProps> = ({ onClose, embedded = false }
       setFixtures([]);
     } finally {
       setLoading(false);
+      setRefreshing(false);
     }
   };
 
@@ -381,7 +387,7 @@ const FixturesView: React.FC<FixturesViewProps> = ({ onClose, embedded = false }
       <div 
         key={fixture.fixtureId || fixture.id} 
         onClick={() => handleFixtureClick(fixture)}
-        className={`px-3 py-2 sm:px-2 sm:py-1.5 border-b border-gray-800/50 last:border-b-0 hover:bg-gray-800/30 active:bg-gray-800/50 transition-colors cursor-pointer ${live ? 'bg-red-950/20' : ''}`}
+        className={`px-3 py-2 sm:px-2 sm:py-1.5 border-b border-gray-800/50 last:border-b-0 hover:bg-gray-800/30 active:bg-gray-800/50 transition-colors cursor-pointer ${live ? 'bg-purple-950/20 border-l-2 border-l-purple-500' : ''}`}
       >
         <div className="flex items-center justify-between gap-2 sm:gap-1.5">
           {/* Time/Status Column - Mobile optimized */}
@@ -403,7 +409,7 @@ const FixturesView: React.FC<FixturesViewProps> = ({ onClose, embedded = false }
                 </span>
               </div>
               {showScore && (
-                <span className={`text-sm sm:text-xs font-bold ml-2 ${live ? 'text-red-400' : 'text-white'}`}>
+                <span className={`text-sm sm:text-xs font-bold ml-2 ${live ? 'text-purple-400' : 'text-white'}`}>
                   {score.home ?? '-'}
                 </span>
               )}
@@ -420,7 +426,7 @@ const FixturesView: React.FC<FixturesViewProps> = ({ onClose, embedded = false }
                 </span>
               </div>
               {showScore && (
-                <span className={`text-sm sm:text-xs font-bold ml-2 ${live ? 'text-red-400' : 'text-white'}`}>
+                <span className={`text-sm sm:text-xs font-bold ml-2 ${live ? 'text-purple-400' : 'text-white'}`}>
                   {score.away ?? '-'}
                 </span>
               )}
@@ -479,24 +485,25 @@ const FixturesView: React.FC<FixturesViewProps> = ({ onClose, embedded = false }
             {dateRange.map((date, index) => {
               const selected = isSameDay(date, selectedDate);
               const today = isToday(date);
+              const dateLabel = today ? 'Today' : date.getDate().toString();
               
               return (
                 <button
                   key={index}
                   onClick={() => setSelectedDate(date)}
-                  className={`flex-shrink-0 px-3 py-2 sm:px-2 sm:py-1 rounded text-xs sm:text-[10px] font-medium transition-colors border min-h-[44px] sm:min-h-0 ${
+                  className={`flex-shrink-0 px-3 py-2 sm:px-2 sm:py-1 rounded text-xs sm:text-[10px] font-medium transition-all border min-h-[44px] sm:min-h-0 ${
                     selected
-                      ? 'bg-blue-600 border-blue-500 text-white'
+                      ? 'bg-purple-600 border-purple-500 text-white shadow-lg shadow-purple-500/50'
                       : today
-                      ? 'bg-gray-800 border-gray-700 text-blue-400'
+                      ? 'bg-purple-900/30 border-purple-700 text-purple-400 font-bold'
                       : 'bg-gray-900 border-gray-800 text-gray-400 hover:bg-gray-800 active:bg-gray-700'
                   }`}
                 >
                   <div className="text-center">
-                    <div className={`font-semibold ${selected ? 'text-white' : today ? 'text-blue-400' : 'text-gray-300'}`}>
-                      {date.getDate()}
+                    <div className={`font-semibold ${selected ? 'text-white' : today ? 'text-purple-400' : 'text-gray-300'}`}>
+                      {dateLabel}
                     </div>
-                    <div className={`text-[10px] sm:text-[9px] ${selected ? 'text-blue-200' : 'text-gray-600'}`}>
+                    <div className={`text-[10px] sm:text-[9px] ${selected ? 'text-purple-200' : today ? 'text-purple-500' : 'text-gray-600'}`}>
                       {date.toLocaleDateString('en-GB', { month: 'short' })}
                     </div>
                   </div>
@@ -515,7 +522,7 @@ const FixturesView: React.FC<FixturesViewProps> = ({ onClose, embedded = false }
                 <ChevronLeft className="w-4 h-4 sm:w-3 sm:h-3 text-gray-500" />
               </button>
               
-              <span className="text-xs sm:text-[10px] font-semibold text-white">
+              <span className={`text-xs sm:text-[10px] font-semibold ${isToday(selectedDate) ? 'text-purple-400' : 'text-white'}`}>
                 {formatDate(selectedDate)}
               </span>
 
@@ -529,11 +536,11 @@ const FixturesView: React.FC<FixturesViewProps> = ({ onClose, embedded = false }
 
             <div className="flex items-center gap-2 sm:gap-1.5">
               <button
-                onClick={fetchFixtures}
-                disabled={loading}
+                onClick={() => fetchFixtures(true)}
+                disabled={loading || refreshing}
                 className="flex items-center gap-1.5 sm:gap-1 px-3 py-2 sm:px-2 sm:py-0.5 bg-gray-900 hover:bg-gray-800 active:bg-gray-700 text-white rounded text-xs sm:text-[10px] transition-colors disabled:opacity-50 border border-gray-800 min-h-[44px] sm:min-h-0"
               >
-                <RefreshCw className={`w-3.5 h-3.5 sm:w-2.5 sm:h-2.5 ${loading ? 'animate-spin' : ''}`} />
+                <RefreshCw className={`w-3.5 h-3.5 sm:w-2.5 sm:h-2.5 ${(loading || refreshing) ? 'animate-spin' : ''}`} />
                 <span className="hidden sm:inline">Refresh</span>
               </button>
 
@@ -550,10 +557,10 @@ const FixturesView: React.FC<FixturesViewProps> = ({ onClose, embedded = false }
           </div>
         </div>
 
-        {/* Loading State */}
-        {loading && (
+        {/* Loading State - Only show on initial load */}
+        {loading && !refreshing && (
           <div className="text-center py-8 sm:py-6">
-            <RefreshCw className="w-8 h-8 sm:w-6 sm:h-6 text-blue-500 animate-spin mx-auto mb-2 sm:mb-1.5" />
+            <RefreshCw className="w-8 h-8 sm:w-6 sm:h-6 text-purple-500 animate-spin mx-auto mb-2 sm:mb-1.5" />
             <p className="text-gray-600 text-xs sm:text-[10px]">Loading fixtures...</p>
           </div>
         )}
@@ -579,12 +586,12 @@ const FixturesView: React.FC<FixturesViewProps> = ({ onClose, embedded = false }
         {/* Live Now Section - Grouped by League - Mobile optimized */}
         {!loading && !error && liveFixtures.length > 0 && (
           <div className="mb-3 sm:mb-2">
-            <div className="bg-[#0f0f0f] border-l-2 border-red-500 border-r border-t border-b border-gray-800 rounded-lg overflow-hidden">
-              <div className="px-3 py-2 sm:px-2 sm:py-1.5 flex items-center justify-between bg-red-950/20 border-b border-gray-800">
+            <div className="bg-[#0f0f0f] border-l-2 border-purple-500 border-r border-t border-b border-gray-800 rounded-lg overflow-hidden shadow-lg shadow-purple-500/20">
+              <div className="px-3 py-2 sm:px-2 sm:py-1.5 flex items-center justify-between bg-purple-950/30 border-b border-gray-800">
                 <div className="flex items-center gap-2 sm:gap-1.5">
-                  <Radio className="w-4 h-4 sm:w-3 sm:h-3 text-red-500 animate-pulse" />
-                  <span className="text-xs sm:text-[10px] font-bold text-red-400">LIVE NOW</span>
-                  <span className="text-[10px] sm:text-[9px] text-red-500 bg-red-950/40 px-1.5 py-0.5 sm:px-1 sm:py-0.5 rounded border border-red-900/50">
+                  <Radio className="w-4 h-4 sm:w-3 sm:h-3 text-purple-500 animate-pulse" />
+                  <span className="text-xs sm:text-[10px] font-bold text-purple-400">LIVE NOW</span>
+                  <span className="text-[10px] sm:text-[9px] text-purple-400 bg-purple-950/60 px-1.5 py-0.5 sm:px-1 sm:py-0.5 rounded border border-purple-700/50">
                     {liveFixtures.length}
                   </span>
                 </div>
