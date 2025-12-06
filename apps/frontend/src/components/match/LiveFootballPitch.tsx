@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+﻿import React, { useEffect, useState } from 'react';
 import { wsService, LiveScoreUpdate, MatchEvent } from '../../services/websocket';
 
 interface LiveFootballPitchProps {
@@ -11,7 +11,7 @@ interface LiveFootballPitchProps {
 
 interface PitchEvent {
   id: string;
-  type: 'goal' | 'card' | 'corner' | 'substitution' | 'attack';
+  type: 'goal' | 'card' | 'corner' | 'substitution';
   team: 'home' | 'away';
   minute: number;
   player?: string;
@@ -69,30 +69,27 @@ export default function LiveFootballPitch({
       
       // Add new events to pitch
       if (data.events && data.events.length > 0) {
-        const newEvents = data.events.map((ev, idx) => ({
-          id: `live-${Date.now()}-${idx}`,
-          type: ev.type,
-          team: ev.team,
-          minute: ev.time,
-          player: ev.player,
-          x: getEventX(ev.type, ev.team),
-          y: 50 + (Math.random() - 0.5) * 40,
-          timestamp: Date.now(),
-          detail: ev.detail
-        }));
+        const newEvents = data.events.map((ev, idx) => {
+  const isHome = ev.team?.toLowerCase().includes(homeTeam.toLowerCase());
+  const teamKey: 'home' | 'away' = isHome ? 'home' : 'away';
+
+  return {
+    id: live-\-\,
+    type: ev.type as PitchEvent['type'],
+    team: teamKey,
+    minute: ev.time,
+    player: ev.player,
+    x: getEventX(ev.type as PitchEvent['type'], teamKey),
+    y: 50 + (Math.random() - 0.5) * 40,
+    timestamp: Date.now(),
+    detail: ev.detail
+  };
+});
         
         setPitchEvents(prev => [...newEvents, ...prev].slice(0, 5));
         
-        // Set danger zone for attacks
-        if (newEvents.some(e => e.type === 'attack')) {
-          const attackTeam = newEvents.find(e => e.type === 'attack')?.team;
-          setDangerZone(attackTeam || null);
-          setTimeout(() => setDangerZone(null), 5000);
-        }
       }
-    });
-
-    return () => unsubscribe();
+    });return () => unsubscribe();
   }, [fixtureId]);
 
   // Auto-remove old events
@@ -236,7 +233,7 @@ export default function LiveFootballPitch({
                 <g transform={`translate(${event.x * 5.4 + 30}, ${event.y * 3.4 + 30})`}>
                   <circle r="12" fill="#22c55e" className="animate-ping" style={{ animationDuration: '2s' }} />
                   <circle r="8" fill="#22c55e" />
-                  <text x="0" y="4" textAnchor="middle" fill="white" fontSize="10" fontWeight="bold">⚽</text>
+                  <text x="0" y="4" textAnchor="middle" fill="white" fontSize="10" fontWeight="bold">âš½</text>
                 </g>
               )}
               
@@ -335,10 +332,11 @@ function getEventX(type: string, team: 'home' | 'away'): number {
 
 function getEventIcon(type: string): string {
   switch (type) {
-    case 'goal': return '⚽';
-    case 'card': return '🟨';
-    case 'corner': return '🚩';
-    case 'substitution': return '🔄';
-    default: return '⚡';
+    case 'goal': return 'âš½';
+    case 'card': return 'ðŸŸ¨';
+    case 'corner': return 'ðŸš©';
+    case 'substitution': return 'ðŸ”„';
+    default: return 'âš¡';
   }
 }
+
