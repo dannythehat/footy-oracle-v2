@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+﻿import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { fixturesApi } from "../services/api";
 import MatchHeader from "../components/match/MatchHeader";
@@ -112,7 +112,7 @@ export default function MatchPage() {
   ];
 
   if (isLive) {
-    baseTabs.push({ key: "livepitch", label: "🔴 Live Pitch" });
+    baseTabs.push({ key: "livepitch", label: "🔥 Live Pitch" });
   }
 
   const tabs = [
@@ -209,7 +209,7 @@ export default function MatchPage() {
             <MatchTimeline
               events={events ?? []}
               homeTeam={homeTeamName}
-              awayTeam={awayTeam Name}
+              awayTeam={awayTeamName}
             />
           )}
 
@@ -229,3 +229,6 @@ export default function MatchPage() {
     </div>
   );
 }
+
+
+
