@@ -1,21 +1,21 @@
 import cron from 'node-cron';
 import { Fixture } from '../models/Fixture.js';
-import { fetchFixtures, fetchOdds } from '../services/apiFootballService.js';
+import { fetchFixtures } from '../services/apiFootballService.js';
 import { updateTodayOdds } from '../services/oddsUpdateService.js';
 
 /**
  * Start the fixtures cron: refreshes 7 days back + 7 days forward
  */
 export function startFixturesCron() {
-  // Run every 2 hours
-  cron.schedule('0 */2 * * *', async () => {
-    console.log('🔄 Running fixtures update cron (every 2 hours)...');
+  // Run once daily at 3:00 AM UTC (before odds update at 5 AM)
+  cron.schedule('0 3 * * *', async () => {
+    console.log('🔄 Running daily fixtures update cron (3:00 AM UTC)...');
     await loadFixturesWindow();
   });
 
-  // Update odds daily at 8:00 AM UTC
-  cron.schedule('0 8 * * *', async () => {
-    console.log('💰 Running daily odds update cron (8:00 AM UTC)...');
+  // Update odds daily at 5:00 AM UTC (BEFORE ML predictions at 6 AM)
+  cron.schedule('0 5 * * *', async () => {
+    console.log('💰 Running daily odds update cron (5:00 AM UTC - before ML at 6 AM)...');
     try {
       const result = await updateTodayOdds();
       console.log(`✅ Daily odds update complete: ${result.updated}/${result.total} updated, ${result.errors} errors`);
@@ -94,6 +94,7 @@ export async function loadTodaysFixtures() {
 
 /**
  * Load fixtures for a single date
+ * NOTE: Odds are now fetched separately by the dedicated odds update cron at 5 AM
  */
 export async function loadFixturesForDate(date: string) {
   try {
@@ -149,20 +150,6 @@ export async function loadFixturesForDate(date: string) {
           updatedAt: new Date(),
         });
         saved++;
-      }
-
-      // 🔥 Update odds for every fixture
-      const odds = await fetchOdds(fixture.fixtureId);
-      if (odds) {
-        await Fixture.updateOne(
-          { fixtureId: fixture.fixtureId },
-          {
-            $set: {
-              odds,
-              updatedAt: new Date(),
-            },
-          }
-        );
       }
 
       // Rate limiting: API-Football gets angry otherwise
