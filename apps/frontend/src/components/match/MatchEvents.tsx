@@ -1,10 +1,22 @@
+import FootballPitchGraphic from './FootballPitchGraphic';
+
 interface MatchEventsProps {
   events: any[];
+  homeTeam?: string;
+  awayTeam?: string;
 }
 
-export default function MatchEvents({ events }: MatchEventsProps) {
+export default function MatchEvents({ events, homeTeam, awayTeam }: MatchEventsProps) {
   if (!events || events.length === 0) {
-    return <div className='text-white opacity-70'>No events available</div>;
+    return (
+      <div className="py-4">
+        <FootballPitchGraphic 
+          homeTeam={homeTeam}
+          awayTeam={awayTeam}
+          isLive={true}
+        />
+      </div>
+    );
   }
 
   return (
