@@ -28,9 +28,7 @@ export interface ValueBet extends MLPrediction {
 }
 
 /** Determine ML folder path **/
-const ML_DIR =
-  process.env.ML_OUTPUTS_LOCAL_PATH ||
-  path.join(process.cwd(), "public", "ml_outputs");
+const ML_DIR = process.env.ML_OUTPUTS_LOCAL_PATH || '/opt/render/project/src/apps/backend/public/ml_outputs';
 
 function loadLocalJSON(filename: string): any | null {
   try {
@@ -181,3 +179,4 @@ export async function loadValueBets(): Promise<ValueBet[]> {
     };
   });
 }
+
