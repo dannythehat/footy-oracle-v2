@@ -70,37 +70,69 @@ export async function fetchFixtures(date: string): Promise<FixtureData[]> {
   }));
 }
 
-/** Fetch Odds */
+/** Fetch Odds with fallback bookmakers */
 export async function fetchOdds(fixtureId: number): Promise<any> {
-  console.log(`💰 Odds for ${fixtureId}`);
+  // Try multiple bookmakers in order of preference
+  // 8 = Bet365, 6 = Bwin, 11 = Williamhill
+  const bookmakers = [
+    { id: 8, name: "Bet365" },
+    { id: 6, name: "Bwin" },
+    { id: 11, name: "Williamhill" }
+  ];
 
-  const response = await apiClient.get("/odds", {
-    params: {
-      fixture: fixtureId,
-      bookmaker: 8,
-    },
-  });
+  for (const bookmaker of bookmakers) {
+    try {
+      console.log(`💰 Fetching odds for fixture ${fixtureId} from ${bookmaker.name}...`);
 
-  const res = response.data.response[0];
-  if (!res) return null;
+      const response = await apiClient.get("/odds", {
+        params: {
+          fixture: fixtureId,
+          bookmaker: bookmaker.id,
+        },
+      });
 
-  const bets = res.bookmakers?.[0]?.bets || [];
+      const res = response.data.response[0];
+      if (!res || !res.bookmakers?.[0]?.bets) {
+        console.log(`⚠️  No odds from ${bookmaker.name} for fixture ${fixtureId}`);
+        continue; // Try next bookmaker
+      }
 
-  function get(bid: number, value: string) {
-    const market = bets.find((b: any) => b.id === bid);
-    return market?.values?.find((v: any) => v.value === value)?.odd;
+      const bets = res.bookmakers[0].bets;
+
+      function get(bid: number, value: string) {
+        const market = bets.find((b: any) => b.id === bid);
+        return market?.values?.find((v: any) => v.value === value)?.odd;
+      }
+
+      const odds = {
+        homeWin: get(1, "Home"),
+        draw: get(1, "Draw"),
+        awayWin: get(1, "Away"),
+        btts: get(8, "Yes"),
+        over25: get(5, "Over 2.5"),
+        under25: get(5, "Under 2.5"),
+        over95corners: get(12, "Over 9.5"),
+        over35cards: get(11, "Over 3.5"),
+      };
+
+      // Check if we got at least some odds
+      const hasOdds = Object.values(odds).some(odd => odd !== undefined);
+      
+      if (hasOdds) {
+        console.log(`✅ Got odds for fixture ${fixtureId} from ${bookmaker.name}`);
+        return odds;
+      } else {
+        console.log(`⚠️  ${bookmaker.name} returned empty odds for fixture ${fixtureId}`);
+      }
+    } catch (err: any) {
+      console.warn(`❌ Error fetching odds from ${bookmaker.name}:`, err.message);
+      // Continue to next bookmaker
+    }
   }
 
-  return {
-    homeWin: get(1, "Home"),
-    draw: get(1, "Draw"),
-    awayWin: get(1, "Away"),
-    btts: get(8, "Yes"),
-    over25: get(5, "Over 2.5"),
-    under25: get(5, "Under 2.5"),
-    over95corners: get(12, "Over 9.5"),
-    over35cards: get(11, "Over 3.5"),
-  };
+  // No bookmaker had odds
+  console.warn(`⚠️  No odds available from any bookmaker for fixture ${fixtureId}`);
+  return null;
 }
 
 /** Fetch H2H */
