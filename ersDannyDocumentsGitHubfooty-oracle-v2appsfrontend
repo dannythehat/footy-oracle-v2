@@ -1,0 +1,141 @@
+warning: in the working copy of 'apps/frontend/src/pages/MatchPage.tsx', LF will be replaced by CRLF the next time Git touches it
+[1mdiff --git a/apps/frontend/src/pages/MatchPage.tsx b/apps/frontend/src/pages/MatchPage.tsx[m
+[1mindex 2e7e517..ac21c09 100644[m
+[1m--- a/apps/frontend/src/pages/MatchPage.tsx[m
+[1m+++ b/apps/frontend/src/pages/MatchPage.tsx[m
+[36m@@ -22,7 +22,6 @@[m [mtype TabKey =[m
+ export default function MatchPage() {[m
+   const { fixtureId } = useParams<{ fixtureId: string }>();[m
+   const navigate = useNavigate();[m
+[31m-[m
+   const id = fixtureId ? Number(fixtureId) : undefined;[m
+ [m
+   const [fixture, setFixture] = useState<any | null>(null);[m
+[36m@@ -45,21 +44,27 @@[m [mexport default function MatchPage() {[m
+ [m
+         const [ev, st] = await Promise.all([[m
+           fixturesApi.getEvents(id).catch(() => []),[m
+[31m-          fixturesApi.getStats(id).catch(() => [])[m
+[32m+[m[32m          fixturesApi.getStats(id).catch(() => []),[m
+         ]);[m
+ [m
+         setEvents(ev || []);[m
+         setStats(st || []);[m
+ [m
+         if (base?.homeTeamId && base?.awayTeamId) {[m
+[31m-          const h2hData = await fixturesApi.getH2H(base.homeTeamId, base.awayTeamId).catch(() => null);[m
+[32m+[m[32m          const h2hData = await fixturesApi[m
+[32m+[m[32m            .getH2H(base.homeTeamId, base.awayTeamId)[m
+[32m+[m[32m            .catch(() => null);[m
+           setH2h(h2hData);[m
+         }[m
+ [m
+         if (base?.leagueId && base?.season) {[m
+[31m-          const table = await fixturesApi.getStandings(base.leagueId, base.season).catch(() => null);[m
+[32m+[m[32m          const table = await fixturesApi[m
+[32m+[m[32m            .getStandings(base.leagueId, base.season)[m
+[32m+[m[32m            .catch(() => null);[m
+           setStandings(table);[m
+         }[m
+[32m+[m[32m      } catch (err) {[m
+[32m+[m[32m        console.error("MatchPage load error", err);[m
+       } finally {[m
+         setLoading(false);[m
+       }[m
+[36m@@ -72,7 +77,7 @@[m [mexport default function MatchPage() {[m
+     return ([m
+       <div className="min-h-screen bg-[#0a0a0a] text-white p-6 flex items-center justify-center">[m
+         <div className="text-center">[m
+[31m-          <div className="w-16 h-16 border-4 border-purple-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>[m
+[32m+[m[32m          <div className="w-16 h-16 border-4 border-purple-500 border-t-transparent rounded-full animate-spin mx-auto mb-4" />[m
+           <p className="text-gray-400">Loading match...</p>[m
+         </div>[m
+       </div>[m
+[36m@@ -100,17 +105,19 @@[m [mexport default function MatchPage() {[m
+     fixture?.status?.short === "2H" ||[m
+     fixture?.status?.short === "HT" ||[m
+     fixture?.status?.short === "ET" ||[m
+[32m+[m[32m    fixture?.status?.short === "P" ||[m
+     fixture?.status?.short === "LIVE" ||[m
+[31m-    fixture?.status?.long?.toLowerCase()?.includes("in play");[m
+[32m+[m[32m    (typeof fixture?.status?.long === "string" &&[m
+[32m+[m[32m      fixture.status.long.toLowerCase().includes("in play"));[m
+ [m
+   const tabs: { key: TabKey; label: string }[] = [[m
+     { key: "overview", label: "Overview" },[m
+[31m-    ...(isLive ? [{ key: "livepitch", label: "🔥 Live Pitch" }] : []),[m
+[32m+[m[32m    ...(isLive ? [{ key: "livepitch", label: "🔥 Live Pitch" } as const] : []),[m
+     { key: "stats", label: "Stats" },[m
+     { key: "events", label: "Events" },[m
+     { key: "timeline", label: "Timeline" },[m
+     { key: "h2h", label: "H2H" },[m
+[31m-    { key: "standings", label: "Standings" }[m
+[32m+[m[32m    { key: "standings", label: "Standings" },[m
+   ];[m
+ [m
+   const homeTeamName = fixture?.homeTeam || fixture?.homeTeamName || "Home";[m
+[36m@@ -134,7 +141,13 @@[m [mexport default function MatchPage() {[m
+             <button[m
+               key={t.key}[m
+               onClick={() => setActiveTab(t.key)}[m
+[31m-              className={px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-all }[m
+[32m+[m[32m              className={[m
+[32m+[m[32m                activeTab === t.key[m
+[32m+[m[32m                  ? "px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-all bg-purple-600 text-white border border-purple-500 shadow-lg shadow-purple-500/50"[m
+[32m+[m[32m                  : t.key === "livepitch"[m
+[32m+[m[32m                  ? "px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-all bg-red-600/20 text-red-400 border border-red-500/50 hover:bg-red-600/30 hover:text-red-300 animate-pulse"[m
+[32m+[m[32m                  : "px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-all bg-gray-900 text-gray-400 border border-gray-800 hover:bg-gray-800 hover:text-gray-300"[m
+[32m+[m[32m              }[m
+             >[m
+               {t.label}[m
+             </button>[m
+[36m@@ -144,8 +157,16 @@[m [mexport default function MatchPage() {[m
+         <div className="bg-[#0a0a0a] border border-gray-800 rounded-lg p-6">[m
+           {activeTab === "overview" && ([m
+             <div className="space-y-6">[m
+[31m-              <MatchStats stats={stats} homeTeam={homeTeamName} awayTeam={awayTeamName} />[m
+[31m-              <MatchEvents events={events} homeTeam={homeTeamName} awayTeam={awayTeamName} />[m
+[32m+[m[32m              <MatchStats[m
+[32m+[m[32m                stats={stats ?? []}[m
+[32m+[m[32m                homeTeam={homeTeamName}[m
+[32m+[m[32m                awayTeam={awayTeamName}[m
+[32m+[m[32m              />[m
+[32m+[m[32m              <MatchEvents[m
+[32m+[m[32m                events={events ?? []}[m
+[32m+[m[32m                homeTeam={homeTeamName}[m
+[32m+[m[32m                awayTeam={awayTeamName}[m
+[32m+[m[32m              />[m
+             </div>[m
+           )}[m
+ [m
+[36m@@ -160,15 +181,27 @@[m [mexport default function MatchPage() {[m
+           )}[m
+ [m
+           {activeTab === "stats" && ([m
+[31m-            <MatchStats stats={stats} homeTeam={homeTeamName} awayTeam={awayTeamName} />[m
+[32m+[m[32m            <MatchStats[m
+[32m+[m[32m              stats={stats ?? []}[m
+[32m+[m[32m              homeTeam={homeTeamName}[m
+[32m+[m[32m              awayTeam={awayTeamName}[m
+[32m+[m[32m            />[m
+           )}[m
+ [m
+           {activeTab === "events" && ([m
+[31m-            <MatchEvents events={events} homeTeam={homeTeamName} awayTeam={awayTeamName} />[m
+[32m+[m[32m            <MatchEvents[m
+[32m+[m[32m              events={events ?? []}[m
+[32m+[m[32m              homeTeam={homeTeamName}[m
+[32m+[m[32m              awayTeam={awayTeamName}[m
+[32m+[m[32m            />[m
+           )}[m
+ [m
+           {activeTab === "timeline" && ([m
+[31m-            <MatchTimeline events={events} homeTeam={homeTeamName} awayTeam={awayTeamName} />[m
+[32m+[m[32m            <MatchTimeline[m
+[32m+[m[32m              events={events ?? []}[m
+[32m+[m[32m              homeTeam={homeTeamName}[m
+[32m+[m[32m              awayTeam={awayTeamName}[m
+[32m+[m[32m            />[m
+           )}[m
+ [m
+           {activeTab === "h2h" && <MatchH2H h2h={h2h} />}[m
