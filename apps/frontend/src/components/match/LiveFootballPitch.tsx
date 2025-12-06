@@ -1,5 +1,5 @@
 ﻿import React, { useEffect, useState } from 'react';
-import { wsService, LiveScoreUpdate, MatchEvent } from '../../services/websocket';
+import { wsService, LiveScoreUpdate } from '../../services/websocket';
 
 interface LiveFootballPitchProps {
   fixtureId: number;
@@ -9,9 +9,11 @@ interface LiveFootballPitchProps {
   initialEvents?: any[];
 }
 
+type PitchEventType = 'goal' | 'card' | 'corner' | 'substitution';
+
 interface PitchEvent {
   id: string;
-  type: 'goal' | 'card' | 'corner' | 'substitution';
+  type: PitchEventType;
   team: 'home' | 'away';
   minute: number;
   player?: string;
@@ -21,9 +23,9 @@ interface PitchEvent {
   detail?: string;
 }
 
-export default function LiveFootballPitch({ 
+export default function LiveFootballPitch({
   fixtureId,
-  homeTeam = 'Home', 
+  homeTeam = 'Home',
   awayTeam = 'Away',
   initialStats = [],
   initialEvents = []
@@ -47,17 +49,27 @@ export default function LiveFootballPitch({
   // Convert initial events to pitch events
   useEffect(() => {
     if (initialEvents && initialEvents.length > 0) {
-      const converted = initialEvents.slice(0, 5).map((ev, idx) => ({
-        id: `initial-${idx}`,
-        type: mapEventType(ev.type),
-        team: ev.team?.name?.toLowerCase().includes(homeTeam.toLowerCase()) ? 'home' : 'away',
-        minute: ev.time?.elapsed || 0,
-        player: ev.player?.name || ev.player,
-        x: getEventX(ev.type, ev.team?.name?.toLowerCase().includes(homeTeam.toLowerCase()) ? 'home' : 'away'),
-        y: 50 + (Math.random() - 0.5) * 40,
-        timestamp: Date.now() - (idx * 10000),
-        detail: ev.detail
-      }));
+      const converted: PitchEvent[] = initialEvents.slice(0, 5).map((ev: any, idx: number) => {
+        const teamName = ev.team?.name ?? ev.team ?? '';
+        const isHome = teamName.toLowerCase().includes(homeTeam.toLowerCase());
+        const teamKey: 'home' | 'away' = isHome ? 'home' : 'away';
+        const minute = ev.time?.elapsed ?? 0;
+        const playerName = ev.player?.name ?? ev.player ?? '';
+        const evType = mapEventType(ev.type as string);
+
+        return {
+          id: `initial-${idx}`,
+          type: evType,
+          team: teamKey,
+          minute,
+          player: playerName,
+          x: getEventX(evType, teamKey),
+          y: 50 + (Math.random() - 0.5) * 40,
+          timestamp: Date.now() - idx * 10000,
+          detail: ev.detail
+        };
+      });
+
       setPitchEvents(converted);
     }
   }, [initialEvents, homeTeam]);
@@ -66,36 +78,47 @@ export default function LiveFootballPitch({
   useEffect(() => {
     const unsubscribe = wsService.subscribe(fixtureId, (data: LiveScoreUpdate) => {
       setLiveData(data);
-      
-      // Add new events to pitch
-      if (data.events && data.events.length > 0) {
-        const newEvents = data.events.map((ev, idx) => {
-  const isHome = ev.team?.toLowerCase().includes(homeTeam.toLowerCase());
-  const teamKey: 'home' | 'away' = isHome ? 'home' : 'away';
 
-  return {
-    id: live-\-\,
-    type: ev.type as PitchEvent['type'],
-    team: teamKey,
-    minute: ev.time,
-    player: ev.player,
-    x: getEventX(ev.type as PitchEvent['type'], teamKey),
-    y: 50 + (Math.random() - 0.5) * 40,
-    timestamp: Date.now(),
-    detail: ev.detail
-  };
-});
-        
+      if (data.events && data.events.length > 0) {
+        const newEvents: PitchEvent[] = data.events.map((ev: any, idx: number) => {
+          const teamName = ev.team?.name ?? ev.team ?? '';
+          const isHome = teamName.toLowerCase().includes(homeTeam.toLowerCase());
+          const teamKey: 'home' | 'away' = isHome ? 'home' : 'away';
+          const minute = ev.time?.elapsed ?? ev.time ?? 0;
+          const playerName = ev.player?.name ?? ev.player ?? '';
+          const evType = mapEventType(ev.type as string);
+
+          return {
+            id: `live-${Date.now()}-${idx}`,
+            type: evType,
+            team: teamKey,
+            minute,
+            player: playerName,
+            x: getEventX(evType, teamKey),
+            y: 50 + (Math.random() - 0.5) * 40,
+            timestamp: Date.now(),
+            detail: ev.detail
+          };
+        });
+
         setPitchEvents(prev => [...newEvents, ...prev].slice(0, 5));
-        
+
+        // Optional: simple danger zone logic based on last event team
+        const last = newEvents[0];
+        if (last) {
+          setDangerZone(last.team);
+          setTimeout(() => setDangerZone(null), 5000);
+        }
       }
-    });return () => unsubscribe();
-  }, [fixtureId]);
+    });
+
+    return () => unsubscribe();
+  }, [fixtureId, homeTeam]);
 
   // Auto-remove old events
   useEffect(() => {
     const interval = setInterval(() => {
-      setPitchEvents(prev => 
+      setPitchEvents(prev =>
         prev.filter(e => Date.now() - e.timestamp < 30000) // Keep events for 30s
       );
     }, 5000);
@@ -158,21 +181,21 @@ export default function LiveFootballPitch({
         <rect x="0" y="0" width="600" height="400" fill="url(#stripes)" />
 
         {/* Possession zones with dynamic intensity */}
-        <rect 
-          x="0" 
-          y="0" 
-          width={`${possession.home * 6}px`} 
-          height="400" 
+        <rect
+          x="0"
+          y="0"
+          width={`${possession.home * 6}px`}
+          height="400"
           fill="url(#homeGlow)"
           className={possession.home > 55 ? "animate-pulse" : ""}
           style={{ animationDuration: '2s' }}
         />
-        
-        <rect 
-          x={`${600 - (possession.away * 6)}px`}
-          y="0" 
-          width={`${possession.away * 6}px`} 
-          height="400" 
+
+        <rect
+          x={`${600 - possession.away * 6}px`}
+          y="0"
+          width={`${possession.away * 6}px`}
+          height="400"
           fill="url(#awayGlow)"
           className={possession.away > 55 ? "animate-pulse" : ""}
           style={{ animationDuration: '2s' }}
@@ -180,23 +203,23 @@ export default function LiveFootballPitch({
 
         {/* Danger zones */}
         {dangerZone === 'home' && (
-          <rect 
-            x="400" 
-            y="0" 
-            width="200" 
-            height="400" 
+          <rect
+            x="400"
+            y="0"
+            width="200"
+            height="400"
             fill="url(#dangerGlow)"
             className="animate-pulse"
             style={{ animationDuration: '1s' }}
           />
         )}
-        
+
         {dangerZone === 'away' && (
-          <rect 
-            x="0" 
-            y="0" 
-            width="200" 
-            height="400" 
+          <rect
+            x="0"
+            y="0"
+            width="200"
+            height="400"
             fill="url(#dangerGlow)"
             className="animate-pulse"
             style={{ animationDuration: '1s' }}
@@ -213,7 +236,7 @@ export default function LiveFootballPitch({
         <rect x="30" y="120" width="90" height="160" fill="none" stroke="white" strokeWidth="2" opacity="0.8" />
         <rect x="30" y="160" width="40" height="80" fill="none" stroke="white" strokeWidth="2" opacity="0.8" />
         <circle cx="95" cy="200" r="3" fill="white" opacity="0.8" />
-        
+
         <rect x="480" y="120" width="90" height="160" fill="none" stroke="white" strokeWidth="2" opacity="0.8" />
         <rect x="530" y="160" width="40" height="80" fill="none" stroke="white" strokeWidth="2" opacity="0.8" />
         <circle cx="505" cy="200" r="3" fill="white" opacity="0.8" />
@@ -226,45 +249,71 @@ export default function LiveFootballPitch({
 
         {/* Event markers on pitch */}
         {pitchEvents.map((event, idx) => {
-          const opacity = 1 - (idx * 0.15); // Fade older events
+          const opacity = 1 - idx * 0.15; // Fade older events
+          const tx = event.x * 5.4 + 30;
+          const ty = event.y * 3.4 + 30;
+
           return (
             <g key={event.id} opacity={opacity}>
               {event.type === 'goal' && (
-                <g transform={`translate(${event.x * 5.4 + 30}, ${event.y * 3.4 + 30})`}>
+                <g transform={`translate(${tx}, ${ty})`}>
                   <circle r="12" fill="#22c55e" className="animate-ping" style={{ animationDuration: '2s' }} />
                   <circle r="8" fill="#22c55e" />
-                  <text x="0" y="4" textAnchor="middle" fill="white" fontSize="10" fontWeight="bold">âš½</text>
+                  <text x="0" y="4" textAnchor="middle" fill="white" fontSize="10" fontWeight="bold">
+                    ⚽
+                  </text>
                 </g>
               )}
-              
+
               {event.type === 'card' && (
-                <g transform={`translate(${event.x * 5.4 + 30}, ${event.y * 3.4 + 30})`}>
-                  <rect x="-6" y="-8" width="12" height="16" fill={event.detail === 'Red Card' ? '#ef4444' : '#fbbf24'} rx="1" />
+                <g transform={`translate(${tx}, ${ty})`}>
+                  <rect x="-6" y="-8" width="12" height="16" fill="#fbbf24" rx="1" />
                 </g>
               )}
-              
+
               {event.type === 'corner' && (
-                <g transform={`translate(${event.x * 5.4 + 30}, ${event.y * 3.4 + 30})`}>
+                <g transform={`translate(${tx}, ${ty})`}>
                   <circle r="8" fill="#8b5cf6" />
-                  <text x="0" y="4" textAnchor="middle" fill="white" fontSize="10" fontWeight="bold">C</text>
+                  <text x="0" y="4" textAnchor="middle" fill="white" fontSize="10" fontWeight="bold">
+                    C
+                  </text>
+                </g>
+              )}
+
+              {event.type === 'substitution' && (
+                <g transform={`translate(${tx}, ${ty})`}>
+                  <circle r="8" fill="#0ea5e9" />
+                  <text x="0" y="4" textAnchor="middle" fill="white" fontSize="10" fontWeight="bold">
+                    ↔
+                  </text>
                 </g>
               )}
             </g>
           );
         })}
 
-        {/* Attack direction arrows */}
+        {/* Attack direction arrows based on possession */}
         {possession.home > 60 && (
           <g opacity="0.6" className="animate-pulse" style={{ animationDuration: '1.5s' }}>
-            <path d="M 200 200 L 350 200 L 340 190 M 350 200 L 340 210" 
-                  stroke="#3b82f6" strokeWidth="4" fill="none" strokeLinecap="round" />
+            <path
+              d="M 200 200 L 350 200 L 340 190 M 350 200 L 340 210"
+              stroke="#3b82f6"
+              strokeWidth="4"
+              fill="none"
+              strokeLinecap="round"
+            />
           </g>
         )}
-        
+
         {possession.away > 60 && (
           <g opacity="0.6" className="animate-pulse" style={{ animationDuration: '1.5s' }}>
-            <path d="M 400 200 L 250 200 L 260 190 M 250 200 L 260 210" 
-                  stroke="#ef4444" strokeWidth="4" fill="none" strokeLinecap="round" />
+            <path
+              d="M 400 200 L 250 200 L 260 190 M 250 200 L 260 210"
+              stroke="#ef4444"
+              strokeWidth="4"
+              fill="none"
+              strokeLinecap="round"
+            />
           </g>
         )}
       </svg>
@@ -305,38 +354,41 @@ export default function LiveFootballPitch({
 }
 
 // Helper functions
-function mapEventType(type: string): 'goal' | 'card' | 'corner' | 'substitution' | 'attack' {
+function mapEventType(type: string): PitchEventType {
   const lower = type?.toLowerCase() || '';
   if (lower.includes('goal')) return 'goal';
   if (lower.includes('card')) return 'card';
   if (lower.includes('corner')) return 'corner';
   if (lower.includes('subst')) return 'substitution';
-  return 'attack';
+  return 'goal';
 }
 
-function getEventX(type: string, team: 'home' | 'away'): number {
-  const eventType = mapEventType(type);
-  
-  if (eventType === 'goal') {
+function getEventX(type: PitchEventType, team: 'home' | 'away'): number {
+  if (type === 'goal') {
     return team === 'home' ? 85 : 15; // Near opponent's goal
   }
-  if (eventType === 'corner') {
+  if (type === 'corner') {
     return team === 'home' ? 90 : 10; // Corner positions
   }
-  if (eventType === 'card') {
+  if (type === 'card') {
     return 40 + Math.random() * 20; // Midfield area
   }
-  
+
+  // substitution or default
   return team === 'home' ? 60 + Math.random() * 20 : 20 + Math.random() * 20;
 }
 
-function getEventIcon(type: string): string {
+function getEventIcon(type: PitchEventType): string {
   switch (type) {
-    case 'goal': return 'âš½';
-    case 'card': return 'ðŸŸ¨';
-    case 'corner': return 'ðŸš©';
-    case 'substitution': return 'ðŸ”„';
-    default: return 'âš¡';
+    case 'goal':
+      return '⚽';
+    case 'card':
+      return '🟨';
+    case 'corner':
+      return '🚩';
+    case 'substitution':
+      return '🔄';
+    default:
+      return '•';
   }
 }
-
