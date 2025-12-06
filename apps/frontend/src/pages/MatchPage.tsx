@@ -7,9 +7,10 @@ import MatchEvents from "../components/match/MatchEvents";
 import MatchTimeline from "../components/match/MatchTimeline";
 import MatchH2H from "../components/match/MatchH2H";
 import MatchStandings from "../components/match/MatchStandings";
+import LiveFootballPitch from "../components/match/LiveFootballPitch";
 import { ArrowLeft } from "lucide-react";
 
-type TabKey = "overview" | "stats" | "events" | "h2h" | "standings" | "timeline";
+type TabKey = "overview" | "stats" | "events" | "h2h" | "standings" | "timeline" | "livepitch";
 
 export default function MatchPage() {
   const { fixtureId } = useParams<{ fixtureId: string }>();
@@ -96,8 +97,26 @@ export default function MatchPage() {
     );
   }
 
-  const tabs: { key: TabKey; label: string }[] = [
+  // Check if match is live
+  const isLive = fixture?.status?.short === '1H' || 
+                 fixture?.status?.short === '2H' || 
+                 fixture?.status?.short === 'HT' ||
+                 fixture?.status?.short === 'ET' ||
+                 fixture?.status?.short === 'P' ||
+                 fixture?.status?.short === 'LIVE' ||
+                 fixture?.status?.long?.toLowerCase().includes('in play');
+
+  // Build tabs array - include Live Pitch only for live matches
+  const baseTabs: { key: TabKey; label: string }[] = [
     { key: "overview", label: "Overview" },
+  ];
+
+  if (isLive) {
+    baseTabs.push({ key: "livepitch", label: "🔴 Live Pitch" });
+  }
+
+  const tabs = [
+    ...baseTabs,
     { key: "stats", label: "Stats" },
     { key: "events", label: "Events" },
     { key: "timeline", label: "Timeline" },
@@ -133,6 +152,8 @@ export default function MatchPage() {
               className={`px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-all ${
                 activeTab === t.key
                   ? "bg-purple-600 text-white border border-purple-500 shadow-lg shadow-purple-500/50"
+                  : t.key === "livepitch"
+                  ? "bg-red-600/20 text-red-400 border border-red-500/50 hover:bg-red-600/30 hover:text-red-300 animate-pulse"
                   : "bg-gray-900 text-gray-400 border border-gray-800 hover:bg-gray-800 hover:text-gray-300"
               }`}
             >
@@ -141,7 +162,7 @@ export default function MatchPage() {
           ))}
         </div>
 
-        {/* Tab Content - FIXED: Changed from #0f0f0f to #0a0a0a */}
+        {/* Tab Content */}
         <div className="bg-[#0a0a0a] border border-gray-800 rounded-lg p-6">
           {activeTab === "overview" && (
             <div className="space-y-6">
@@ -156,6 +177,16 @@ export default function MatchPage() {
                 awayTeam={awayTeamName}
               />
             </div>
+          )}
+
+          {activeTab === "livepitch" && id && (
+            <LiveFootballPitch
+              fixtureId={id}
+              homeTeam={homeTeamName}
+              awayTeam={awayTeamName}
+              initialStats={stats}
+              initialEvents={events}
+            />
           )}
 
           {activeTab === "stats" && (
@@ -178,7 +209,7 @@ export default function MatchPage() {
             <MatchTimeline
               events={events ?? []}
               homeTeam={homeTeamName}
-              awayTeam={awayTeamName}
+              awayTeam={awayTeam Name}
             />
           )}
 
