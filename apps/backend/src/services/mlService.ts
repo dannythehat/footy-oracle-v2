@@ -63,11 +63,7 @@ export async function loadMLPredictions(): Promise<MLPrediction[]> {
 
   if (!body) return [];
 
-  const raw = Array.isArray(body)
-    ? body
-    : Array.isArray(body.predictions)
-    ? body.predictions
-    : [];
+  const raw = body?.golden_bets || body?.data || body || [];
 
   return raw.map((x: any, i: number) => {
     const predicted = x.predicted_outcome || x.prediction || "home_win";
@@ -101,11 +97,7 @@ export async function loadGoldenBets(): Promise<GoldenBet[]> {
   const body = loadLocalJSON("golden_bets.json");
   if (!body) return [];
 
-  const raw = Array.isArray(body)
-    ? body
-    : Array.isArray(body.golden_bets)
-    ? body.golden_bets
-    : [];
+  const raw = body?.golden_bets || body?.data || body || [];
 
   return raw.map((x: any, i: number) => {
     const predicted = x.bet_type || x.prediction || "home_win";
@@ -134,11 +126,7 @@ export async function loadValueBets(): Promise<ValueBet[]> {
   const body = loadLocalJSON("value_bets.json");
   if (!body) return [];
 
-  const raw = Array.isArray(body)
-    ? body
-    : Array.isArray(body.value_bets)
-    ? body.value_bets
-    : [];
+  const raw = body?.golden_bets || body?.data || body || [];
 
   return raw.map((x: any, i: number) => {
     const predicted = x.bet_type || x.prediction || "";
@@ -167,6 +155,7 @@ export async function loadValueBets(): Promise<ValueBet[]> {
     };
   });
 }
+
 
 
 
