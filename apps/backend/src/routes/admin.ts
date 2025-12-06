@@ -2,8 +2,45 @@ import { Router } from 'express';
 import { importBetBuilders, importBetBuildersFromAPI } from '../services/betBuilderImporter.js';
 import { runBetBuilderImportNow } from '../cron/betBuilderCron.js';
 import { exportFixturesForML, getExportStatus } from '../services/fixtureExportService.js';
+import { updateLiveScores, updateRecentlyFinishedFixtures } from '../services/liveScoresService.js';
 
 const router = Router();
+
+/**
+ * POST /api/admin/update-live-scores
+ * Manually trigger live score updates (bypasses cron)
+ */
+router.post('/update-live-scores', async (req, res) => {
+  try {
+    console.log('🔴 Manual live score update triggered');
+    
+    // Update both live and recently finished fixtures
+    const liveResult = await updateLiveScores();
+    const finishedResult = await updateRecentlyFinishedFixtures();
+    
+    res.json({
+      success: true,
+      message: 'Live score update completed',
+      results: {
+        live_fixtures: {
+          updated: liveResult.updated,
+          total: liveResult.total,
+        },
+        recently_finished: {
+          updated: finishedResult.updated,
+          total: finishedResult.total,
+        },
+        total_updated: liveResult.updated + finishedResult.updated,
+      },
+    });
+  } catch (error: any) {
+    console.error('Error updating live scores:', error);
+    res.status(500).json({
+      success: false,
+      error: error.message,
+    });
+  }
+});
 
 /**
  * POST /api/admin/export-fixtures-ml
