@@ -1,6 +1,8 @@
 import fs from "fs";
 import path from "path";
 
+const ML_DIR = process.env.ML_OUTPUTS_LOCAL_PATH || "/opt/render/project/src/apps/backend/public/ml_outputs";
+
 /** Simple Types **/
 export interface MLPrediction {
   fixtureId: number;
@@ -26,20 +28,6 @@ export interface ValueBet extends MLPrediction {
   result?: string;
   profitLoss?: number;
 }
-
-/** Determine ML folder path **/
-const ML_DIR = process.env.ML_OUTPUTS_LOCAL_PATH || '/opt/render/project/src/apps/backend/public/ml_outputs';
-
-function loadLocalJSON(filename: string): any | null {
-  try {
-    const filePath = path.join(ML_DIR, filename);
-
-    if (!fs.existsSync(filePath)) {
-      console.error("ML file missing:", filePath);
-      return null;
-    }
-
-    const data = fs.readFileSync(filePath, "utf-8");
     return JSON.parse(data);
   } catch (err) {
     console.error("ML JSON read error:", err);
@@ -179,4 +167,8 @@ export async function loadValueBets(): Promise<ValueBet[]> {
     };
   });
 }
+
+
+
+
 
