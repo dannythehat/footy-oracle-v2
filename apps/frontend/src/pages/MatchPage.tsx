@@ -22,7 +22,6 @@ type TabKey =
 export default function MatchPage() {
   const { fixtureId } = useParams<{ fixtureId: string }>();
   const navigate = useNavigate();
-
   const id = fixtureId ? Number(fixtureId) : undefined;
 
   const [fixture, setFixture] = useState<any | null>(null);
@@ -45,21 +44,27 @@ export default function MatchPage() {
 
         const [ev, st] = await Promise.all([
           fixturesApi.getEvents(id).catch(() => []),
-          fixturesApi.getStats(id).catch(() => [])
+          fixturesApi.getStats(id).catch(() => []),
         ]);
 
         setEvents(ev || []);
         setStats(st || []);
 
         if (base?.homeTeamId && base?.awayTeamId) {
-          const h2hData = await fixturesApi.getH2H(base.homeTeamId, base.awayTeamId).catch(() => null);
+          const h2hData = await fixturesApi
+            .getH2H(base.homeTeamId, base.awayTeamId)
+            .catch(() => null);
           setH2h(h2hData);
         }
 
         if (base?.leagueId && base?.season) {
-          const table = await fixturesApi.getStandings(base.leagueId, base.season).catch(() => null);
+          const table = await fixturesApi
+            .getStandings(base.leagueId, base.season)
+            .catch(() => null);
           setStandings(table);
         }
+      } catch (err) {
+        console.error("MatchPage load error", err);
       } finally {
         setLoading(false);
       }
@@ -72,7 +77,7 @@ export default function MatchPage() {
     return (
       <div className="min-h-screen bg-[#0a0a0a] text-white p-6 flex items-center justify-center">
         <div className="text-center">
-          <div className="w-16 h-16 border-4 border-purple-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <div className="w-16 h-16 border-4 border-purple-500 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
           <p className="text-gray-400">Loading match...</p>
         </div>
       </div>
@@ -100,17 +105,19 @@ export default function MatchPage() {
     fixture?.status?.short === "2H" ||
     fixture?.status?.short === "HT" ||
     fixture?.status?.short === "ET" ||
+    fixture?.status?.short === "P" ||
     fixture?.status?.short === "LIVE" ||
-    fixture?.status?.long?.toLowerCase()?.includes("in play");
+    (typeof fixture?.status?.long === "string" &&
+      fixture.status.long.toLowerCase().includes("in play"));
 
   const tabs: { key: TabKey; label: string }[] = [
     { key: "overview", label: "Overview" },
-    ...(isLive ? [{ key: "livepitch", label: "🔥 Live Pitch" }] : []),
+    ...(isLive ? [{ key: "livepitch", label: "🔥 Live Pitch" } as const] : []),
     { key: "stats", label: "Stats" },
     { key: "events", label: "Events" },
     { key: "timeline", label: "Timeline" },
     { key: "h2h", label: "H2H" },
-    { key: "standings", label: "Standings" }
+    { key: "standings", label: "Standings" },
   ];
 
   const homeTeamName = fixture?.homeTeam || fixture?.homeTeamName || "Home";
@@ -134,7 +141,13 @@ export default function MatchPage() {
             <button
               key={t.key}
               onClick={() => setActiveTab(t.key)}
-              className={px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-all }
+              className={
+                activeTab === t.key
+                  ? "px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-all bg-purple-600 text-white border border-purple-500 shadow-lg shadow-purple-500/50"
+                  : t.key === "livepitch"
+                  ? "px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-all bg-red-600/20 text-red-400 border border-red-500/50 hover:bg-red-600/30 hover:text-red-300 animate-pulse"
+                  : "px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-all bg-gray-900 text-gray-400 border border-gray-800 hover:bg-gray-800 hover:text-gray-300"
+              }
             >
               {t.label}
             </button>
@@ -144,8 +157,16 @@ export default function MatchPage() {
         <div className="bg-[#0a0a0a] border border-gray-800 rounded-lg p-6">
           {activeTab === "overview" && (
             <div className="space-y-6">
-              <MatchStats stats={stats} homeTeam={homeTeamName} awayTeam={awayTeamName} />
-              <MatchEvents events={events} homeTeam={homeTeamName} awayTeam={awayTeamName} />
+              <MatchStats
+                stats={stats ?? []}
+                homeTeam={homeTeamName}
+                awayTeam={awayTeamName}
+              />
+              <MatchEvents
+                events={events ?? []}
+                homeTeam={homeTeamName}
+                awayTeam={awayTeamName}
+              />
             </div>
           )}
 
@@ -160,15 +181,27 @@ export default function MatchPage() {
           )}
 
           {activeTab === "stats" && (
-            <MatchStats stats={stats} homeTeam={homeTeamName} awayTeam={awayTeamName} />
+            <MatchStats
+              stats={stats ?? []}
+              homeTeam={homeTeamName}
+              awayTeam={awayTeamName}
+            />
           )}
 
           {activeTab === "events" && (
-            <MatchEvents events={events} homeTeam={homeTeamName} awayTeam={awayTeamName} />
+            <MatchEvents
+              events={events ?? []}
+              homeTeam={homeTeamName}
+              awayTeam={awayTeamName}
+            />
           )}
 
           {activeTab === "timeline" && (
-            <MatchTimeline events={events} homeTeam={homeTeamName} awayTeam={awayTeamName} />
+            <MatchTimeline
+              events={events ?? []}
+              homeTeam={homeTeamName}
+              awayTeam={awayTeamName}
+            />
           )}
 
           {activeTab === "h2h" && <MatchH2H h2h={h2h} />}
