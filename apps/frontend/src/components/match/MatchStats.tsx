@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { CompactStatBar } from './CompactStatBar';
 import { ChevronDown, ChevronUp } from 'lucide-react';
+import FootballPitchGraphic from './FootballPitchGraphic';
 
 interface MatchStatsProps {
   stats: any[];
@@ -24,12 +25,21 @@ export default function MatchStats({ stats, homeTeam = 'Home', awayTeam = 'Away'
   const [showAllStats, setShowAllStats] = useState(false);
 
   if (!stats || stats.length === 0) {
+    // Extract possession data if available (even with no stats, we might have basic possession)
+    const possessionStat = stats?.find(s => s.type === 'Ball Possession');
+    const possession = possessionStat ? {
+      home: parseFloat(possessionStat.home) || 50,
+      away: parseFloat(possessionStat.away) || 50
+    } : undefined;
+
     return (
-      <div className="flex items-center justify-center py-8">
-        <div className="text-center">
-          <div className="text-gray-500 text-sm mb-1">No statistics available</div>
-          <div className="text-gray-600 text-xs">Stats will appear once the match starts</div>
-        </div>
+      <div className="py-4">
+        <FootballPitchGraphic 
+          homeTeam={homeTeam}
+          awayTeam={awayTeam}
+          possession={possession}
+          isLive={true}
+        />
       </div>
     );
   }
