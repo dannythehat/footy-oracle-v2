@@ -105,6 +105,10 @@ export default function MatchPage() {
     { key: "standings", label: "Table" },
   ];
 
+  // Extract team names for components
+  const homeTeamName = fixture?.homeTeam || fixture?.homeTeamName || "Home";
+  const awayTeamName = fixture?.awayTeam || fixture?.awayTeamName || "Away";
+
   return (
     <div className="min-h-screen bg-[#0a0a0a] text-white p-5">
       <div className="max-w-6xl mx-auto">
@@ -141,20 +145,40 @@ export default function MatchPage() {
         <div className="bg-[#0a0a0a] border border-gray-800 rounded-lg p-6">
           {activeTab === "overview" && (
             <div className="space-y-6">
-              <MatchStats stats={stats ?? []} />
-              <MatchEvents events={events ?? []} />
+              <MatchStats 
+                stats={stats ?? []} 
+                homeTeam={homeTeamName}
+                awayTeam={awayTeamName}
+              />
+              <MatchEvents 
+                events={events ?? []} 
+                homeTeam={homeTeamName}
+                awayTeam={awayTeamName}
+              />
             </div>
           )}
 
-          {activeTab === "stats" && <MatchStats stats={stats ?? []} />}
+          {activeTab === "stats" && (
+            <MatchStats 
+              stats={stats ?? []} 
+              homeTeam={homeTeamName}
+              awayTeam={awayTeamName}
+            />
+          )}
 
-          {activeTab === "events" && <MatchEvents events={events ?? []} />}
+          {activeTab === "events" && (
+            <MatchEvents 
+              events={events ?? []} 
+              homeTeam={homeTeamName}
+              awayTeam={awayTeamName}
+            />
+          )}
 
           {activeTab === "timeline" && (
             <MatchTimeline
               events={events ?? []}
-              homeTeam={fixture?.homeTeam || fixture?.homeTeamName || "Home"}
-              awayTeam={fixture?.awayTeam || fixture?.awayTeamName || "Away"}
+              homeTeam={homeTeamName}
+              awayTeam={awayTeamName}
             />
           )}
 
@@ -165,8 +189,8 @@ export default function MatchPage() {
               league={fixture?.league || fixture?.leagueName}
               season={fixture?.season}
               standings={standings}
-              homeTeam={fixture?.homeTeam || fixture?.homeTeamName}
-              awayTeam={fixture?.awayTeam || fixture?.awayTeamName}
+              homeTeam={homeTeamName}
+              awayTeam={awayTeamName}
             />
           )}
         </div>
