@@ -137,8 +137,8 @@ export default function MatchPage() {
           ))}
         </div>
 
-        {/* Tab Content */}
-        <div className="bg-[#0f0f0f] border border-gray-800 rounded-lg p-6">
+        {/* Tab Content - FIXED: Changed from #0f0f0f to #0a0a0a */}
+        <div className="bg-[#0a0a0a] border border-gray-800 rounded-lg p-6">
           {activeTab === "overview" && (
             <div className="space-y-6">
               <MatchStats stats={stats ?? []} />
