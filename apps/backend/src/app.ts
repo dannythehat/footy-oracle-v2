@@ -37,6 +37,9 @@ import liveFixturesRoutes from "./routes/liveFixtures";
 import betBuilderRoutes from "./routes/betBuilder";
 import valueBetsRoutes from "./routes/valueBets";
 
+// IMPORT CRON JOBS
+import { startLiveScoresCron } from "./cron/liveScoresCron";
+
 // MOUNT ROUTES
 app.use("/api", fixtureDetailsRoutes);                  // <-- enables /fixtures/:id/events, /stats, /h2h
 app.use("/api/fixtures", fixturesRoutes);
@@ -50,5 +53,11 @@ app.use("/api/pnl", pnlRoutes);
 app.use("/api/live-fixtures", liveFixturesRoutes);
 app.use("/api/bet-builder", betBuilderRoutes);
 app.use("/api/value-bets", valueBetsRoutes);
+
+// 🚨 CRITICAL: START CRON JOBS
+// This was missing - cron jobs were defined but never started!
+console.log("🚀 Initializing cron jobs...");
+startLiveScoresCron();
+console.log("✅ Cron jobs started successfully");
 
 export default app;
