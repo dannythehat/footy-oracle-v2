@@ -52,16 +52,12 @@ export default function MatchPage() {
         setStats(st || []);
 
         if (base?.homeTeamId && base?.awayTeamId) {
-          const h2hData = await fixturesApi
-            .getH2H(base.homeTeamId, base.awayTeamId)
-            .catch(() => null);
+          const h2hData = await fixturesApi.getH2H(base.homeTeamId, base.awayTeamId).catch(() => null);
           setH2h(h2hData);
         }
 
         if (base?.leagueId && base?.season) {
-          const table = await fixturesApi
-            .getStandings(base.leagueId, base.season)
-            .catch(() => null);
+          const table = await fixturesApi.getStandings(base.leagueId, base.season).catch(() => null);
           setStandings(table);
         }
       } finally {
@@ -109,7 +105,7 @@ export default function MatchPage() {
 
   const tabs: { key: TabKey; label: string }[] = [
     { key: "overview", label: "Overview" },
-    ...(isLive ? [{ key: "livepitch", label: "?? Live Pitch" }] : []),
+    ...(isLive ? [{ key: "livepitch", label: "🔥 Live Pitch" }] : []),
     { key: "stats", label: "Stats" },
     { key: "events", label: "Events" },
     { key: "timeline", label: "Timeline" },
@@ -123,7 +119,6 @@ export default function MatchPage() {
   return (
     <div className="min-h-screen bg-[#0a0a0a] text-white p-5">
       <div className="max-w-6xl mx-auto">
-
         <button
           onClick={() => navigate("/")}
           className="mb-4 flex items-center gap-2 text-gray-400 hover:text-purple-400 transition-colors text-sm"
@@ -139,7 +134,7 @@ export default function MatchPage() {
             <button
               key={t.key}
               onClick={() => setActiveTab(t.key)}
-              className={`px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-all ${ activeTab === t.key ? "bg-purple-600 text-white border border-purple-500 shadow-lg shadow-purple-500/50" : t.key === "livepitch" ? "bg-red-600/20 text-red-400 border border-red-500/50 hover:bg-red-600/30 hover:text-red-300 animate-pulse" : "bg-gray-900 text-gray-400 border border-gray-800 hover:bg-gray-800 hover:text-gray-300" }`}
+              className={px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-all }
             >
               {t.label}
             </button>
