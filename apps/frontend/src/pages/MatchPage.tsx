@@ -7,6 +7,7 @@ import MatchEvents from "../components/match/MatchEvents";
 import MatchTimeline from "../components/match/MatchTimeline";
 import MatchH2H from "../components/match/MatchH2H";
 import MatchStandings from "../components/match/MatchStandings";
+import { ArrowLeft } from "lucide-react";
 
 type TabKey = "overview" | "stats" | "events" | "h2h" | "standings" | "timeline";
 
@@ -66,30 +67,31 @@ export default function MatchPage() {
 
   if (loading && !fixture) {
     return (
-      <div
-        style={{
-          padding: "20px",
-          background: "#020617",
-          minHeight: "100vh",
-          color: "#fff",
-        }}
-      >
-        Loading match...
+      <div className="min-h-screen bg-[#0a0a0a] text-white p-5">
+        <div className="flex items-center justify-center h-screen">
+          <div className="text-center">
+            <div className="w-16 h-16 border-4 border-purple-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+            <p className="text-gray-400">Loading match...</p>
+          </div>
+        </div>
       </div>
     );
   }
 
   if (!fixture) {
     return (
-      <div
-        style={{
-          padding: "20px",
-          background: "#020617",
-          minHeight: "100vh",
-          color: "#fff",
-        }}
-      >
-        Match not found.
+      <div className="min-h-screen bg-[#0a0a0a] text-white p-5">
+        <div className="flex items-center justify-center h-screen">
+          <div className="text-center">
+            <p className="text-gray-400 text-lg">Match not found.</p>
+            <button
+              onClick={() => navigate("/")}
+              className="mt-4 px-6 py-2 bg-purple-600 hover:bg-purple-700 rounded-lg transition-colors"
+            >
+              Back to Home
+            </button>
+          </div>
+        </div>
       </div>
     );
   }
@@ -104,94 +106,71 @@ export default function MatchPage() {
   ];
 
   return (
-    <div
-      style={{
-        padding: "20px",
-        background: "#020617",
-        minHeight: "100vh",
-        color: "#fff",
-      }}
-    >
-      <button
-        onClick={() => navigate("/")}
-        style={{
-          marginBottom: "10px",
-          background: "transparent",
-          border: "none",
-          color: "#9ca3af",
-          fontSize: "12px",
-          cursor: "pointer",
-        }}
-      >
-        ← Back to Fixtures
-      </button>
+    <div className="min-h-screen bg-[#0a0a0a] text-white p-5">
+      <div className="max-w-6xl mx-auto">
+        {/* Back Button */}
+        <button
+          onClick={() => navigate("/")}
+          className="mb-4 flex items-center gap-2 text-gray-400 hover:text-purple-400 transition-colors text-sm"
+        >
+          <ArrowLeft className="w-4 h-4" />
+          Back to Fixtures
+        </button>
 
-      <MatchHeader fixture={fixture} />
+        {/* Match Header */}
+        <MatchHeader fixture={fixture} />
 
-      {/* TABS */}
-      <div
-        style={{
-          display: "flex",
-          gap: "8px",
-          marginBottom: "16px",
-          overflowX: "auto",
-        }}
-      >
-        {tabs.map((t) => (
-          <button
-            key={t.key}
-            onClick={() => setActiveTab(t.key)}
-            style={{
-              padding: "6px 10px",
-              borderRadius: "999px",
-              border:
+        {/* Tabs */}
+        <div className="flex gap-2 mb-6 overflow-x-auto pb-2 scrollbar-thin scrollbar-thumb-gray-700 scrollbar-track-gray-900">
+          {tabs.map((t) => (
+            <button
+              key={t.key}
+              onClick={() => setActiveTab(t.key)}
+              className={`px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-all ${
                 activeTab === t.key
-                  ? "1px solid #22c55e"
-                  : "1px solid #1f2937",
-              background:
-                activeTab === t.key ? "#16a34a33" : "transparent",
-              color: "#e5e7eb",
-              fontSize: "12px",
-              cursor: "pointer",
-              whiteSpace: "nowrap",
-            }}
-          >
-            {t.label}
-          </button>
-        ))}
-      </div>
-
-      {/* TAB CONTENT */}
-      {activeTab === "overview" && (
-        <div>
-          <MatchStats stats={stats ?? []} />
-          <MatchEvents events={events ?? []} />
+                  ? "bg-purple-600 text-white border border-purple-500 shadow-lg shadow-purple-500/50"
+                  : "bg-gray-900 text-gray-400 border border-gray-800 hover:bg-gray-800 hover:text-gray-300"
+              }`}
+            >
+              {t.label}
+            </button>
+          ))}
         </div>
-      )}
 
-      {activeTab === "stats" && <MatchStats stats={stats ?? []} />}
+        {/* Tab Content */}
+        <div className="bg-[#0f0f0f] border border-gray-800 rounded-lg p-6">
+          {activeTab === "overview" && (
+            <div className="space-y-6">
+              <MatchStats stats={stats ?? []} />
+              <MatchEvents events={events ?? []} />
+            </div>
+          )}
 
-      {activeTab === "events" && <MatchEvents events={events ?? []} />}
+          {activeTab === "stats" && <MatchStats stats={stats ?? []} />}
 
-      {activeTab === "timeline" && (
-        <MatchTimeline
-          events={events ?? []}
-          homeTeam={fixture?.homeTeam || fixture?.homeTeamName || "Home"}
-          awayTeam={fixture?.awayTeam || fixture?.awayTeamName || "Away"}
-        />
-      )}
+          {activeTab === "events" && <MatchEvents events={events ?? []} />}
 
-      {activeTab === "h2h" && <MatchH2H h2h={h2h} />}
+          {activeTab === "timeline" && (
+            <MatchTimeline
+              events={events ?? []}
+              homeTeam={fixture?.homeTeam || fixture?.homeTeamName || "Home"}
+              awayTeam={fixture?.awayTeam || fixture?.awayTeamName || "Away"}
+            />
+          )}
 
-      {activeTab === "standings" && (
-        <MatchStandings
-          league={fixture?.league || fixture?.leagueName}
-          season={fixture?.season}
-          standings={standings}
-          homeTeam={fixture?.homeTeam || fixture?.homeTeamName}
-          awayTeam={fixture?.awayTeam || fixture?.awayTeamName}
-        />
-      )}
+          {activeTab === "h2h" && <MatchH2H h2h={h2h} />}
+
+          {activeTab === "standings" && (
+            <MatchStandings
+              league={fixture?.league || fixture?.leagueName}
+              season={fixture?.season}
+              standings={standings}
+              homeTeam={fixture?.homeTeam || fixture?.homeTeamName}
+              awayTeam={fixture?.awayTeam || fixture?.awayTeamName}
+            />
+          )}
+        </div>
+      </div>
     </div>
   );
 }
