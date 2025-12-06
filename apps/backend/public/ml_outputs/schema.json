@@ -1,0 +1,314 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Betopia ML Outputs Schema",
+  "description": "JSON Schema for validating ML prediction outputs",
+  "definitions": {
+    "bet": {
+      "type": "object",
+      "required": ["id", "fixture_id", "home_team", "away_team", "league", "kickoff", "market", "prediction"],
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^(gb|vb)_[0-9]+$",
+          "description": "Unique bet identifier (gb_ for golden, vb_ for value)"
+        },
+        "fixture_id": {
+          "type": "string",
+          "description": "Unique fixture identifier"
+        },
+        "home_team": {
+          "type": "string",
+          "minLength": 1
+        },
+        "away_team": {
+          "type": "string",
+          "minLength": 1
+        },
+        "league": {
+          "type": "string",
+          "minLength": 1
+        },
+        "kickoff": {
+          "type": "string",
+          "format": "date-time",
+          "description": "ISO 8601 datetime"
+        },
+        "market": {
+          "type": "string",
+          "enum": ["Match Winner", "Over/Under 2.5", "Both Teams to Score", "Double Chance"]
+        },
+        "prediction": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "golden_bet": {
+      "allOf": [
+        { "$ref": "#/definitions/bet" },
+        {
+          "required": ["confidence", "confidence_label", "odds", "reasoning"],
+          "properties": {
+            "confidence": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1,
+              "description": "Confidence score (0-1)"
+            },
+            "confidence_label": {
+              "type": "string",
+              "enum": ["Very High", "High", "Medium", "Low"]
+            },
+            "odds": {
+              "type": "number",
+              "minimum": 1.01,
+              "description": "Decimal odds"
+            },
+            "reasoning": {
+              "type": "string",
+              "minLength": 10,
+              "description": "AI-generated explanation"
+            }
+          }
+        }
+      ]
+    },
+    "value_bet": {
+      "allOf": [
+        { "$ref": "#/definitions/bet" },
+        {
+          "required": ["probability", "odds", "expected_value", "kelly_stake"],
+          "properties": {
+            "probability": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1,
+              "description": "Predicted probability (0-1)"
+            },
+            "odds": {
+              "type": "number",
+              "minimum": 1.01,
+              "description": "Decimal odds"
+            },
+            "expected_value": {
+              "type": "number",
+              "description": "Expected value (can be negative)"
+            },
+            "kelly_stake": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1,
+              "description": "Kelly criterion stake (0-1)"
+            }
+          }
+        }
+      ]
+    },
+    "predictions": {
+      "type": "object",
+      "required": ["match_winner", "over_under_2_5", "both_teams_score", "double_chance"],
+      "properties": {
+        "match_winner": {
+          "type": "object",
+          "required": ["home_win", "draw", "away_win"],
+          "properties": {
+            "home_win": { "type": "number", "minimum": 0, "maximum": 1 },
+            "draw": { "type": "number", "minimum": 0, "maximum": 1 },
+            "away_win": { "type": "number", "minimum": 0, "maximum": 1 }
+          }
+        },
+        "over_under_2_5": {
+          "type": "object",
+          "required": ["over", "under"],
+          "properties": {
+            "over": { "type": "number", "minimum": 0, "maximum": 1 },
+            "under": { "type": "number", "minimum": 0, "maximum": 1 }
+          }
+        },
+        "both_teams_score": {
+          "type": "object",
+          "required": ["yes", "no"],
+          "properties": {
+            "yes": { "type": "number", "minimum": 0, "maximum": 1 },
+            "no": { "type": "number", "minimum": 0, "maximum": 1 }
+          }
+        },
+        "double_chance": {
+          "type": "object",
+          "required": ["home_or_draw", "home_or_away", "draw_or_away"],
+          "properties": {
+            "home_or_draw": { "type": "number", "minimum": 0, "maximum": 1 },
+            "home_or_away": { "type": "number", "minimum": 0, "maximum": 1 },
+            "draw_or_away": { "type": "number", "minimum": 0, "maximum": 1 }
+          }
+        }
+      }
+    },
+    "stats": {
+      "type": "object",
+      "required": ["home_form", "away_form", "h2h_last_5"],
+      "properties": {
+        "home_form": {
+          "type": "array",
+          "items": { "type": "number", "enum": [0, 1, 3] },
+          "minItems": 5,
+          "maxItems": 5,
+          "description": "Last 5 home games (3=win, 1=draw, 0=loss)"
+        },
+        "away_form": {
+          "type": "array",
+          "items": { "type": "number", "enum": [0, 1, 3] },
+          "minItems": 5,
+          "maxItems": 5,
+          "description": "Last 5 away games"
+        },
+        "h2h_last_5": {
+          "type": "array",
+          "items": { "type": "number", "enum": [0, 1, 3] },
+          "minItems": 5,
+          "maxItems": 5,
+          "description": "Last 5 head-to-head matches"
+        },
+        "avg_goals_home": { "type": "number", "minimum": 0 },
+        "avg_goals_away": { "type": "number", "minimum": 0 },
+        "home_clean_sheets": { "type": "integer", "minimum": 0 },
+        "away_clean_sheets": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "fixture": {
+      "type": "object",
+      "required": ["id", "home_team", "away_team", "league", "kickoff", "is_golden_bet", "predictions"],
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique fixture identifier"
+        },
+        "home_team": { "type": "string", "minLength": 1 },
+        "away_team": { "type": "string", "minLength": 1 },
+        "league": { "type": "string", "minLength": 1 },
+        "kickoff": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "is_golden_bet": { "type": "boolean" },
+        "predictions": { "$ref": "#/definitions/predictions" },
+        "stats": { "$ref": "#/definitions/stats" },
+        "golden_bet": {
+          "type": "object",
+          "required": ["market", "prediction", "confidence", "confidence_label", "odds", "reasoning"],
+          "properties": {
+            "market": { "type": "string" },
+            "prediction": { "type": "string" },
+            "confidence": { "type": "number", "minimum": 0, "maximum": 1 },
+            "confidence_label": { "type": "string" },
+            "odds": { "type": "number", "minimum": 1.01 },
+            "reasoning": { "type": "string", "minLength": 10 }
+          }
+        }
+      }
+    }
+  },
+  "oneOf": [
+    {
+      "title": "Golden Bets Output",
+      "type": "object",
+      "required": ["date", "generated_at", "count", "bets"],
+      "properties": {
+        "date": {
+          "type": "string",
+          "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}$",
+          "description": "Date in YYYY-MM-DD format"
+        },
+        "generated_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "count": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 3
+        },
+        "bets": {
+          "type": "array",
+          "items": { "$ref": "#/definitions/golden_bet" },
+          "maxItems": 3
+        }
+      }
+    },
+    {
+      "title": "Value Bets Output",
+      "type": "object",
+      "required": ["date", "generated_at", "count", "bets"],
+      "properties": {
+        "date": {
+          "type": "string",
+          "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}$"
+        },
+        "generated_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "count": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "bets": {
+          "type": "array",
+          "items": { "$ref": "#/definitions/value_bet" }
+        }
+      }
+    },
+    {
+      "title": "Fixtures Output",
+      "type": "object",
+      "required": ["date", "generated_at", "count", "fixtures"],
+      "properties": {
+        "date": {
+          "type": "string",
+          "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}$"
+        },
+        "generated_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "count": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "fixtures": {
+          "type": "array",
+          "items": { "$ref": "#/definitions/fixture" }
+        }
+      }
+    },
+    {
+      "title": "Metadata Output",
+      "type": "object",
+      "required": ["date", "generated_at", "pipeline_version", "model_version", "status"],
+      "properties": {
+        "date": {
+          "type": "string",
+          "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}$"
+        },
+        "generated_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "pipeline_version": { "type": "string" },
+        "model_version": { "type": "string" },
+        "total_fixtures": { "type": "integer", "minimum": 0 },
+        "total_golden_bets": { "type": "integer", "minimum": 0 },
+        "total_value_bets": { "type": "integer", "minimum": 0 },
+        "leagues_covered": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "execution_time_seconds": { "type": "number", "minimum": 0 },
+        "status": {
+          "type": "string",
+          "enum": ["success", "partial", "failed"]
+        }
+      }
+    }
+  ]
+}

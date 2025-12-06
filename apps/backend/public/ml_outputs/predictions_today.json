@@ -1,0 +1,1883 @@
+[
+  {
+    "fixture_id": 1478011,
+    "home": "Ceara",
+    "away": "Internacional",
+    "predictions": {
+      "goals": null,
+      "btts": null,
+      "corners": null,
+      "cards": null
+    },
+    "golden": "goals",
+    "top_value": "goals",
+    "ev": {
+      "goals": null,
+      "btts": null,
+      "corners": null,
+      "cards": null
+    }
+  },
+  {
+    "fixture_id": 1485998,
+    "home": "Pachuca",
+    "away": "U.N.A.M. - Pumas",
+    "predictions": {
+      "goals": null,
+      "btts": null,
+      "corners": null,
+      "cards": null
+    },
+    "golden": "goals",
+    "top_value": "goals",
+    "ev": {
+      "goals": null,
+      "btts": null,
+      "corners": null,
+      "cards": null
+    }
+  },
+  {
+    "fixture_id": 1392866,
+    "home": "LD Alajuelense",
+    "away": "CS Cartagines",
+    "predictions": {
+      "goals": null,
+      "btts": null,
+      "corners": null,
+      "cards": null
+    },
+    "golden": "goals",
+    "top_value": "goals",
+    "ev": {
+      "goals": null,
+      "btts": null,
+      "corners": null,
+      "cards": null
+    }
+  },
+  {
+    "fixture_id": 1485997,
+    "home": "Club Tijuana",
+    "away": "FC Juarez",
+    "predictions": {
+      "goals": null,
+      "btts": null,
+      "corners": null,
+      "cards": null
+    },
+    "golden": "goals",
+    "top_value": "goals",
+    "ev": {
+      "goals": null,
+      "btts": null,
+      "corners": null,
+      "cards": null
+    }
+  },
+  {
+    "fixture_id": 1403673,
+    "home": "PSM Makassar",
+    "away": "PSBS Biak Numfor",
+    "predictions": {
+      "goals": null,
+      "btts": null,
+      "corners": null,
+      "cards": null
+    },
+    "golden": "goals",
+    "top_value": "goals",
+    "ev": {
+      "goals": null,
+      "btts": null,
+      "corners": null,
+      "cards": null
+    }
+  },
+  {
+    "fixture_id": 1469582,
+    "home": "Adelaide United",
+    "away": "Melbourne City",
+    "predictions": {
+      "goals": null,
+      "btts": null,
+      "corners": null,
+      "cards": null
+    },
+    "golden": "goals",
+    "top_value": "goals",
+    "ev": {
+      "goals": null,
+      "btts": null,
+      "corners": null,
+      "cards": null
+    }
+  },
+  {
+    "fixture_id": 1482184,
+    "home": "Welwalo Adigrat Uni",
+    "away": "Awassa Kenema",
+    "predictions": {
+      "goals": null,
+      "btts": null,
+      "corners": null,
+      "cards": null
+    },
+    "golden": "goals",
+    "top_value": "goals",
+    "ev": {
+      "goals": null,
+      "btts": null,
+      "corners": null,
+      "cards": null
+    }
+  },
+  {
+    "fixture_id": 1412692,
+    "home": "Zimbru II",
+    "away": "Iskra",
+    "predictions": {
+      "goals": null,
+      "btts": null,
+      "corners": null,
+      "cards": null
+    },
+    "golden": "goals",
+    "top_value": "goals",
+    "ev": {
+      "goals": null,
+      "btts": null,
+      "corners": null,
+      "cards": null
+    }
+  },
+  {
+    "fixture_id": 1412691,
+    "home": "Oguzsport",
+    "away": "Victoria Bardar",
+    "predictions": {
+      "goals": null,
+      "btts": null,
+      "corners": null,
+      "cards": null
+    },
+    "golden": "goals",
+    "top_value": "goals",
+    "ev": {
+      "goals": null,
+      "btts": null,
+      "corners": null,
+      "cards": null
+    }
+  },
+  {
+    "fixture_id": 1487236,
+    "home": "Mes Kerman",
+    "away": "Sepahan FC",
+    "predictions": {
+      "goals": null,
+      "btts": null,
+      "corners": null,
+      "cards": null
+    },
+    "golden": "goals",
+    "top_value": "goals",
+    "ev": {
+      "goals": null,
+      "btts": null,
+      "corners": null,
+      "cards": null
+    }
+  },
+  {
+    "fixture_id": 1400376,
+    "home": "Mash'al",
+    "away": "Navbahor",
+    "predictions": {
+      "goals": null,
+      "btts": null,
+      "corners": null,
+      "cards": null
+    },
+    "golden": "goals",
+    "top_value": "goals",
+    "ev": {
+      "goals": null,
+      "btts": null,
+      "corners": null,
+      "cards": null
+    }
+  },
+  {
+    "fixture_id": 1487246,
+    "home": "Mes Novin Kerman",
+    "away": "Sepahan FC",
+    "predictions": {
+      "goals": null,
+      "btts": null,
+      "corners": null,
+      "cards": null
+    },
+    "golden": "goals",
+    "top_value": "goals",
+    "ev": {
+      "goals": null,
+      "btts": null,
+      "corners": null,
+      "cards": null
+    }
+  },
+  {
+    "fixture_id": 1412693,
+    "home": "FCM Ungheni",
+    "away": "Flore\u015fti",
+    "predictions": {
+      "goals": null,
+      "btts": null,
+      "corners": null,
+      "cards": null
+    },
+    "golden": "goals",
+    "top_value": "goals",
+    "ev": {
+      "goals": null,
+      "btts": null,
+      "corners": null,
+      "cards": null
+    }
+  },
+  {
+    "fixture_id": 1487235,
+    "home": "Tractor Sazi",
+    "away": "Persepolis FC",
+    "predictions": {
+      "goals": null,
+      "btts": null,
+      "corners": null,
+      "cards": null
+    },
+    "golden": "goals",
+    "top_value": "goals",
+    "ev": {
+      "goals": null,
+      "btts": null,
+      "corners": null,
+      "cards": null
+    }
+  },
+  {
+    "fixture_id": 1482185,
+    "home": "Ethiopia Bunna",
+    "away": "Ethiopian Medhin",
+    "predictions": {
+      "goals": null,
+      "btts": null,
+      "corners": null,
+      "cards": null
+    },
+    "golden": "goals",
+    "top_value": "goals",
+    "ev": {
+      "goals": null,
+      "btts": null,
+      "corners": null,
+      "cards": null
+    }
+  },
+  {
+    "fixture_id": 1403674,
+    "home": "Persib Bandung",
+    "away": "Dewa United",
+    "predictions": {
+      "goals": null,
+      "btts": null,
+      "corners": null,
+      "cards": null
+    },
+    "golden": "goals",
+    "top_value": "goals",
+    "ev": {
+      "goals": null,
+      "btts": null,
+      "corners": null,
+      "cards": null
+    }
+  },
+  {
+    "fixture_id": 1404160,
+    "home": "Johor Darul Takzim FC",
+    "away": "Melaka",
+    "predictions": {
+      "goals": null,
+      "btts": null,
+      "corners": null,
+      "cards": null
+    },
+    "golden": "goals",
+    "top_value": "goals",
+    "ev": {
+      "goals": null,
+      "btts": null,
+      "corners": null,
+      "cards": null
+    }
+  },
+  {
+    "fixture_id": 1481741,
+    "home": "Dibba Al-Fujairah",
+    "away": "Al Wahda FC",
+    "predictions": {
+      "goals": null,
+      "btts": null,
+      "corners": null,
+      "cards": null
+    },
+    "golden": "goals",
+    "top_value": "goals",
+    "ev": {
+      "goals": null,
+      "btts": null,
+      "corners": null,
+      "cards": null
+    }
+  },
+  {
+    "fixture_id": 1481740,
+    "home": "Al Nasr",
+    "away": "Al-Dhafra",
+    "predictions": {
+      "goals": null,
+      "btts": null,
+      "corners": null,
+      "cards": null
+    },
+    "golden": "goals",
+    "top_value": "goals",
+    "ev": {
+      "goals": null,
+      "btts": null,
+      "corners": null,
+      "cards": null
+    }
+  },
+  {
+    "fixture_id": 1476778,
+    "home": "Buhimba Saints",
+    "away": "Mbarara City",
+    "predictions": {
+      "goals": null,
+      "btts": null,
+      "corners": null,
+      "cards": null
+    },
+    "golden": "goals",
+    "top_value": "goals",
+    "ev": {
+      "goals": null,
+      "btts": null,
+      "corners": null,
+      "cards": null
+    }
+  },
+  {
+    "fixture_id": 1416015,
+    "home": "NAPSA Stars",
+    "away": "Nkwazi",
+    "predictions": {
+      "goals": null,
+      "btts": null,
+      "corners": null,
+      "cards": null
+    },
+    "golden": "goals",
+    "top_value": "goals",
+    "ev": {
+      "goals": null,
+      "btts": null,
+      "corners": null,
+      "cards": null
+    }
+  },
+  {
+    "fixture_id": 1482082,
+    "home": "Ararat",
+    "away": "Ararat-Armenia",
+    "predictions": {
+      "goals": null,
+      "btts": null,
+      "corners": null,
+      "cards": null
+    },
+    "golden": "goals",
+    "top_value": "goals",
+    "ev": {
+      "goals": null,
+      "btts": null,
+      "corners": null,
+      "cards": null
+    }
+  },
+  {
+    "fixture_id": 1482186,
+    "home": "Ethiopia Nigd Bank",
+    "away": "Welayta Dicha",
+    "predictions": {
+      "goals": null,
+      "btts": null,
+      "corners": null,
+      "cards": null
+    },
+    "golden": "goals",
+    "top_value": "goals",
+    "ev": {
+      "goals": null,
+      "btts": null,
+      "corners": null,
+      "cards": null
+    }
+  },
+  {
+    "fixture_id": 1400378,
+    "home": "Andijan",
+    "away": "Xorazm",
+    "predictions": {
+      "goals": null,
+      "btts": null,
+      "corners": null,
+      "cards": null
+    },
+    "golden": "goals",
+    "top_value": "goals",
+    "ev": {
+      "goals": null,
+      "btts": null,
+      "corners": null,
+      "cards": null
+    }
+  },
+  {
+    "fixture_id": 1400379,
+    "home": "Dinamo Samarqand",
+    "away": "Kokand-1912",
+    "predictions": {
+      "goals": null,
+      "btts": null,
+      "corners": null,
+      "cards": null
+    },
+    "golden": "goals",
+    "top_value": "goals",
+    "ev": {
+      "goals": null,
+      "btts": null,
+      "corners": null,
+      "cards": null
+    }
+  },
+  {
+    "fixture_id": 1391518,
+    "home": "SK Poltava",
+    "away": "LNZ Cherkasy",
+    "predictions": {
+      "goals": null,
+      "btts": null,
+      "corners": null,
+      "cards": null
+    },
+    "golden": "goals",
+    "top_value": "goals",
+    "ev": {
+      "goals": null,
+      "btts": null,
+      "corners": null,
+      "cards": null
+    }
+  },
+  {
+    "fixture_id": 1385017,
+    "home": "Radnik Surdulica",
+    "away": "Vojvodina",
+    "predictions": {
+      "goals": null,
+      "btts": null,
+      "corners": null,
+      "cards": null
+    },
+    "golden": "goals",
+    "top_value": "goals",
+    "ev": {
+      "goals": null,
+      "btts": null,
+      "corners": null,
+      "cards": null
+    }
+  },
+  {
+    "fixture_id": 1449945,
+    "home": "Al Ramtha",
+    "away": "Al Ahli",
+    "predictions": {
+      "goals": null,
+      "btts": null,
+      "corners": null,
+      "cards": null
+    },
+    "golden": "goals",
+    "top_value": "goals",
+    "ev": {
+      "goals": null,
+      "btts": null,
+      "corners": null,
+      "cards": null
+    }
+  },
+  {
+    "fixture_id": 1435990,
+    "home": "Al Kholood",
+    "away": "Al-Hazm",
+    "predictions": {
+      "goals": null,
+      "btts": null,
+      "corners": null,
+      "cards": null
+    },
+    "golden": "goals",
+    "top_value": "goals",
+    "ev": {
+      "goals": null,
+      "btts": null,
+      "corners": null,
+      "cards": null
+    }
+  },
+  {
+    "fixture_id": 1482083,
+    "home": "FC Urartu",
+    "away": "Pyunik Yerevan",
+    "predictions": {
+      "goals": null,
+      "btts": null,
+      "corners": null,
+      "cards": null
+    },
+    "golden": "goals",
+    "top_value": "goals",
+    "ev": {
+      "goals": null,
+      "btts": null,
+      "corners": null,
+      "cards": null
+    }
+  },
+  {
+    "fixture_id": 1435988,
+    "home": "Al-Ittihad FC",
+    "away": "Al Riyadh",
+    "predictions": {
+      "goals": null,
+      "btts": null,
+      "corners": null,
+      "cards": null
+    },
+    "golden": "goals",
+    "top_value": "goals",
+    "ev": {
+      "goals": null,
+      "btts": null,
+      "corners": null,
+      "cards": null
+    }
+  },
+  {
+    "fixture_id": 1481742,
+    "home": "Sharjah FC",
+    "away": "Baniyas SC",
+    "predictions": {
+      "goals": null,
+      "btts": null,
+      "corners": null,
+      "cards": null
+    },
+    "golden": "goals",
+    "top_value": "goals",
+    "ev": {
+      "goals": null,
+      "btts": null,
+      "corners": null,
+      "cards": null
+    }
+  },
+  {
+    "fixture_id": 1400151,
+    "home": "Akron",
+    "away": "FC Sochi",
+    "predictions": {
+      "goals": null,
+      "btts": null,
+      "corners": null,
+      "cards": null
+    },
+    "golden": "goals",
+    "top_value": "goals",
+    "ev": {
+      "goals": null,
+      "btts": null,
+      "corners": null,
+      "cards": null
+    }
+  },
+  {
+    "fixture_id": 1482187,
+    "home": "Kedus Giorgis",
+    "away": "Hadiya Hosaena",
+    "predictions": {
+      "goals": null,
+      "btts": null,
+      "corners": null,
+      "cards": null
+    },
+    "golden": "goals",
+    "top_value": "goals",
+    "ev": {
+      "goals": null,
+      "btts": null,
+      "corners": null,
+      "cards": null
+    }
+  },
+  {
+    "fixture_id": 1486727,
+    "home": "Nouakchott King's",
+    "away": "Tevragh-Ze\u00efne",
+    "predictions": {
+      "goals": null,
+      "btts": null,
+      "corners": null,
+      "cards": null
+    },
+    "golden": "goals",
+    "top_value": "goals",
+    "ev": {
+      "goals": null,
+      "btts": null,
+      "corners": null,
+      "cards": null
+    }
+  },
+  {
+    "fixture_id": 1449946,
+    "home": "Al Salt",
+    "away": "Al Faisaly",
+    "predictions": {
+      "goals": null,
+      "btts": null,
+      "corners": null,
+      "cards": null
+    },
+    "golden": "goals",
+    "top_value": "goals",
+    "ev": {
+      "goals": null,
+      "btts": null,
+      "corners": null,
+      "cards": null
+    }
+  },
+  {
+    "fixture_id": 1380526,
+    "home": "Nieciecza",
+    "away": "Arka Gdynia",
+    "predictions": {
+      "goals": null,
+      "btts": null,
+      "corners": null,
+      "cards": null
+    },
+    "golden": "goals",
+    "top_value": "goals",
+    "ev": {
+      "goals": null,
+      "btts": null,
+      "corners": null,
+      "cards": null
+    }
+  },
+  {
+    "fixture_id": 1475053,
+    "home": "Gaborone United",
+    "away": "TAFIC",
+    "predictions": {
+      "goals": null,
+      "btts": null,
+      "corners": null,
+      "cards": null
+    },
+    "golden": "goals",
+    "top_value": "goals",
+    "ev": {
+      "goals": null,
+      "btts": null,
+      "corners": null,
+      "cards": null
+    }
+  },
+  {
+    "fixture_id": 1381668,
+    "home": "Puszcza Niepo\u0142omice",
+    "away": "Miedz Legnica",
+    "predictions": {
+      "goals": null,
+      "btts": null,
+      "corners": null,
+      "cards": null
+    },
+    "golden": "goals",
+    "top_value": "goals",
+    "ev": {
+      "goals": null,
+      "btts": null,
+      "corners": null,
+      "cards": null
+    }
+  },
+  {
+    "fixture_id": 1476707,
+    "home": "KCCA",
+    "away": "URA",
+    "predictions": {
+      "goals": null,
+      "btts": null,
+      "corners": null,
+      "cards": null
+    },
+    "golden": "goals",
+    "top_value": "goals",
+    "ev": {
+      "goals": null,
+      "btts": null,
+      "corners": null,
+      "cards": null
+    }
+  },
+  {
+    "fixture_id": 1401284,
+    "home": "Union Berlin W",
+    "away": "Hamburger SV W",
+    "predictions": {
+      "goals": null,
+      "btts": null,
+      "corners": null,
+      "cards": null
+    },
+    "golden": "goals",
+    "top_value": "goals",
+    "ev": {
+      "goals": null,
+      "btts": null,
+      "corners": null,
+      "cards": null
+    }
+  },
+  {
+    "fixture_id": 1435993,
+    "home": "Al-Ahli Jeddah",
+    "away": "Al-Qadisiyah FC",
+    "predictions": {
+      "goals": null,
+      "btts": null,
+      "corners": null,
+      "cards": null
+    },
+    "golden": "goals",
+    "top_value": "goals",
+    "ev": {
+      "goals": null,
+      "btts": null,
+      "corners": null,
+      "cards": null
+    }
+  },
+  {
+    "fixture_id": 1388725,
+    "home": "Hertha BSC",
+    "away": "Eintracht Braunschweig",
+    "predictions": {
+      "goals": null,
+      "btts": null,
+      "corners": null,
+      "cards": null
+    },
+    "golden": "goals",
+    "top_value": "goals",
+    "ev": {
+      "goals": null,
+      "btts": null,
+      "corners": null,
+      "cards": null
+    }
+  },
+  {
+    "fixture_id": 1388722,
+    "home": "VfL Bochum",
+    "away": "Dynamo Dresden",
+    "predictions": {
+      "goals": null,
+      "btts": null,
+      "corners": null,
+      "cards": null
+    },
+    "golden": "goals",
+    "top_value": "goals",
+    "ev": {
+      "goals": null,
+      "btts": null,
+      "corners": null,
+      "cards": null
+    }
+  },
+  {
+    "fixture_id": 1379442,
+    "home": "Silkeborg",
+    "away": "Aarhus",
+    "predictions": {
+      "goals": null,
+      "btts": null,
+      "corners": null,
+      "cards": null
+    },
+    "golden": "goals",
+    "top_value": "goals",
+    "ev": {
+      "goals": null,
+      "btts": null,
+      "corners": null,
+      "cards": null
+    }
+  },
+  {
+    "fixture_id": 1342413,
+    "home": "KFUM Oslo",
+    "away": "Bodo/Glimt",
+    "predictions": {
+      "goals": null,
+      "btts": null,
+      "corners": null,
+      "cards": null
+    },
+    "golden": "goals",
+    "top_value": "goals",
+    "ev": {
+      "goals": null,
+      "btts": null,
+      "corners": null,
+      "cards": null
+    }
+  },
+  {
+    "fixture_id": 1431258,
+    "home": "Villarreal II",
+    "away": "Gimnastic",
+    "predictions": {
+      "goals": null,
+      "btts": null,
+      "corners": null,
+      "cards": null
+    },
+    "golden": "goals",
+    "top_value": "goals",
+    "ev": {
+      "goals": null,
+      "btts": null,
+      "corners": null,
+      "cards": null
+    }
+  },
+  {
+    "fixture_id": 1381893,
+    "home": "FC WIL 1900",
+    "away": "Yverdon Sport",
+    "predictions": {
+      "goals": null,
+      "btts": null,
+      "corners": null,
+      "cards": null
+    },
+    "golden": "goals",
+    "top_value": "goals",
+    "ev": {
+      "goals": null,
+      "btts": null,
+      "corners": null,
+      "cards": null
+    }
+  },
+  {
+    "fixture_id": 1389253,
+    "home": "Rodez",
+    "away": "Dunkerque",
+    "predictions": {
+      "goals": null,
+      "btts": null,
+      "corners": null,
+      "cards": null
+    },
+    "golden": "goals",
+    "top_value": "goals",
+    "ev": {
+      "goals": null,
+      "btts": null,
+      "corners": null,
+      "cards": null
+    }
+  },
+  {
+    "fixture_id": 1389250,
+    "home": "Boulogne",
+    "away": "Grenoble",
+    "predictions": {
+      "goals": null,
+      "btts": null,
+      "corners": null,
+      "cards": null
+    },
+    "golden": "goals",
+    "top_value": "goals",
+    "ev": {
+      "goals": null,
+      "btts": null,
+      "corners": null,
+      "cards": null
+    }
+  },
+  {
+    "fixture_id": 1382070,
+    "home": "Jong Ajax",
+    "away": "FC Eindhoven",
+    "predictions": {
+      "goals": null,
+      "btts": null,
+      "corners": null,
+      "cards": null
+    },
+    "golden": "goals",
+    "top_value": "goals",
+    "ev": {
+      "goals": null,
+      "btts": null,
+      "corners": null,
+      "cards": null
+    }
+  },
+  {
+    "fixture_id": 1382074,
+    "home": "VVV Venlo",
+    "away": "Willem II",
+    "predictions": {
+      "goals": null,
+      "btts": null,
+      "corners": null,
+      "cards": null
+    },
+    "golden": "goals",
+    "top_value": "goals",
+    "ev": {
+      "goals": null,
+      "btts": null,
+      "corners": null,
+      "cards": null
+    }
+  },
+  {
+    "fixture_id": 1382069,
+    "home": "Dordrecht",
+    "away": "Vitesse",
+    "predictions": {
+      "goals": null,
+      "btts": null,
+      "corners": null,
+      "cards": null
+    },
+    "golden": "goals",
+    "top_value": "goals",
+    "ev": {
+      "goals": null,
+      "btts": null,
+      "corners": null,
+      "cards": null
+    }
+  },
+  {
+    "fixture_id": 1389247,
+    "home": "PAU",
+    "away": "Le Mans",
+    "predictions": {
+      "goals": null,
+      "btts": null,
+      "corners": null,
+      "cards": null
+    },
+    "golden": "goals",
+    "top_value": "goals",
+    "ev": {
+      "goals": null,
+      "btts": null,
+      "corners": null,
+      "cards": null
+    }
+  },
+  {
+    "fixture_id": 1382071,
+    "home": "Jong PSV U21",
+    "away": "Jong Utrecht",
+    "predictions": {
+      "goals": null,
+      "btts": null,
+      "corners": null,
+      "cards": null
+    },
+    "golden": "goals",
+    "top_value": "goals",
+    "ev": {
+      "goals": null,
+      "btts": null,
+      "corners": null,
+      "cards": null
+    }
+  },
+  {
+    "fixture_id": 1382072,
+    "home": "MVV",
+    "away": "Jong AZ",
+    "predictions": {
+      "goals": null,
+      "btts": null,
+      "corners": null,
+      "cards": null
+    },
+    "golden": "goals",
+    "top_value": "goals",
+    "ev": {
+      "goals": null,
+      "btts": null,
+      "corners": null,
+      "cards": null
+    }
+  },
+  {
+    "fixture_id": 1382066,
+    "home": "Cambuur",
+    "away": "ADO Den Haag",
+    "predictions": {
+      "goals": null,
+      "btts": null,
+      "corners": null,
+      "cards": null
+    },
+    "golden": "goals",
+    "top_value": "goals",
+    "ev": {
+      "goals": null,
+      "btts": null,
+      "corners": null,
+      "cards": null
+    }
+  },
+  {
+    "fixture_id": 1382068,
+    "home": "Den Bosch",
+    "away": "Almere City FC",
+    "predictions": {
+      "goals": null,
+      "btts": null,
+      "corners": null,
+      "cards": null
+    },
+    "golden": "goals",
+    "top_value": "goals",
+    "ev": {
+      "goals": null,
+      "btts": null,
+      "corners": null,
+      "cards": null
+    }
+  },
+  {
+    "fixture_id": 1382073,
+    "home": "FC OSS",
+    "away": "Waalwijk",
+    "predictions": {
+      "goals": null,
+      "btts": null,
+      "corners": null,
+      "cards": null
+    },
+    "golden": "goals",
+    "top_value": "goals",
+    "ev": {
+      "goals": null,
+      "btts": null,
+      "corners": null,
+      "cards": null
+    }
+  },
+  {
+    "fixture_id": 1389252,
+    "home": "Laval",
+    "away": "Estac Troyes",
+    "predictions": {
+      "goals": null,
+      "btts": null,
+      "corners": null,
+      "cards": null
+    },
+    "golden": "goals",
+    "top_value": "goals",
+    "ev": {
+      "goals": null,
+      "btts": null,
+      "corners": null,
+      "cards": null
+    }
+  },
+  {
+    "fixture_id": 1396829,
+    "home": "Annecy",
+    "away": "Bastia",
+    "predictions": {
+      "goals": null,
+      "btts": null,
+      "corners": null,
+      "cards": null
+    },
+    "golden": "goals",
+    "top_value": "goals",
+    "ev": {
+      "goals": null,
+      "btts": null,
+      "corners": null,
+      "cards": null
+    }
+  },
+  {
+    "fixture_id": 1382067,
+    "home": "De Graafschap",
+    "away": "Helmond Sport",
+    "predictions": {
+      "goals": null,
+      "btts": null,
+      "corners": null,
+      "cards": null
+    },
+    "golden": "goals",
+    "top_value": "goals",
+    "ev": {
+      "goals": null,
+      "btts": null,
+      "corners": null,
+      "cards": null
+    }
+  },
+  {
+    "fixture_id": 1470338,
+    "home": "Aston Villa W",
+    "away": "Birmingham City W",
+    "predictions": {
+      "goals": null,
+      "btts": null,
+      "corners": null,
+      "cards": null
+    },
+    "golden": "goals",
+    "top_value": "goals",
+    "ev": {
+      "goals": null,
+      "btts": null,
+      "corners": null,
+      "cards": null
+    }
+  },
+  {
+    "fixture_id": 1447097,
+    "home": "Sheffield United U21",
+    "away": "Bristol City U21",
+    "predictions": {
+      "goals": null,
+      "btts": null,
+      "corners": null,
+      "cards": null
+    },
+    "golden": "goals",
+    "top_value": "goals",
+    "ev": {
+      "goals": null,
+      "btts": null,
+      "corners": null,
+      "cards": null
+    }
+  },
+  {
+    "fixture_id": 1392654,
+    "home": "Francs Borains",
+    "away": "Li\u00e8ge",
+    "predictions": {
+      "goals": null,
+      "btts": null,
+      "corners": null,
+      "cards": null
+    },
+    "golden": "goals",
+    "top_value": "goals",
+    "ev": {
+      "goals": null,
+      "btts": null,
+      "corners": null,
+      "cards": null
+    }
+  },
+  {
+    "fixture_id": 1392655,
+    "home": "SK Beveren",
+    "away": "AS Eupen",
+    "predictions": {
+      "goals": null,
+      "btts": null,
+      "corners": null,
+      "cards": null
+    },
+    "golden": "goals",
+    "top_value": "goals",
+    "ev": {
+      "goals": null,
+      "btts": null,
+      "corners": null,
+      "cards": null
+    }
+  },
+  {
+    "fixture_id": 1447095,
+    "home": "Hull City U21",
+    "away": "Reading U21",
+    "predictions": {
+      "goals": null,
+      "btts": null,
+      "corners": null,
+      "cards": null
+    },
+    "golden": "goals",
+    "top_value": "goals",
+    "ev": {
+      "goals": null,
+      "btts": null,
+      "corners": null,
+      "cards": null
+    }
+  },
+  {
+    "fixture_id": 1447098,
+    "home": "Watford U21",
+    "away": "Blackburn Rovers U21",
+    "predictions": {
+      "goals": null,
+      "btts": null,
+      "corners": null,
+      "cards": null
+    },
+    "golden": "goals",
+    "top_value": "goals",
+    "ev": {
+      "goals": null,
+      "btts": null,
+      "corners": null,
+      "cards": null
+    }
+  },
+  {
+    "fixture_id": 1447071,
+    "home": "Leicester City U21",
+    "away": "Ipswich Town U21",
+    "predictions": {
+      "goals": null,
+      "btts": null,
+      "corners": null,
+      "cards": null
+    },
+    "golden": "goals",
+    "top_value": "goals",
+    "ev": {
+      "goals": null,
+      "btts": null,
+      "corners": null,
+      "cards": null
+    }
+  },
+  {
+    "fixture_id": 1447096,
+    "home": "Derby County U21",
+    "away": "Stoke City U21",
+    "predictions": {
+      "goals": null,
+      "btts": null,
+      "corners": null,
+      "cards": null
+    },
+    "golden": "goals",
+    "top_value": "goals",
+    "ev": {
+      "goals": null,
+      "btts": null,
+      "corners": null,
+      "cards": null
+    }
+  },
+  {
+    "fixture_id": 1447100,
+    "home": "Nottingham Forest U21",
+    "away": "Wolves U21",
+    "predictions": {
+      "goals": null,
+      "btts": null,
+      "corners": null,
+      "cards": null
+    },
+    "golden": "goals",
+    "top_value": "goals",
+    "ev": {
+      "goals": null,
+      "btts": null,
+      "corners": null,
+      "cards": null
+    }
+  },
+  {
+    "fixture_id": 1381890,
+    "home": "Bellinzona",
+    "away": "FC Vaduz",
+    "predictions": {
+      "goals": null,
+      "btts": null,
+      "corners": null,
+      "cards": null
+    },
+    "golden": "goals",
+    "top_value": "goals",
+    "ev": {
+      "goals": null,
+      "btts": null,
+      "corners": null,
+      "cards": null
+    }
+  },
+  {
+    "fixture_id": 1381891,
+    "home": "\u00c9toile Carouge",
+    "away": "Rapperswil",
+    "predictions": {
+      "goals": null,
+      "btts": null,
+      "corners": null,
+      "cards": null
+    },
+    "golden": "goals",
+    "top_value": "goals",
+    "ev": {
+      "goals": null,
+      "btts": null,
+      "corners": null,
+      "cards": null
+    }
+  },
+  {
+    "fixture_id": 1380520,
+    "home": "Gornik Zabrze",
+    "away": "Wisla Plock",
+    "predictions": {
+      "goals": null,
+      "btts": null,
+      "corners": null,
+      "cards": null
+    },
+    "golden": "goals",
+    "top_value": "goals",
+    "ev": {
+      "goals": null,
+      "btts": null,
+      "corners": null,
+      "cards": null
+    }
+  },
+  {
+    "fixture_id": 1419718,
+    "home": "Catanzaro",
+    "away": "Pescara",
+    "predictions": {
+      "goals": null,
+      "btts": null,
+      "corners": null,
+      "cards": null
+    },
+    "golden": "goals",
+    "top_value": "goals",
+    "ev": {
+      "goals": null,
+      "btts": null,
+      "corners": null,
+      "cards": null
+    }
+  },
+  {
+    "fixture_id": 1391922,
+    "home": "Las Palmas",
+    "away": "Albacete",
+    "predictions": {
+      "goals": null,
+      "btts": null,
+      "corners": null,
+      "cards": null
+    },
+    "golden": "goals",
+    "top_value": "goals",
+    "ev": {
+      "goals": null,
+      "btts": null,
+      "corners": null,
+      "cards": null
+    }
+  },
+  {
+    "fixture_id": 1466703,
+    "home": "Brighton U21",
+    "away": "Benfica B",
+    "predictions": {
+      "goals": null,
+      "btts": null,
+      "corners": null,
+      "cards": null
+    },
+    "golden": "goals",
+    "top_value": "goals",
+    "ev": {
+      "goals": null,
+      "btts": null,
+      "corners": null,
+      "cards": null
+    }
+  },
+  {
+    "fixture_id": 1388403,
+    "home": "FSV Mainz 05",
+    "away": "1899 Hoffenheim",
+    "predictions": {
+      "goals": null,
+      "btts": null,
+      "corners": null,
+      "cards": null
+    },
+    "golden": "goals",
+    "top_value": "goals",
+    "ev": {
+      "goals": null,
+      "btts": null,
+      "corners": null,
+      "cards": null
+    }
+  },
+  {
+    "fixture_id": 1381663,
+    "home": "Pogo\u0144 Grod. Mazowiecki",
+    "away": "Slask Wroclaw",
+    "predictions": {
+      "goals": null,
+      "btts": null,
+      "corners": null,
+      "cards": null
+    },
+    "golden": "goals",
+    "top_value": "goals",
+    "ev": {
+      "goals": null,
+      "btts": null,
+      "corners": null,
+      "cards": null
+    }
+  },
+  {
+    "fixture_id": 1382943,
+    "home": "Queen's Park",
+    "away": "Ross County",
+    "predictions": {
+      "goals": null,
+      "btts": null,
+      "corners": null,
+      "cards": null
+    },
+    "golden": "goals",
+    "top_value": "goals",
+    "ev": {
+      "goals": null,
+      "btts": null,
+      "corners": null,
+      "cards": null
+    }
+  },
+  {
+    "fixture_id": 1387811,
+    "home": "Nice",
+    "away": "Marseille",
+    "predictions": {
+      "goals": null,
+      "btts": null,
+      "corners": null,
+      "cards": null
+    },
+    "golden": "goals",
+    "top_value": "goals",
+    "ev": {
+      "goals": null,
+      "btts": null,
+      "corners": null,
+      "cards": null
+    }
+  },
+  {
+    "fixture_id": 1382544,
+    "home": "Standard Liege",
+    "away": "Zulte Waregem",
+    "predictions": {
+      "goals": null,
+      "btts": null,
+      "corners": null,
+      "cards": null
+    },
+    "golden": "goals",
+    "top_value": "goals",
+    "ev": {
+      "goals": null,
+      "btts": null,
+      "corners": null,
+      "cards": null
+    }
+  },
+  {
+    "fixture_id": 1395547,
+    "home": "Ruthin Town",
+    "away": "Brickfield Rangers",
+    "predictions": {
+      "goals": null,
+      "btts": null,
+      "corners": null,
+      "cards": null
+    },
+    "golden": "goals",
+    "top_value": "goals",
+    "ev": {
+      "goals": null,
+      "btts": null,
+      "corners": null,
+      "cards": null
+    }
+  },
+  {
+    "fixture_id": 1483508,
+    "home": "Cambrian & Clydach",
+    "away": "Penybont",
+    "predictions": {
+      "goals": null,
+      "btts": null,
+      "corners": null,
+      "cards": null
+    },
+    "golden": "goals",
+    "top_value": "goals",
+    "ev": {
+      "goals": null,
+      "btts": null,
+      "corners": null,
+      "cards": null
+    }
+  },
+  {
+    "fixture_id": 1483515,
+    "home": "Llandudno",
+    "away": "GAP Connah S Quay FC",
+    "predictions": {
+      "goals": null,
+      "btts": null,
+      "corners": null,
+      "cards": null
+    },
+    "golden": "goals",
+    "top_value": "goals",
+    "ev": {
+      "goals": null,
+      "btts": null,
+      "corners": null,
+      "cards": null
+    }
+  },
+  {
+    "fixture_id": 1483516,
+    "home": "llanelli AFC",
+    "away": "Barry Town",
+    "predictions": {
+      "goals": null,
+      "btts": null,
+      "corners": null,
+      "cards": null
+    },
+    "golden": "goals",
+    "top_value": "goals",
+    "ev": {
+      "goals": null,
+      "btts": null,
+      "corners": null,
+      "cards": null
+    }
+  },
+  {
+    "fixture_id": 1483510,
+    "home": "Cardiff MET",
+    "away": "The New Saints",
+    "predictions": {
+      "goals": null,
+      "btts": null,
+      "corners": null,
+      "cards": null
+    },
+    "golden": "goals",
+    "top_value": "goals",
+    "ev": {
+      "goals": null,
+      "btts": null,
+      "corners": null,
+      "cards": null
+    }
+  },
+  {
+    "fixture_id": 1386742,
+    "home": "Preston",
+    "away": "Blackburn",
+    "predictions": {
+      "goals": null,
+      "btts": null,
+      "corners": null,
+      "cards": null
+    },
+    "golden": "goals",
+    "top_value": "goals",
+    "ev": {
+      "goals": null,
+      "btts": null,
+      "corners": null,
+      "cards": null
+    }
+  },
+  {
+    "fixture_id": 1390947,
+    "home": "Valencia",
+    "away": "Levante",
+    "predictions": {
+      "goals": null,
+      "btts": null,
+      "corners": null,
+      "cards": null
+    },
+    "golden": "goals",
+    "top_value": "goals",
+    "ev": {
+      "goals": null,
+      "btts": null,
+      "corners": null,
+      "cards": null
+    }
+  },
+  {
+    "fixture_id": 1431637,
+    "home": "Unionistas de Salamanca",
+    "away": "Real Madrid II",
+    "predictions": {
+      "goals": null,
+      "btts": null,
+      "corners": null,
+      "cards": null
+    },
+    "golden": "goals",
+    "top_value": "goals",
+    "ev": {
+      "goals": null,
+      "btts": null,
+      "corners": null,
+      "cards": null
+    }
+  },
+  {
+    "fixture_id": 1482543,
+    "home": "Atl\u00e9tico CP",
+    "away": "Benfica",
+    "predictions": {
+      "goals": null,
+      "btts": null,
+      "corners": null,
+      "cards": null
+    },
+    "golden": "goals",
+    "top_value": "goals",
+    "ev": {
+      "goals": null,
+      "btts": null,
+      "corners": null,
+      "cards": null
+    }
+  },
+  {
+    "fixture_id": 1482737,
+    "home": "Gualberto Villarroel SJ",
+    "away": "Aurora",
+    "predictions": {
+      "goals": null,
+      "btts": null,
+      "corners": null,
+      "cards": null
+    },
+    "golden": "goals",
+    "top_value": "goals",
+    "ev": {
+      "goals": null,
+      "btts": null,
+      "corners": null,
+      "cards": null
+    }
+  },
+  {
+    "fixture_id": 1456970,
+    "home": "Deportivo Zap",
+    "away": "Zitacuaro",
+    "predictions": {
+      "goals": null,
+      "btts": null,
+      "corners": null,
+      "cards": null
+    },
+    "golden": "goals",
+    "top_value": "goals",
+    "ev": {
+      "goals": null,
+      "btts": null,
+      "corners": null,
+      "cards": null
+    }
+  },
+  {
+    "fixture_id": 1457129,
+    "home": "Neza",
+    "away": "Deportiva Venados",
+    "predictions": {
+      "goals": null,
+      "btts": null,
+      "corners": null,
+      "cards": null
+    },
+    "golden": "goals",
+    "top_value": "goals",
+    "ev": {
+      "goals": null,
+      "btts": null,
+      "corners": null,
+      "cards": null
+    }
+  },
+  {
+    "fixture_id": 1483552,
+    "home": "Morvant Caledonia United",
+    "away": "San Juan Jabloteh",
+    "predictions": {
+      "goals": null,
+      "btts": null,
+      "corners": null,
+      "cards": null
+    },
+    "golden": "goals",
+    "top_value": "goals",
+    "ev": {
+      "goals": null,
+      "btts": null,
+      "corners": null,
+      "cards": null
+    }
+  },
+  {
+    "fixture_id": 1339226,
+    "home": "Deportes Limache",
+    "away": "Union Espanola",
+    "predictions": {
+      "goals": null,
+      "btts": null,
+      "corners": null,
+      "cards": null
+    },
+    "golden": "goals",
+    "top_value": "goals",
+    "ev": {
+      "goals": null,
+      "btts": null,
+      "corners": null,
+      "cards": null
+    }
+  },
+  {
+    "fixture_id": 1339227,
+    "home": "A. Italiano",
+    "away": "Everton de Vina",
+    "predictions": {
+      "goals": null,
+      "btts": null,
+      "corners": null,
+      "cards": null
+    },
+    "golden": "goals",
+    "top_value": "goals",
+    "ev": {
+      "goals": null,
+      "btts": null,
+      "corners": null,
+      "cards": null
+    }
+  },
+  {
+    "fixture_id": 1339224,
+    "home": "Deportes Iquique",
+    "away": "Cobresal",
+    "predictions": {
+      "goals": null,
+      "btts": null,
+      "corners": null,
+      "cards": null
+    },
+    "golden": "goals",
+    "top_value": "goals",
+    "ev": {
+      "goals": null,
+      "btts": null,
+      "corners": null,
+      "cards": null
+    }
+  },
+  {
+    "fixture_id": 1482738,
+    "home": "Independiente Petrolero",
+    "away": "ABB",
+    "predictions": {
+      "goals": null,
+      "btts": null,
+      "corners": null,
+      "cards": null
+    },
+    "golden": "goals",
+    "top_value": "goals",
+    "ev": {
+      "goals": null,
+      "btts": null,
+      "corners": null,
+      "cards": null
+    }
+  }
+]
