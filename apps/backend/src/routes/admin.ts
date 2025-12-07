@@ -4,6 +4,7 @@ import { runBetBuilderImportNow } from '../cron/betBuilderCron.js';
 import { exportFixturesForML, getExportStatus } from '../services/fixtureExportService.js';
 import { updateLiveScores, updateRecentlyFinishedFixtures } from '../services/liveScoresService.js';
 import { runMLPredictionsNow } from '../cron/mlPredictionsCron.js';
+import { predictionCache } from '../services/predictionCache.js';
 
 const router = Router();
 
@@ -20,10 +21,33 @@ router.post('/generate-predictions', async (req, res) => {
     res.json({
       success: true,
       message: 'ML predictions generated successfully',
-      note: 'Golden Bets and Value Bets have been generated for today\'s fixtures',
+      note: 'Golden Bets and Value Bets have been generated and cached for 24 hours',
+      cache: predictionCache.getStatus()
     });
   } catch (error: any) {
     console.error('Error generating predictions:', error);
+    res.status(500).json({
+      success: false,
+      error: error.message,
+    });
+  }
+});
+
+/**
+ * GET /api/admin/cache-status
+ * Check prediction cache status
+ */
+router.get('/cache-status', async (req, res) => {
+  try {
+    const status = predictionCache.getStatus();
+    
+    res.json({
+      success: true,
+      cache: status,
+      note: 'Cache expires after 24 hours. Predictions are regenerated daily at 6 AM UTC.'
+    });
+  } catch (error: any) {
+    console.error('Error checking cache status:', error);
     res.status(500).json({
       success: false,
       error: error.message,
