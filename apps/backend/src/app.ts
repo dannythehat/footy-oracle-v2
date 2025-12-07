@@ -40,6 +40,7 @@ import valueBetsRoutes from "./routes/valueBets";
 
 // IMPORT CRON JOBS
 import { startLiveScoresCron } from "./cron/liveScoresCron";
+import { startMLPredictionsCron } from "./cron/mlPredictionsCron";
 
 // MOUNT ROUTES
 app.use("/api", fixtureDetailsRoutes);                  // <-- enables /fixtures/:id/events, /stats, /h2h
@@ -61,7 +62,7 @@ app.use("/api/value-bets", valueBetsRoutes);
 // This was missing - cron jobs were defined but never started!
 console.log("🚀 Initializing cron jobs...");
 startLiveScoresCron();
+startMLPredictionsCron();
 console.log("✅ Cron jobs started successfully");
 
 export default app;
-
