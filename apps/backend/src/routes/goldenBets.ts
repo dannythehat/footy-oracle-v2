@@ -2,12 +2,27 @@ import { Router } from 'express';
 import { Prediction } from '../models/Prediction.js';
 import { Fixture } from '../models/Fixture.js';
 import { loadGoldenBets } from '../services/mlService.js';
+import { predictionCache } from '../services/predictionCache.js';
 
 const router = Router();
 
-// Get today's Golden Bets from ML API
+// Get today's Golden Bets from ML API (with 24-hour cache)
 router.get('/today', async (req, res) => {
   try {
+    // Check cache first
+    const cachedBets = predictionCache.getGoldenBets();
+    if (cachedBets && cachedBets.length > 0) {
+      return res.json({
+        success: true,
+        data: cachedBets,
+        count: cachedBets.length,
+        source: 'CACHE',
+        cached: true
+      });
+    }
+    
+    console.log('🔄 Cache miss - fetching fresh Golden Bets from ML API');
+    
     // Get today's fixtures
     const today = new Date();
     today.setHours(0, 0, 0, 0);
@@ -26,12 +41,16 @@ router.get('/today', async (req, res) => {
     const mlGoldenBets = await loadGoldenBets(fixtures);
     
     if (mlGoldenBets && mlGoldenBets.length > 0) {
+      // Cache the results for 24 hours
+      predictionCache.setGoldenBets(mlGoldenBets);
+      
       return res.json({
         success: true,
         data: mlGoldenBets,
         count: mlGoldenBets.length,
         source: 'ML_API',
-        fixturesAnalyzed: fixtures.length
+        fixturesAnalyzed: fixtures.length,
+        cached: false
       });
     }
     
@@ -53,7 +72,8 @@ router.get('/today', async (req, res) => {
       dateRange: {
         from: today.toISOString(),
         to: endOfDay.toISOString()
-      }
+      },
+      cached: false
     });
   } catch (error: any) {
     console.error('Golden Bets error:', error);
