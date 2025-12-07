@@ -3,8 +3,33 @@ import { importBetBuilders, importBetBuildersFromAPI } from '../services/betBuil
 import { runBetBuilderImportNow } from '../cron/betBuilderCron.js';
 import { exportFixturesForML, getExportStatus } from '../services/fixtureExportService.js';
 import { updateLiveScores, updateRecentlyFinishedFixtures } from '../services/liveScoresService.js';
+import { runMLPredictionsNow } from '../cron/mlPredictionsCron.js';
 
 const router = Router();
+
+/**
+ * POST /api/admin/generate-predictions
+ * Manually trigger ML predictions generation (Golden Bets + Value Bets)
+ */
+router.post('/generate-predictions', async (req, res) => {
+  try {
+    console.log('🤖 Manual ML predictions generation triggered');
+    
+    await runMLPredictionsNow();
+    
+    res.json({
+      success: true,
+      message: 'ML predictions generated successfully',
+      note: 'Golden Bets and Value Bets have been generated for today\'s fixtures',
+    });
+  } catch (error: any) {
+    console.error('Error generating predictions:', error);
+    res.status(500).json({
+      success: false,
+      error: error.message,
+    });
+  }
+});
 
 /**
  * POST /api/admin/update-live-scores
