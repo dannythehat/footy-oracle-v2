@@ -11,8 +11,7 @@ if (!API_KEY) {
 const apiClient = axios.create({
   baseURL: API_BASE_URL,
   headers: {
-    "x-rapidapi-key": API_KEY,
-    "x-rapidapi-host": "v3.football.api-sports.io",
+    "x-apisports-key": API_KEY,
   },
   timeout: 20000,
 });
@@ -250,33 +249,50 @@ export async function fetchFixtureStats(
 
   return {
     home: {
-      shots: {
-        total: getStat(homeStats, "Total Shots") || 0,
-        on: getStat(homeStats, "Shots on Goal") || 0,
-      },
-      possession: parseInt(getStat(homeStats, "Ball Possession") || "0"),
-      corners: getStat(homeStats, "Corner Kicks") || 0,
-      fouls: getStat(homeStats, "Fouls") || 0,
-      yellowCards: getStat(homeStats, "Yellow Cards") || 0,
-      redCards: getStat(homeStats, "Red Cards") || 0,
+      shotsOnGoal: getStat(homeStats, "Shots on Goal"),
+      shotsOffGoal: getStat(homeStats, "Shots off Goal"),
+      totalShots: getStat(homeStats, "Total Shots"),
+      blockedShots: getStat(homeStats, "Blocked Shots"),
+      shotsInsideBox: getStat(homeStats, "Shots insidebox"),
+      shotsOutsideBox: getStat(homeStats, "Shots outsidebox"),
+      fouls: getStat(homeStats, "Fouls"),
+      cornerKicks: getStat(homeStats, "Corner Kicks"),
+      offsides: getStat(homeStats, "Offsides"),
+      ballPossession: getStat(homeStats, "Ball Possession"),
+      yellowCards: getStat(homeStats, "Yellow Cards"),
+      redCards: getStat(homeStats, "Red Cards"),
+      goalkeeperSaves: getStat(homeStats, "Goalkeeper Saves"),
+      totalPasses: getStat(homeStats, "Total passes"),
+      passesAccurate: getStat(homeStats, "Passes accurate"),
+      passesPercentage: getStat(homeStats, "Passes %"),
     },
     away: {
-      shots: {
-        total: getStat(awayStats, "Total Shots") || 0,
-        on: getStat(awayStats, "Shots on Goal") || 0,
-      },
-      possession: parseInt(getStat(awayStats, "Ball Possession") || "0"),
-      corners: getStat(awayStats, "Corner Kicks") || 0,
-      fouls: getStat(awayStats, "Fouls") || 0,
-      yellowCards: getStat(awayStats, "Yellow Cards") || 0,
-      redCards: getStat(awayStats, "Red Cards") || 0,
+      shotsOnGoal: getStat(awayStats, "Shots on Goal"),
+      shotsOffGoal: getStat(awayStats, "Shots off Goal"),
+      totalShots: getStat(awayStats, "Total Shots"),
+      blockedShots: getStat(awayStats, "Blocked Shots"),
+      shotsInsideBox: getStat(awayStats, "Shots insidebox"),
+      shotsOutsideBox: getStat(awayStats, "Shots outsidebox"),
+      fouls: getStat(awayStats, "Fouls"),
+      cornerKicks: getStat(awayStats, "Corner Kicks"),
+      offsides: getStat(awayStats, "Offsides"),
+      ballPossession: getStat(awayStats, "Ball Possession"),
+      yellowCards: getStat(awayStats, "Yellow Cards"),
+      redCards: getStat(awayStats, "Red Cards"),
+      goalkeeperSaves: getStat(awayStats, "Goalkeeper Saves"),
+      totalPasses: getStat(awayStats, "Total passes"),
+      passesAccurate: getStat(awayStats, "Passes accurate"),
+      passesPercentage: getStat(awayStats, "Passes %"),
     },
   };
 }
 
-/** Fetch Team Last Fixtures */
-export async function fetchTeamLastFixtures(teamId: number, last: number = 5) {
-  console.log(`🔙 Fetching last ${last} fixtures for team ${teamId}`);
+/** Fetch Past Fixtures */
+export async function fetchPastFixtures(
+  teamId: number,
+  last: number = 10
+): Promise<any[]> {
+  console.log(`📜 Fetching last ${last} fixtures for team ${teamId}`);
 
   const response = await apiClient.get("/fixtures", {
     params: {
@@ -285,59 +301,23 @@ export async function fetchTeamLastFixtures(teamId: number, last: number = 5) {
     },
   });
 
-  return (
-    response.data.response?.map((f: any) => ({
-      fixtureId: f.fixture.id,
-      date: f.fixture.date,
-      homeTeam: f.teams.home.name,
-      awayTeam: f.teams.away.name,
-      score: {
-        home: f.goals.home ?? null,
-        away: f.goals.away ?? null,
-      },
-      league: f.league.name,
-      status: mapStatus(f.fixture.status.short),
-    })) || []
-  );
-}
+  const fixtures = response.data.response || [];
 
-/** ⭐ NEW: Live Snapshot */
-export async function fetchLiveFixtureSnapshot(fixtureId: number) {
-  console.log(`📡 Fetching live fixture snapshot: ${fixtureId}`);
-
-  const response = await apiClient.get("/fixtures", {
-    params: { id: fixtureId },
-  });
-
-  const match = response.data.response?.[0];
-  if (!match) return null;
-
-  return {
-    fixtureId,
-    status: match.fixture.status.short,
-    elapsed: match.fixture.status.elapsed || 0,
-    referee: match.fixture.referee,
-    venue: match.fixture.venue,
-    score: match.goals,
-    events: match.events || [],
-    statistics: match.statistics || [],
-    lineups: match.lineups || [],
-  };
-}
-
-/** ⭐ NEW: League Standings */
-export async function fetchLeagueStandings(
-  leagueId: number,
-  season: number
-) {
-  console.log(`📊 Fetching standings for league ${leagueId}`);
-
-  const response = await apiClient.get("/standings", {
-    params: {
-      league: leagueId,
-      season,
+  return fixtures.map((f: any) => ({
+    fixtureId: f.fixture.id,
+    date: f.fixture.date,
+    homeTeam: f.teams.home.name,
+    awayTeam: f.teams.away.name,
+    score: {
+      home: f.goals.home ?? 0,
+      away: f.goals.away ?? 0,
     },
-  });
+    league: f.league.name,
+    status: mapStatus(f.fixture.status.short),
+  }));
+}
 
-  return response.data.response?.[0]?.league?.standings?.[0] || [];
+/** Fetch Odds for a specific fixture (used by cron) */
+export async function fetchOddsForFixture(fixtureId: number): Promise<any> {
+  return fetchOdds(fixtureId);
 }
