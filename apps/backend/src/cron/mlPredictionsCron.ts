@@ -1,7 +1,10 @@
 import cron from 'node-cron';
+import axios from 'axios';
 import { Fixture } from '../models/Fixture.js';
 import { loadGoldenBets, loadValueBets } from '../services/mlService.js';
 import { predictionCache } from '../services/predictionCache.js';
+
+const ML_API_URL = process.env.ML_API_URL || 'https://football-ml-api.onrender.com';
 
 /**
  * Start ML predictions cron job
@@ -14,9 +17,21 @@ export function startMLPredictionsCron() {
     await generateDailyPredictions();
   });
 
+  // Keep ML API awake - ping every 10 minutes during business hours (6 AM - 11 PM UTC)
+  // This prevents Render free tier from sleeping
+  cron.schedule('*/10 6-23 * * *', async () => {
+    try {
+      await axios.get(`${ML_API_URL}/api/health`, { timeout: 5000 });
+      console.log('💓 ML API keep-alive ping successful');
+    } catch (error) {
+      console.warn('⚠️ ML API keep-alive ping failed (API may be sleeping)');
+    }
+  });
+
   console.log('✅ ML predictions cron job scheduled: 6:00 AM UTC daily');
   console.log('   Runs after odds update (5 AM) and before bet builder (6:30 AM)');
   console.log('   Predictions cached for 24 hours');
+  console.log('💓 ML API keep-alive: Every 10 minutes (6 AM - 11 PM UTC)');
 }
 
 /**
@@ -25,6 +40,15 @@ export function startMLPredictionsCron() {
  */
 export async function generateDailyPredictions() {
   try {
+    // First, wake up ML API if it's sleeping
+    console.log('💓 Waking up ML API...');
+    try {
+      await axios.get(`${ML_API_URL}/api/health`, { timeout: 30000 });
+      console.log('✅ ML API is awake');
+    } catch (error) {
+      console.warn('⚠️ ML API health check failed, but continuing anyway...');
+    }
+
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     
@@ -67,6 +91,7 @@ export async function generateDailyPredictions() {
     
   } catch (error: any) {
     console.error('❌ ML predictions generation failed:', error.message);
+    console.error('Stack trace:', error.stack);
   }
 }
 
