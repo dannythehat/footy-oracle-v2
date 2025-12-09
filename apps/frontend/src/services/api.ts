@@ -17,6 +17,13 @@ const getTimezoneOffset = () => {
 
 // Fixtures API
 export const fixturesApi = {
+  // Get H2H data
+  getH2H: (homeTeamId: number, awayTeamId: number) =>
+    api.get(/api/fixtures/h2h, { params: { homeTeamId, awayTeamId } }).then(r => r.data),
+
+  // Get league standings
+  getStandings: (leagueId: number, season: number) =>
+    api.get(/api/leagues//standings, { params: { season } }).then(r => r.data),
   // Get fixtures by date (with timezone support)
   getByDate: (date: string) => {
     const timezoneOffset = getTimezoneOffset();
@@ -90,3 +97,4 @@ export const predictionsApi = {
 };
 
 export default api;
+
