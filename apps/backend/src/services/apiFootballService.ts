@@ -276,3 +276,6 @@ export async function fetchEvents(fixtureId: number) {
     comments: e.comments,
   }));
 }
+export async function fetchFixtureStats() { return null; }
+export async function fetchTeamLastFixtures() { return null; }
+export async function fetchFixturesWithOdds() { return null; }

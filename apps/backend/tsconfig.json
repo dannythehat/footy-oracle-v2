@@ -1,36 +1,36 @@
-﻿{
+{
   "compilerOptions": {
-    "target": "ES2020",
-    "module": "commonjs",
+    "target": "ES2022",
+    "module": "ES2022",
     "moduleResolution": "node",
-    "outDir": "dist",
-    "rootDir": "src",
+    "lib": ["ES2022"],
+    "rootDir": "./src",
+    "outDir": "./dist",
     "strict": false,
     "esModuleInterop": true,
     "skipLibCheck": true,
-    "resolveJsonModule": true
+    "forceConsistentCasingInFileNames": false,
+    "allowSyntheticDefaultImports": true,
+    "resolveJsonModule": true,
+    "incremental": false,
+    "declaration": false,
+    "sourceMap": false
   },
-  "include": [
-    "src/server.ts",
-    "src/routes/**/*.ts",
-    "src/services/apiFootballService.ts",
-    "src/services/mlService.ts",
-    "src/services/fixtureService.ts",
-    "src/services/oddsService.ts"
-  ],
+  "include": ["src/**/*"],
   "exclude": [
-    "src/cron/**/*",
-    "src/routes/admin.ts",
-    "src/routes/fixtures-odds-patch.ts",
+    "node_modules",
+    "dist",
+    "src/services/fixtureExportService.ts",
     "src/services/betBuilderImporter.ts",
     "src/services/bettingInsightsService.ts",
-    "src/services/fixtureExportService.ts",
-    "src/services/fixtureStorageService.ts",
-    "src/services/pnlTrackingService.ts",
-    "src/services/predictionCache.ts",
-    "src/services/trebleService.ts",
+    "src/services/cronService.ts",
     "src/services/websocket.ts",
-    "**/*.test.ts",
-    "**/*.spec.ts"
+    "src/routes/admin.ts",
+    "src/routes/betBuilder.ts",
+    "src/routes/fixtures-odds-patch.ts",
+    "src/services/pnlTrackingService.ts",
+    "src/services/trebleService.ts",
+    "src/scripts/*",
+    "test/*"
   ]
 }

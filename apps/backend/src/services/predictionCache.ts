@@ -1,119 +1,33 @@
-/**
- * 24-Hour Prediction Cache
- * 
- * Caches Golden Bets and Value Bets for 24 hours to prevent
- * unnecessary ML API calls and ensure consistent predictions
- * throughout the day.
- */
-
-import { GoldenBet, ValueBet } from './mlService.js';
-
-interface CacheEntry<T> {
-  data: T[];
-  timestamp: number;
-  expiresAt: number;
-}
+import { GoldenBet, ValueBet, MLPrediction } from "./mlService.js";
 
 class PredictionCache {
-  private goldenBetsCache: CacheEntry<GoldenBet> | null = null;
-  private valueBetsCache: CacheEntry<ValueBet> | null = null;
-  private readonly CACHE_DURATION = 24 * 60 * 60 * 1000; // 24 hours in milliseconds
+  predictions: MLPrediction[] = [];
+  golden: GoldenBet[] = [];
+  value: ValueBet[] = [];
 
-  /**
-   * Get cached Golden Bets if still valid
-   */
-  getGoldenBets(): GoldenBet[] | null {
-    if (!this.goldenBetsCache) {
-      return null;
-    }
-
-    const now = Date.now();
-    if (now > this.goldenBetsCache.expiresAt) {
-      console.log('🕐 Golden Bets cache expired');
-      this.goldenBetsCache = null;
-      return null;
-    }
-
-    const age = Math.floor((now - this.goldenBetsCache.timestamp) / 1000 / 60);
-    console.log(`✅ Returning cached Golden Bets (${age} minutes old)`);
-    return this.goldenBetsCache.data;
+  setPredictions(p: MLPrediction[]) {
+    this.predictions = p;
   }
 
-  /**
-   * Set Golden Bets cache
-   */
-  setGoldenBets(data: GoldenBet[]): void {
-    const now = Date.now();
-    this.goldenBetsCache = {
-      data,
-      timestamp: now,
-      expiresAt: now + this.CACHE_DURATION
-    };
-    console.log(`💾 Cached ${data.length} Golden Bets (expires in 24 hours)`);
+  setGoldenBets(g: GoldenBet[]) {
+    this.golden = g;
   }
 
-  /**
-   * Get cached Value Bets if still valid
-   */
-  getValueBets(): ValueBet[] | null {
-    if (!this.valueBetsCache) {
-      return null;
-    }
-
-    const now = Date.now();
-    if (now > this.valueBetsCache.expiresAt) {
-      console.log('🕐 Value Bets cache expired');
-      this.valueBetsCache = null;
-      return null;
-    }
-
-    const age = Math.floor((now - this.valueBetsCache.timestamp) / 1000 / 60);
-    console.log(`✅ Returning cached Value Bets (${age} minutes old)`);
-    return this.valueBetsCache.data;
+  setValueBets(v: ValueBet[]) {
+    this.value = v;
   }
 
-  /**
-   * Set Value Bets cache
-   */
-  setValueBets(data: ValueBet[]): void {
-    const now = Date.now();
-    this.valueBetsCache = {
-      data,
-      timestamp: now,
-      expiresAt: now + this.CACHE_DURATION
-    };
-    console.log(`💾 Cached ${data.length} Value Bets (expires in 24 hours)`);
+  getPredictions() {
+    return this.predictions;
   }
 
-  /**
-   * Clear all caches (useful for manual refresh)
-   */
-  clearAll(): void {
-    this.goldenBetsCache = null;
-    this.valueBetsCache = null;
-    console.log('🗑️ All prediction caches cleared');
+  getGoldenBets() {
+    return this.golden;
   }
 
-  /**
-   * Get cache status for debugging
-   */
-  getStatus() {
-    const now = Date.now();
-    
-    return {
-      goldenBets: this.goldenBetsCache ? {
-        count: this.goldenBetsCache.data.length,
-        ageMinutes: Math.floor((now - this.goldenBetsCache.timestamp) / 1000 / 60),
-        expiresInMinutes: Math.floor((this.goldenBetsCache.expiresAt - now) / 1000 / 60)
-      } : null,
-      valueBets: this.valueBetsCache ? {
-        count: this.valueBetsCache.data.length,
-        ageMinutes: Math.floor((now - this.valueBetsCache.timestamp) / 1000 / 60),
-        expiresInMinutes: Math.floor((this.valueBetsCache.expiresAt - now) / 1000 / 60)
-      } : null
-    };
+  getValueBets() {
+    return this.value;
   }
 }
 
-// Export singleton instance
 export const predictionCache = new PredictionCache();
