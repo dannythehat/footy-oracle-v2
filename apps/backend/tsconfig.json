@@ -1,3 +1,6 @@
+$path = "C:\Users\Danny\Documents\GitHub\footy-oracle-v2\apps\backend\tsconfig.json"
+
+$contents = @'
 {
   "compilerOptions": {
     "target": "ES2020",
@@ -34,3 +37,6 @@
     "**/*.spec.ts"
   ]
 }
+'@
+
+Set-Content -LiteralPath $path -Value $contents
