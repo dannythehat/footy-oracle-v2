@@ -6,6 +6,7 @@ import { updateLiveScores, updateRecentlyFinishedFixtures } from '../services/li
 import { runMLPredictionsNow } from '../cron/mlPredictionsCron.js';
 import { predictionCache } from '../services/predictionCache.js';
 
+import { loadTodayFixturesManual } from '../services/manualFixtureLoader.js';
 const router = Router();
 
 /**
@@ -354,3 +355,19 @@ router.get('/bet-builder-status', async (req, res) => {
 });
 
 export default router;
+/**
+ * POST /api/admin/load-today-fixtures
+ * Manually load today's fixtures into MongoDB
+ */
+router.post("/load-today-fixtures", async (req, res) => {
+  try {
+    const count = await loadTodayFixturesManual();
+    res.json({
+      success: true,
+      fixtures_loaded: count,
+      message: `Loaded ${count} fixtures for today`
+    });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
