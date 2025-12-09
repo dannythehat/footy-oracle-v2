@@ -13,7 +13,10 @@
   "include": [
     "src/server.ts",
     "src/routes/**/*.ts",
-    "src/services/*.ts"
+    "src/services/apiFootballService.ts",
+    "src/services/mlService.ts",
+    "src/services/fixtureService.ts",
+    "src/services/oddsService.ts"
   ],
   "exclude": [
     "src/cron/**/*",
