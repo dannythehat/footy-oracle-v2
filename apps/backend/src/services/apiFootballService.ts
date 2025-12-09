@@ -11,8 +11,7 @@ if (!API_KEY) {
 const apiClient = axios.create({
   baseURL: API_BASE_URL,
   headers: {
-    "x-rapidapi-key": API_KEY,
-    "x-rapidapi-host": "v3.football.api-sports.io",
+    "x-apisports-key": API_KEY,
   },
   timeout: 20000,
 });
@@ -258,7 +257,7 @@ export async function fetchStatistics(fixtureId: number) {
 
 /** Fetch Events */
 export async function fetchEvents(fixtureId: number) {
-  console.log(`⚡ Fetching events for fixture ${fixtureId}`);
+  console.log(`⚽ Fetching events for fixture ${fixtureId}`);
 
   const response = await apiClient.get("/fixtures/events", {
     params: { fixture: fixtureId },
@@ -270,18 +269,10 @@ export async function fetchEvents(fixtureId: number) {
     time: e.time.elapsed,
     timeExtra: e.time.extra,
     team: e.team.name,
-    teamId: e.team.id,
     player: e.player.name,
-    playerId: e.player.id,
-    assist: e.assist?.name || null,
-    assistId: e.assist?.id || null,
+    assist: e.assist.name,
     type: e.type,
     detail: e.detail,
     comments: e.comments,
   }));
-}
-
-/** Fetch Odds for a specific fixture (used by cron) */
-export async function fetchOddsForFixture(fixtureId: number) {
-  return fetchOdds(fixtureId);
 }
