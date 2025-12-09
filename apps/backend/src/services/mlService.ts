@@ -33,14 +33,15 @@ export interface ValueBet extends MLPrediction {
 /**
  * Format fixtures for ML API consumption
  * Converts our Fixture model to the format expected by the Python ML API
+ * CRITICAL: ML API expects "match_id" and "datetime", not "id" and "date"
  */
 function formatFixturesForML(fixtures: IFixture[]) {
   return {
     matches: fixtures.map(f => ({
-      id: f.fixtureId.toString(),
+      match_id: f.fixtureId.toString(),  // ← FIXED: was "id"
+      datetime: f.date.toISOString(),     // ← FIXED: was "date"
       home_team: f.homeTeam,
       away_team: f.awayTeam,
-      date: f.date.toISOString(),
       stats: {
         // Use live statistics if available, otherwise use defaults
         home_goals_avg: f.statistics?.home?.totalShots ? f.statistics.home.totalShots / 10 : 1.5,
@@ -93,6 +94,7 @@ export async function loadMLPredictions(fixtures?: IFixture[]): Promise<MLPredic
   try {
     const payload = formatFixturesForML(fixtures);
     console.log(`🤖 Calling ML API for ${fixtures.length} fixtures...`);
+    console.log('📤 Payload sample:', JSON.stringify(payload.matches[0], null, 2));
     
     const response = await axios.post(
       `${ML_API_URL}/api/v1/predictions/smart-bets`,
@@ -120,6 +122,10 @@ export async function loadMLPredictions(fixtures?: IFixture[]): Promise<MLPredic
     
   } catch (error: any) {
     console.error('ML API error:', error.message);
+    if (error.response) {
+      console.error('Response data:', error.response.data);
+      console.error('Response status:', error.response.status);
+    }
     
     // If ML API is down, return empty array (graceful degradation)
     if (error.code === 'ECONNREFUSED' || error.code === 'ETIMEDOUT') {
@@ -140,6 +146,7 @@ export async function loadGoldenBets(fixtures?: IFixture[]): Promise<GoldenBet[]
   try {
     const payload = formatFixturesForML(fixtures);
     console.log(`🏆 Calling ML API for Golden Bets (${fixtures.length} fixtures)...`);
+    console.log('📤 Payload sample:', JSON.stringify(payload.matches[0], null, 2));
     
     const response = await axios.post(
       `${ML_API_URL}/api/v1/predictions/golden-bets`,
@@ -147,8 +154,12 @@ export async function loadGoldenBets(fixtures?: IFixture[]): Promise<GoldenBet[]
       { timeout: ML_API_TIMEOUT }
     );
     
+    console.log('📥 ML API Response:', JSON.stringify(response.data, null, 2));
+    
     if (!response.data || !response.data.golden_bets) {
       console.error('Invalid Golden Bets API response format');
+      console.error('Expected: { golden_bets: [...] }');
+      console.error('Got:', response.data);
       return [];
     }
 
@@ -169,6 +180,10 @@ export async function loadGoldenBets(fixtures?: IFixture[]): Promise<GoldenBet[]
     
   } catch (error: any) {
     console.error('Golden Bets API error:', error.message);
+    if (error.response) {
+      console.error('Response data:', error.response.data);
+      console.error('Response status:', error.response.status);
+    }
     
     if (error.code === 'ECONNREFUSED' || error.code === 'ETIMEDOUT') {
       console.warn('⚠️ ML API unavailable for Golden Bets');
@@ -188,6 +203,7 @@ export async function loadValueBets(fixtures?: IFixture[]): Promise<ValueBet[]> 
   try {
     const payload = formatFixturesForML(fixtures);
     console.log(`💰 Calling ML API for Value Bets (${fixtures.length} fixtures)...`);
+    console.log('📤 Payload sample:', JSON.stringify(payload.matches[0], null, 2));
     
     const response = await axios.post(
       `${ML_API_URL}/api/v1/predictions/value-bets`,
@@ -218,6 +234,10 @@ export async function loadValueBets(fixtures?: IFixture[]): Promise<ValueBet[]> 
     
   } catch (error: any) {
     console.error('Value Bets API error:', error.message);
+    if (error.response) {
+      console.error('Response data:', error.response.data);
+      console.error('Response status:', error.response.status);
+    }
     
     if (error.code === 'ECONNREFUSED' || error.code === 'ETIMEDOUT') {
       console.warn('⚠️ ML API unavailable for Value Bets');
