@@ -1,289 +1,253 @@
-# 🚀 Footy Oracle v2 - Deployment Guide
+# 🚀 Deployment Guide - Footy Oracle v2
 
-Complete guide for deploying Footy Oracle v2 to production.
+## 🎯 IMMEDIATE FIX REQUIRED
 
-## 📋 Prerequisites
+### **CRITICAL: Add ML_API_URL to Render Backend**
 
-- MongoDB Atlas account (or MongoDB instance)
-- API-Football API key ([get one here](https://www.api-football.com/))
-- OpenAI API key
-- Render/Railway/Vercel account for hosting
+**This is the #1 issue preventing Golden Bets and Value Bets from working!**
 
-## 🔧 Backend Deployment (Render)
+1. Go to [Render Dashboard - Backend Service](https://dashboard.render.com/web/srv-d4jvnhili9vc73ddva60)
+2. Click **Environment** tab
+3. Click **Add Environment Variable**
+4. Add:
+   ```
+   Key: ML_API_URL
+   Value: https://football-ml-api.onrender.com
+   ```
+5. Click **Save Changes**
+6. Service will auto-redeploy (takes ~2 minutes)
 
-### 1. Environment Variables
+**This fixes:** #143, #142, #141, #139 - Golden Bets, Value Bets, and ML predictions not loading.
 
-Set these in your Render dashboard:
+---
+
+## 📋 Required Environment Variables
+
+### Backend Service (Render)
+
+Service: `footy-oracle-backend`  
+URL: https://footy-oracle-backend.onrender.com
 
 ```bash
 # Server
 PORT=3001
 NODE_ENV=production
 
-# API-Football
-API_FOOTBALL_KEY=your_api_football_key_here
+# API-Football (REQUIRED)
+API_FOOTBALL_KEY=<your_key>
 API_FOOTBALL_BASE_URL=https://v3.football.api-sports.io
 
-# OpenAI
-OPENAI_API_KEY=your_openai_api_key_here
+# OpenAI (REQUIRED)
+OPENAI_API_KEY=<your_key>
 OPENAI_MODEL=gpt-4
 
-# Database
-MONGODB_URI=mongodb+srv://username:password@cluster.mongodb.net/footy-oracle
+# Database (REQUIRED)
+MONGODB_URI=<your_mongodb_connection_string>
 
-# ML Model
-ML_MODEL_PATH=../../shared/ml_outputs/predictions.json
+# ML API (REQUIRED - CURRENTLY MISSING!)
+ML_API_URL=https://football-ml-api.onrender.com
 
 # CORS
-CORS_ORIGIN=https://your-frontend-domain.vercel.app
-
-# Cron
-PREDICTION_CRON_SCHEDULE=0 6 * * *
+CORS_ORIGIN=https://footy-oracle-v2.vercel.app
 ```
 
-### 2. Build Settings
+### Frontend Service (Vercel)
 
-```yaml
-Build Command: cd apps/backend && npm install
-Start Command: cd apps/backend && npm start
-```
-
-### 3. Initial Database Seeding
-
-After deployment, seed the database with fixtures:
+Project: `footy-oracle-v2`  
+URL: https://footy-oracle-v2.vercel.app
 
 ```bash
-# SSH into your Render instance or use Render Shell
-cd apps/backend
-npm run seed:fixtures
+VITE_API_BASE_URL=https://footy-oracle-backend.onrender.com
 ```
 
-This will:
-- Fetch fixtures for the next 7 days
-- Populate all required fields
-- Fetch odds data for major leagues
-- Take ~5-10 minutes depending on API rate limits
+---
 
-## 🎨 Frontend Deployment (Vercel)
+## ✅ Verification Checklist
 
-### 1. Environment Variables
-
-Set in Vercel dashboard:
+Run these commands to verify everything is working:
 
 ```bash
-VITE_API_URL=https://your-backend.onrender.com
-```
+# 1. Backend Health
+curl https://footy-oracle-backend.onrender.com/health
+# Expected: {"status":"ok"}
 
-### 2. Build Settings
+# 2. ML API Health
+curl https://football-ml-api.onrender.com/api/health
+# Expected: {"status":"healthy"}
 
-```yaml
-Framework Preset: Vite
-Build Command: cd apps/frontend && npm install && npm run build
-Output Directory: apps/frontend/dist
-Install Command: npm install
-Root Directory: /
-```
-
-### 3. Vercel Configuration
-
-The `vercel.json` is already configured:
-
-```json
-{
-  "buildCommand": "cd apps/frontend && npm install && npm run build",
-  "outputDirectory": "apps/frontend/dist",
-  "installCommand": "npm install",
-  "framework": "vite",
-  "rewrites": [
-    { "source": "/(.*)", "destination": "/index.html" }
-  ]
-}
-```
-
-## 🗄️ Database Setup
-
-### MongoDB Atlas Setup
-
-1. Create a new cluster
-2. Create a database user
-3. Whitelist IP addresses (or allow from anywhere: `0.0.0.0/0`)
-4. Get connection string
-5. Replace `<password>` and `<dbname>` in connection string
-
-### Initial Collections
-
-The following collections will be auto-created:
-- `fixtures` - Match fixtures and live data
-- `predictions` - ML predictions
-- `featuredselections` - Golden Bets and Value Bets
-- `betbuilders` - Bet Builder combinations
-
-## 🔄 Automated Tasks
-
-### Cron Jobs (Configured in Backend)
-
-1. **Fixtures Update** - Every 5 minutes
-   - Updates live scores
-   - Fetches new fixtures
-   - Updates match statistics
-
-2. **AI Betting Insights** - Daily at 5 AM
-   - Generates betting predictions
-   - Updates Golden Bets
-   - Calculates Value Bets
-
-3. **ML Predictions** - Daily at 6 AM
-   - Runs ML model predictions
-   - Updates prediction data
-
-## ✅ Testing Deployment
-
-### 1. Backend Health Check
-
-```bash
-curl https://your-backend.onrender.com/health
-# Expected: { "status": "ok" }
-```
-
-### 2. Test Fixtures API
-
-```bash
-curl "https://your-backend.onrender.com/api/fixtures?date=2025-12-02"
+# 3. Fixtures Loading
+curl "https://footy-oracle-backend.onrender.com/api/fixtures?date=2025-12-08&limit=5"
 # Expected: JSON with fixtures array
+
+# 4. Golden Bets
+curl https://footy-oracle-backend.onrender.com/api/golden-bets/today
+# Expected: JSON with golden bets (may be empty if not 6 AM UTC yet)
+
+# 5. Value Bets
+curl https://footy-oracle-backend.onrender.com/api/value-bets
+# Expected: JSON with value bets
 ```
 
-### 3. Frontend Check
+---
 
-Visit your frontend URL and verify:
-- ✅ Fixtures load correctly
-- ✅ Live scores update
-- ✅ Match details open
-- ✅ Betting insights work
-- ✅ No console errors
+## ⏰ Cron Job Schedule (UTC)
+
+| Time | Job | Description |
+|------|-----|-------------|
+| 3:00 AM | Fixtures Window | Load 7 days back + 7 days ahead |
+| 5:00 AM | Odds Update | Update today's fixture odds |
+| 6:00 AM | ML Predictions | Generate Golden + Value Bets |
+| Every 2 min | Live Scores | Update live match scores |
+| Every 10 min | ML Keep-Alive | Ping ML API (6 AM - 11 PM) |
+
+**Note:** Render free tier sleeps after 15 min inactivity. Keep-alive prevents ML API downtime.
+
+---
 
 ## 🐛 Troubleshooting
 
-### Backend Issues
+### Golden Bets Not Loading
 
-**Problem: "Cannot connect to MongoDB"**
+**Symptoms:**
+- Empty Golden Bets page
+- API returns `{"data": [], "count": 0}`
+
+**Diagnosis:**
 ```bash
-# Check MongoDB URI format
-# Ensure IP whitelist includes Render IPs
-# Verify database user credentials
-```
+# Check ML API connection
+curl https://football-ml-api.onrender.com/api/health
 
-**Problem: "API-Football rate limit exceeded"**
-```bash
-# Check your API-Football plan limits
-# Reduce seeding frequency
-# Use cached data when possible
-```
+# Check if ML_API_URL is set (look in Render dashboard Environment tab)
 
-**Problem: "No fixtures showing"**
-```bash
-# Run seeding script manually
-cd apps/backend
-npm run seed:fixtures
-```
-
-### Frontend Issues
-
-**Problem: "Network Error" or CORS issues**
-```bash
-# Verify VITE_API_URL is correct
-# Check CORS_ORIGIN in backend matches frontend domain
-# Ensure backend is running
-```
-
-**Problem: "Fixtures not loading"**
-```bash
-# Check browser console for errors
-# Verify API endpoint in Network tab
 # Check backend logs for errors
+# Look for: "ML API error" or "ECONNREFUSED"
 ```
 
-## 📊 Monitoring
+**Fix:**
+1. Add `ML_API_URL` environment variable (see top of this guide)
+2. Redeploy backend
+3. Wait for 6 AM UTC cron or trigger manually:
+   ```bash
+   curl -X POST https://footy-oracle-backend.onrender.com/api/admin/generate-predictions
+   ```
 
-### Backend Logs (Render)
+### Fixtures Not Loading
 
+**Symptoms:**
+- Empty fixtures page
+- 500 error from API
+- "API_FOOTBALL_KEY not set" in logs
+
+**Diagnosis:**
 ```bash
-# View in Render dashboard under "Logs"
-# Look for:
-✅ "Connected to MongoDB"
-✅ "Server running on port 3001"
-✅ "Fixtures updated: X"
+# Test fixtures endpoint
+curl "https://footy-oracle-backend.onrender.com/api/fixtures?date=2025-12-08"
+
+# Check API-Football quota
+# Login to: https://dashboard.api-football.com/
 ```
 
-### Frontend Logs (Vercel)
+**Fix:**
+1. Verify `API_FOOTBALL_KEY` is set in Render Environment
+2. Check API-Football quota not exceeded
+3. Verify headers are `x-apisports-key` (not `x-rapidapi-key`)
 
+### Odds Showing "N/A"
+
+**Symptoms:**
+- Fixtures load but odds are null
+- "No odds available from any bookmaker" in logs
+
+**Fix:**
+1. Verify API-Football subscription includes odds
+2. Fallback bookmakers (Bet365, Bwin, Williamhill) should work
+3. Some fixtures may not have odds available yet
+
+---
+
+## 🔄 Manual Operations
+
+### Clear Cache
 ```bash
-# View in Vercel dashboard under "Deployments" > "Functions"
-# Check for build errors or runtime issues
+curl -X POST https://footy-oracle-backend.onrender.com/api/admin/clear-cache
 ```
 
-## 🔐 Security Checklist
-
-- [ ] Environment variables are set (not hardcoded)
-- [ ] MongoDB has authentication enabled
-- [ ] API keys are kept secret
-- [ ] CORS is configured correctly
-- [ ] Rate limiting is implemented
-- [ ] HTTPS is enabled (automatic on Render/Vercel)
-
-## 📈 Performance Optimization
-
-### Backend
-- Use MongoDB indexes (already configured)
-- Enable caching for frequently accessed data
-- Implement rate limiting for API endpoints
-- Use connection pooling for MongoDB
-
-### Frontend
-- Enable Vercel Edge caching
-- Optimize images and assets
-- Use lazy loading for components
-- Implement service workers for offline support
-
-## 🔄 Continuous Deployment
-
-### Automatic Deployments
-
-Both Render and Vercel support automatic deployments:
-
-1. **Backend (Render)**
-   - Auto-deploys on push to `main` branch
-   - Configure in Render dashboard
-
-2. **Frontend (Vercel)**
-   - Auto-deploys on push to `main` branch
-   - Preview deployments for PRs
-
-### Manual Deployment
-
+### Load Fixtures for Date
 ```bash
-# Backend
-git push origin main
-# Render will auto-deploy
-
-# Frontend
-git push origin main
-# Vercel will auto-deploy
+curl -X POST https://footy-oracle-backend.onrender.com/api/admin/load-fixtures \
+  -H "Content-Type: application/json" \
+  -d '{"date": "2025-12-08"}'
 ```
 
-## 📞 Support
+### Generate ML Predictions
+```bash
+curl -X POST https://footy-oracle-backend.onrender.com/api/admin/generate-predictions
+```
 
-If you encounter issues:
+### Check Cache Status
+```bash
+curl https://footy-oracle-backend.onrender.com/api/admin/cache-status
+```
 
-1. Check the logs (Render/Vercel dashboards)
-2. Review this guide
-3. Check GitHub issues
-4. Verify all environment variables are set correctly
+---
 
-## 🎉 Success!
+## 📊 Architecture
 
-Your Footy Oracle v2 should now be live! 
+```
+┌─────────────────────┐
+│  Vercel Frontend    │  React + Vite
+│  Port: 5173 (dev)   │  https://footy-oracle-v2.vercel.app
+└──────────┬──────────┘
+           │ VITE_API_BASE_URL
+           ↓
+┌─────────────────────────────────┐
+│  Render Backend                 │  Node.js + Express
+│  Port: 3001                     │  https://footy-oracle-backend.onrender.com
+│  - REST API                     │
+│  - MongoDB (fixtures, bets)     │
+│  - Cron jobs (3 AM, 5 AM, 6 AM) │
+└──────────┬──────────────────────┘
+           │ ML_API_URL (MISSING!)
+           ↓
+┌─────────────────────────────────┐
+│  Render ML API                  │  Python + FastAPI
+│  Port: 8000                     │  https://football-ml-api.onrender.com
+│  - ML models                    │
+│  - Golden Bets algorithm        │
+│  - Value Bets algorithm         │
+└─────────────────────────────────┘
+```
 
-- Frontend: `https://your-app.vercel.app`
-- Backend: `https://your-backend.onrender.com`
+---
 
-Enjoy your AI-powered sports betting platform! ⚽🎯
+## 🚨 Emergency Recovery
+
+If everything is broken:
+
+1. **Check all services are running:**
+   - Render: footy-oracle-backend (green)
+   - Render: football-ml-api (green)
+   - Vercel: footy-oracle-v2 (deployed)
+
+2. **Verify environment variables:**
+   - Backend: ML_API_URL, API_FOOTBALL_KEY, MONGODB_URI, OPENAI_API_KEY
+   - Frontend: VITE_API_BASE_URL
+
+3. **Clear cache and regenerate:**
+   ```bash
+   curl -X POST https://footy-oracle-backend.onrender.com/api/admin/clear-cache
+   curl -X POST https://footy-oracle-backend.onrender.com/api/admin/generate-predictions
+   ```
+
+4. **Check logs:**
+   - Render Dashboard → Logs tab
+   - Look for startup errors, cron job execution, API errors
+
+---
+
+## 📞 Support Resources
+
+- **GitHub Issues:** https://github.com/dannythehat/footy-oracle-v2/issues
+- **Render Dashboard:** https://dashboard.render.com
+- **Vercel Dashboard:** https://vercel.com/dashboard
+- **API-Football:** https://dashboard.api-football.com/

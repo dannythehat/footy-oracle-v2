@@ -11,8 +11,7 @@ if (!API_KEY) {
 const apiClient = axios.create({
   baseURL: API_BASE_URL,
   headers: {
-    "x-rapidapi-key": API_KEY,
-    "x-rapidapi-host": "v3.football.api-sports.io",
+    "x-apisports-key": API_KEY,
   },
   timeout: 20000,
 });
@@ -150,187 +149,22 @@ export async function fetchH2H(
     },
   });
 
-  const matches = response.data.response || [];
+  const list = response.data.response || [];
 
-  const transformed = matches.map((m: any) => ({
-    date: m.fixture.date,
-    homeTeam: m.teams.home.name,
-    awayTeam: m.teams.away.name,
-    score: {
-      home: m.goals.home ?? 0,
-      away: m.goals.away ?? 0,
-    },
-    league: m.league.name,
+  return list.map((f: any) => ({
+    fixtureId: f.fixture.id,
+    date: f.fixture.date,
+    homeTeam: f.teams.home.name,
+    awayTeam: f.teams.away.name,
+    homeScore: f.goals.home,
+    awayScore: f.goals.away,
+    status: mapStatus(f.fixture.status.short),
   }));
-
-  let homeWins = 0,
-    awayWins = 0,
-    draws = 0,
-    btts = 0,
-    over25 = 0;
-
-  transformed.forEach((m: any) => {
-    const h = m.score.home;
-    const a = m.score.away;
-
-    if (h > a) homeWins++;
-    else if (a > h) awayWins++;
-    else draws++;
-
-    if (h > 0 && a > 0) btts++;
-    if (h + a > 2.5) over25++;
-  });
-
-  return {
-    matches: transformed,
-    stats: {
-      totalMatches: transformed.length,
-      homeWins,
-      awayWins,
-      draws,
-      bttsCount: btts,
-      over25Count: over25,
-    },
-  };
 }
 
-/** Fetch Team Stats */
-export async function fetchTeamStats(
-  teamId: number,
-  leagueId: number,
-  season: number
-) {
-  console.log(`📊 Fetching team stats: ${teamId} in league ${leagueId}`);
-
-  const response = await apiClient.get("/teams/statistics", {
-    params: {
-      team: teamId,
-      league: leagueId,
-      season,
-    },
-  });
-
-  const data = response.data.response;
-  if (!data) throw new Error("No statistics available");
-
-  return {
-    form: data.form,
-    fixtures: data.fixtures,
-    goals: data.goals,
-    cleanSheets: data.clean_sheet,
-  };
-}
-
-/** Fetch Fixture Stats */
-export async function fetchFixtureStats(
-  fixtureId: number,
-  homeTeamId: number,
-  awayTeamId: number,
-  leagueId: number,
-  season: number
-) {
-  console.log(`📈 Fetching fixture stats for ${fixtureId}`);
-
-  const response = await apiClient.get("/fixtures/statistics", {
-    params: {
-      fixture: fixtureId,
-    },
-  });
-
-  const stats = response.data.response;
-
-  if (!stats || stats.length < 2)
-    throw new Error("Statistics not available yet");
-
-  const getStat = (teamStats: any, type: string) =>
-    teamStats?.statistics?.find((s: any) => s.type === type)?.value;
-
-  const homeStats = stats.find((s: any) => s.team.id === homeTeamId);
-  const awayStats = stats.find((s: any) => s.team.id === awayTeamId);
-
-  return {
-    home: {
-      shots: {
-        total: getStat(homeStats, "Total Shots") || 0,
-        on: getStat(homeStats, "Shots on Goal") || 0,
-      },
-      possession: parseInt(getStat(homeStats, "Ball Possession") || "0"),
-      corners: getStat(homeStats, "Corner Kicks") || 0,
-      fouls: getStat(homeStats, "Fouls") || 0,
-      yellowCards: getStat(homeStats, "Yellow Cards") || 0,
-      redCards: getStat(homeStats, "Red Cards") || 0,
-    },
-    away: {
-      shots: {
-        total: getStat(awayStats, "Total Shots") || 0,
-        on: getStat(awayStats, "Shots on Goal") || 0,
-      },
-      possession: parseInt(getStat(awayStats, "Ball Possession") || "0"),
-      corners: getStat(awayStats, "Corner Kicks") || 0,
-      fouls: getStat(awayStats, "Fouls") || 0,
-      yellowCards: getStat(awayStats, "Yellow Cards") || 0,
-      redCards: getStat(awayStats, "Red Cards") || 0,
-    },
-  };
-}
-
-/** Fetch Team Last Fixtures */
-export async function fetchTeamLastFixtures(teamId: number, last: number = 5) {
-  console.log(`🔙 Fetching last ${last} fixtures for team ${teamId}`);
-
-  const response = await apiClient.get("/fixtures", {
-    params: {
-      team: teamId,
-      last,
-    },
-  });
-
-  return (
-    response.data.response?.map((f: any) => ({
-      fixtureId: f.fixture.id,
-      date: f.fixture.date,
-      homeTeam: f.teams.home.name,
-      awayTeam: f.teams.away.name,
-      score: {
-        home: f.goals.home ?? null,
-        away: f.goals.away ?? null,
-      },
-      league: f.league.name,
-      status: mapStatus(f.fixture.status.short),
-    })) || []
-  );
-}
-
-/** ⭐ NEW: Live Snapshot */
-export async function fetchLiveFixtureSnapshot(fixtureId: number) {
-  console.log(`📡 Fetching live fixture snapshot: ${fixtureId}`);
-
-  const response = await apiClient.get("/fixtures", {
-    params: { id: fixtureId },
-  });
-
-  const match = response.data.response?.[0];
-  if (!match) return null;
-
-  return {
-    fixtureId,
-    status: match.fixture.status.short,
-    elapsed: match.fixture.status.elapsed || 0,
-    referee: match.fixture.referee,
-    venue: match.fixture.venue,
-    score: match.goals,
-    events: match.events || [],
-    statistics: match.statistics || [],
-    lineups: match.lineups || [],
-  };
-}
-
-/** ⭐ NEW: League Standings */
-export async function fetchLeagueStandings(
-  leagueId: number,
-  season: number
-) {
-  console.log(`📊 Fetching standings for league ${leagueId}`);
+/** Fetch Standings */
+export async function fetchStandings(leagueId: number, season: number) {
+  console.log(`📊 Fetching standings for league ${leagueId}, season ${season}`);
 
   const response = await apiClient.get("/standings", {
     params: {
@@ -339,5 +173,106 @@ export async function fetchLeagueStandings(
     },
   });
 
-  return response.data.response?.[0]?.league?.standings?.[0] || [];
+  const standings = response.data.response?.[0]?.league?.standings?.[0] || [];
+
+  return standings.map((team: any) => ({
+    rank: team.rank,
+    teamId: team.team.id,
+    teamName: team.team.name,
+    teamLogo: team.team.logo,
+    points: team.points,
+    played: team.all.played,
+    win: team.all.win,
+    draw: team.all.draw,
+    lose: team.all.lose,
+    goalsFor: team.all.goals.for,
+    goalsAgainst: team.all.goals.against,
+    goalsDiff: team.goalsDiff,
+    form: team.form,
+  }));
+}
+
+/** Fetch Statistics */
+export async function fetchStatistics(fixtureId: number) {
+  console.log(`📈 Fetching statistics for fixture ${fixtureId}`);
+
+  const response = await apiClient.get("/fixtures/statistics", {
+    params: { fixture: fixtureId },
+  });
+
+  const data = response.data.response || [];
+
+  if (data.length < 2) {
+    console.warn(`⚠️  Incomplete statistics for fixture ${fixtureId}`);
+    return null;
+  }
+
+  const homeStats = data[0].statistics;
+  const awayStats = data[1].statistics;
+
+  function getStat(stats: any[], type: string) {
+    const stat = stats.find((s: any) => s.type === type);
+    return stat?.value ?? null;
+  }
+
+  return {
+    home: {
+      shotsOnGoal: getStat(homeStats, "Shots on Goal"),
+      shotsOffGoal: getStat(homeStats, "Shots off Goal"),
+      totalShots: getStat(homeStats, "Total Shots"),
+      blockedShots: getStat(homeStats, "Blocked Shots"),
+      shotsInsideBox: getStat(homeStats, "Shots insidebox"),
+      shotsOutsideBox: getStat(homeStats, "Shots outsidebox"),
+      fouls: getStat(homeStats, "Fouls"),
+      cornerKicks: getStat(homeStats, "Corner Kicks"),
+      offsides: getStat(homeStats, "Offsides"),
+      ballPossession: getStat(homeStats, "Ball Possession"),
+      yellowCards: getStat(homeStats, "Yellow Cards"),
+      redCards: getStat(homeStats, "Red Cards"),
+      goalkeeperSaves: getStat(homeStats, "Goalkeeper Saves"),
+      totalPasses: getStat(homeStats, "Total passes"),
+      passesAccurate: getStat(homeStats, "Passes accurate"),
+      passesPercentage: getStat(homeStats, "Passes %"),
+    },
+    away: {
+      shotsOnGoal: getStat(awayStats, "Shots on Goal"),
+      shotsOffGoal: getStat(awayStats, "Shots off Goal"),
+      totalShots: getStat(awayStats, "Total Shots"),
+      blockedShots: getStat(awayStats, "Blocked Shots"),
+      shotsInsideBox: getStat(awayStats, "Shots insidebox"),
+      shotsOutsideBox: getStat(awayStats, "Shots outsidebox"),
+      fouls: getStat(awayStats, "Fouls"),
+      cornerKicks: getStat(awayStats, "Corner Kicks"),
+      offsides: getStat(awayStats, "Offsides"),
+      ballPossession: getStat(awayStats, "Ball Possession"),
+      yellowCards: getStat(awayStats, "Yellow Cards"),
+      redCards: getStat(awayStats, "Red Cards"),
+      goalkeeperSaves: getStat(awayStats, "Goalkeeper Saves"),
+      totalPasses: getStat(awayStats, "Total passes"),
+      passesAccurate: getStat(awayStats, "Passes accurate"),
+      passesPercentage: getStat(awayStats, "Passes %"),
+    },
+  };
+}
+
+/** Fetch Events */
+export async function fetchEvents(fixtureId: number) {
+  console.log(`⚽ Fetching events for fixture ${fixtureId}`);
+
+  const response = await apiClient.get("/fixtures/events", {
+    params: { fixture: fixtureId },
+  });
+
+  const events = response.data.response || [];
+
+  return events.map((e: any) => ({
+    time: e.time.elapsed,
+    timeExtra: e.time.extra,
+    team: e.team.name,
+    player: e.player.name,
+    assist: e.assist.name,
+    type: e.type,
+    detail: e.detail,
+    comments: e.comments,
+  }));
 }

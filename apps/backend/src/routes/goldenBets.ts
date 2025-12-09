@@ -1,30 +1,61 @@
 import { Router } from 'express';
 import { Prediction } from '../models/Prediction.js';
+import { Fixture } from '../models/Fixture.js';
 import { loadGoldenBets } from '../services/mlService.js';
+import { predictionCache } from '../services/predictionCache.js';
 
 const router = Router();
 
-// Get today's Golden Bets from LM outputs
+// Get today's Golden Bets from ML API (with 24-hour cache)
 router.get('/today', async (req, res) => {
   try {
-    // First try to load from LM outputs (golden-betopia)
-    const lmGoldenBets = await loadGoldenBets();
-    
-    if (lmGoldenBets && lmGoldenBets.length > 0) {
+    // Check cache first
+    const cachedBets = predictionCache.getGoldenBets();
+    if (cachedBets && cachedBets.length > 0) {
       return res.json({
         success: true,
-        data: lmGoldenBets,
-        count: lmGoldenBets.length,
-        source: 'LM_OUTPUTS'
+        data: cachedBets,
+        count: cachedBets.length,
+        source: 'CACHE',
+        cached: true
       });
     }
     
-    // Fallback to database with full 24-hour range
+    console.log('🔄 Cache miss - fetching fresh Golden Bets from ML API');
+    
+    // Get today's fixtures
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     
     const endOfDay = new Date(today);
     endOfDay.setHours(23, 59, 59, 999);
+    
+    const fixtures = await Fixture.find({
+      date: { $gte: today, $lte: endOfDay },
+      status: { $in: ['scheduled', 'live'] }
+    });
+    
+    console.log(`📊 Found ${fixtures.length} fixtures for Golden Bets`);
+    
+    // Call ML API with today's fixtures
+    const mlGoldenBets = await loadGoldenBets(fixtures);
+    
+    if (mlGoldenBets && mlGoldenBets.length > 0) {
+      // Cache the results for 24 hours
+      predictionCache.setGoldenBets(mlGoldenBets);
+      
+      return res.json({
+        success: true,
+        data: mlGoldenBets,
+        count: mlGoldenBets.length,
+        source: 'ML_API',
+        fixturesAnalyzed: fixtures.length,
+        cached: false
+      });
+    }
+    
+    // Fallback to database if ML API returns nothing
+    console.log('⚠️ ML API returned no Golden Bets, falling back to database');
     
     const goldenBets = await Prediction.find({
       isGoldenBet: true,
@@ -37,13 +68,15 @@ router.get('/today', async (req, res) => {
       success: true,
       data: goldenBets,
       count: goldenBets.length,
-      source: 'DATABASE',
+      source: 'DATABASE_FALLBACK',
       dateRange: {
         from: today.toISOString(),
         to: endOfDay.toISOString()
-      }
+      },
+      cached: false
     });
   } catch (error: any) {
+    console.error('Golden Bets error:', error);
     res.status(500).json({
       success: false,
       error: error.message,

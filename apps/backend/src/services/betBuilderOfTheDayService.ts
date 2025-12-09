@@ -1,5 +1,40 @@
 import { BetBuilder, IBetBuilder } from '../models/BetBuilder.js';
+import { Fixture } from '../models/Fixture.js';
 import { generateBulkReasoning } from './aiService.js';
+import axios from 'axios';
+
+const ML_API_URL = process.env.ML_API_URL || 'https://football-ml-api.onrender.com';
+const ML_API_TIMEOUT = 30000; // 30 seconds
+
+/**
+ * Format fixtures for ML API consumption
+ */
+function formatFixturesForML(fixtures: any[]) {
+  return {
+    matches: fixtures.map(f => ({
+      id: f.fixtureId?.toString() || f._id?.toString(),
+      home_team: f.homeTeam,
+      away_team: f.awayTeam,
+      date: f.date.toISOString(),
+      league: f.league || 'Unknown',
+      datetime: f.date.toISOString(),
+      stats: {
+        home_goals_avg: f.statistics?.home?.totalShots ? f.statistics.home.totalShots / 10 : 1.5,
+        away_goals_avg: f.statistics?.away?.totalShots ? f.statistics.away.totalShots / 10 : 1.5,
+        home_cards_avg: (f.statistics?.home?.yellowCards || 0) + (f.statistics?.home?.redCards || 0) * 2,
+        away_cards_avg: (f.statistics?.away?.yellowCards || 0) + (f.statistics?.away?.redCards || 0) * 2,
+        home_corners_avg: f.statistics?.home?.cornerKicks || 5.0,
+        away_corners_avg: f.statistics?.away?.cornerKicks || 5.0
+      },
+      odds: {
+        btts: f.odds?.btts || 1.70,
+        goals: f.odds?.over25 || 1.85,
+        corners: f.odds?.over95corners || 1.95,
+        cards: f.odds?.over35cards || 2.20
+      }
+    }))
+  };
+}
 
 /**
  * Calculate a composite score for bet builder selection
@@ -23,7 +58,107 @@ function calculateCompositeScore(betBuilder: IBetBuilder): number {
 }
 
 /**
- * Select the Bet Builder of the Day
+ * Get Bet Builder of the Day from ML API
+ * Fetches today's fixtures and calls ML API for analysis
+ */
+async function getBetBuilderFromMLAPI(): Promise<{
+  betBuilder: IBetBuilder | null;
+  reasoning: string | null;
+  compositeScore: number | null;
+}> {
+  try {
+    // Get today's fixtures
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    
+    const endOfDay = new Date(today);
+    endOfDay.setHours(23, 59, 59, 999);
+    
+    const fixtures = await Fixture.find({
+      date: { $gte: today, $lte: endOfDay },
+      status: { $in: ['scheduled', 'live'] }
+    });
+    
+    if (fixtures.length === 0) {
+      console.log('No fixtures available for Bet Builder of the Day');
+      return { betBuilder: null, reasoning: null, compositeScore: null };
+    }
+    
+    console.log(`🎯 Calling ML API for Bet Builder (${fixtures.length} fixtures)...`);
+    
+    const payload = formatFixturesForML(fixtures);
+    
+    const response = await axios.post(
+      `${ML_API_URL}/api/v1/predictions/bet-builder-of-the-day`,
+      payload,
+      { timeout: ML_API_TIMEOUT }
+    );
+    
+    if (!response.data || !response.data.bet_builder) {
+      console.log('⚠️ ML API returned no bet builder');
+      return { betBuilder: null, reasoning: null, compositeScore: null };
+    }
+    
+    const mlBetBuilder = response.data.bet_builder;
+    
+    // Map ML response to our bet builder format
+    const markets = mlBetBuilder.markets.map((m: any) => ({
+      market: m.market,
+      marketName: m.prediction,
+      confidence: m.confidence,
+      probability: m.confidence / 100,
+      estimatedOdds: m.odds || 1.85
+    }));
+    
+    // Create or update bet builder in database
+    const betBuilderData = {
+      fixtureId: parseInt(mlBetBuilder.match_id),
+      date: new Date(mlBetBuilder.datetime || today),
+      homeTeam: mlBetBuilder.home_team,
+      awayTeam: mlBetBuilder.away_team,
+      league: mlBetBuilder.league,
+      kickoff: new Date(mlBetBuilder.datetime || today),
+      markets,
+      combinedConfidence: mlBetBuilder.combined_confidence,
+      estimatedCombinedOdds: mlBetBuilder.combined_odds || 1.0,
+      aiReasoning: mlBetBuilder.reasoning || ''
+    };
+    
+    let betBuilder = await BetBuilder.findOne({ fixtureId: betBuilderData.fixtureId });
+    
+    if (betBuilder) {
+      Object.assign(betBuilder, betBuilderData);
+      await betBuilder.save();
+    } else {
+      betBuilder = new BetBuilder(betBuilderData);
+      await betBuilder.save();
+    }
+    
+    // Generate enhanced AI reasoning with GPT-4o-latest
+    const reasoning = await generateBetBuilderOfTheDayReasoning(betBuilder);
+    const compositeScore = calculateCompositeScore(betBuilder);
+    
+    console.log(`✅ Got Bet Builder of the Day from ML API: ${betBuilder.homeTeam} vs ${betBuilder.awayTeam}`);
+    
+    return {
+      betBuilder,
+      reasoning,
+      compositeScore
+    };
+    
+  } catch (error: any) {
+    console.error('ML API error for Bet Builder:', error.message);
+    
+    if (error.code === 'ECONNREFUSED' || error.code === 'ETIMEDOUT') {
+      console.warn('⚠️ ML API unavailable for Bet Builder');
+    }
+    
+    return { betBuilder: null, reasoning: null, compositeScore: null };
+  }
+}
+
+/**
+ * Select the Bet Builder of the Day from database (fallback)
  * Uses ML-driven composite scoring to find the optimal balance
  * between confidence and value
  * 
@@ -60,7 +195,7 @@ export async function selectBetBuilderOfTheDay(): Promise<IBetBuilder | null> {
 
 /**
  * Generate enhanced AI reasoning for Bet Builder of the Day
- * Includes confidence percentage and detailed analysis
+ * Uses GPT-4o-latest for friendly, detailed, humorous analysis
  * 
  * @param betBuilder - The selected bet builder
  * @returns Enhanced AI reasoning with confidence metrics
@@ -68,8 +203,8 @@ export async function selectBetBuilderOfTheDay(): Promise<IBetBuilder | null> {
 export async function generateBetBuilderOfTheDayReasoning(
   betBuilder: IBetBuilder
 ): Promise<string> {
-  // Generate base reasoning if not already present
-  if (!betBuilder.aiReasoning) {
+  // Generate base reasoning if not already present or enhance existing
+  if (!betBuilder.aiReasoning || betBuilder.aiReasoning.length < 50) {
     const reasonings = await generateBulkReasoning([
       {
         homeTeam: betBuilder.homeTeam,
@@ -112,7 +247,7 @@ This bet builder represents the optimal balance between high confidence (${betBu
 
 /**
  * Get or create today's Bet Builder of the Day
- * Caches the selection for the day to ensure consistency
+ * Tries ML API first, falls back to database if unavailable
  * 
  * @returns Today's featured bet builder with enhanced reasoning
  */
@@ -121,6 +256,15 @@ export async function getBetBuilderOfTheDay(): Promise<{
   reasoning: string | null;
   compositeScore: number | null;
 }> {
+  // Try ML API first
+  const mlResult = await getBetBuilderFromMLAPI();
+  
+  if (mlResult.betBuilder) {
+    return mlResult;
+  }
+  
+  // Fallback to database
+  console.log('⚠️ Falling back to database for Bet Builder of the Day');
   const betBuilder = await selectBetBuilderOfTheDay();
   
   if (!betBuilder) {

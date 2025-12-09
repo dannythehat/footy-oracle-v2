@@ -39,7 +39,9 @@ import betBuilderRoutes from "./routes/betBuilder";
 import valueBetsRoutes from "./routes/valueBets";
 
 // IMPORT CRON JOBS
+import { startFixturesCron } from "./cron/fixturesCron";
 import { startLiveScoresCron } from "./cron/liveScoresCron";
+import { startMLPredictionsCron } from "./cron/mlPredictionsCron";
 
 // MOUNT ROUTES
 app.use("/api", fixtureDetailsRoutes);                  // <-- enables /fixtures/:id/events, /stats, /h2h
@@ -57,11 +59,16 @@ app.use('/api/debug', debugRouter);
 app.use("/api/bet-builder", betBuilderRoutes);
 app.use("/api/value-bets", valueBetsRoutes);
 
-// 🚨 CRITICAL: START CRON JOBS
-// This was missing - cron jobs were defined but never started!
+// 🚨 CRITICAL: START ALL CRON JOBS
 console.log("🚀 Initializing cron jobs...");
-startLiveScoresCron();
-console.log("✅ Cron jobs started successfully");
+startFixturesCron();      // 3 AM: Load fixtures window (7 days back + 7 days ahead)
+                          // 5 AM: Update odds for today's fixtures
+startLiveScoresCron();    // Every 2 minutes: Update live scores
+startMLPredictionsCron(); // 6 AM: Generate ML predictions (Golden Bets + Value Bets)
+                          // Every 10 min: Keep ML API awake
+console.log("✅ All cron jobs started successfully");
+console.log("   📅 Fixtures: 3 AM daily (window load) + 5 AM (odds update)");
+console.log("   🤖 ML Predictions: 6 AM daily + keep-alive every 10 min");
+console.log("   ⚽ Live Scores: Every 2 minutes");
 
 export default app;
-

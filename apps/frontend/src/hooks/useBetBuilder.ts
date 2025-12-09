@@ -1,4 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
+import api from "../services/api";
 
 export interface BetBuilder {
   bet_id: string;
@@ -13,21 +14,14 @@ export interface BetBuilder {
   profit_loss: number;
 }
 
-const API_BASE =
-  import.meta.env.VITE_API_BASE_URL ??
-  "https://footy-oracle-backend.onrender.com/api";
-
 const fetchBetBuilder = async (): Promise<BetBuilder | null> => {
-  const res = await fetch(`${API_BASE}/bet-builders/today`, {
-    credentials: "include",
-  });
+  const response = await api.get("/api/bet-builders/today");
 
-  if (!res.ok) {
-    console.error("Failed to fetch bet builder:", res.status);
-    return null;
-  }
+  const body = response.data;
 
-  const data = await res.json();
+  // Handle different response formats
+  const data = body?.data ?? body;
+  
   return data ?? null;
 };
 

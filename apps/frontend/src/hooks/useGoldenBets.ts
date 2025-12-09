@@ -1,4 +1,5 @@
-﻿import { useQuery } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
+import api from "../services/api";
 
 export interface GoldenBet {
   bet_id: string;
@@ -15,12 +16,6 @@ export interface GoldenBet {
   result: "win" | "loss" | "pending";
   profit_loss: number;
 }
-
-const API_BASE =
-  import.meta.env.VITE_API_BASE_URL ||
-  (typeof window !== "undefined"
-    ? window.location.origin.replace(/\/$/, "") + "/api"
-    : "/api");
 
 const TOP_LEAGUES = new Set<string>([
   "Premier League",
@@ -131,14 +126,9 @@ const mapGoldenBet = (raw: any, index: number): GoldenBet => {
 };
 
 const fetchGoldenBets = async (): Promise<GoldenBet[]> => {
-  const res = await fetch(API_BASE + "/golden-bets/today");
+  const response = await api.get("/api/golden-bets/today");
 
-  if (!res.ok) {
-    console.error("Failed to fetch golden bets:", res.status);
-    return [];
-  }
-
-  const body = await res.json();
+  const body = response.data;
 
   const raw =
     Array.isArray(body)

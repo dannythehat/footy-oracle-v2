@@ -1,4 +1,5 @@
-﻿import { useQuery } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
+import api from "../services/api";
 
 export interface ValueBet {
   bet_id: string;
@@ -15,12 +16,6 @@ export interface ValueBet {
   result: "win" | "loss" | "pending";
   profit_loss: number;
 }
-
-const API_BASE =
-  import.meta.env.VITE_API_BASE_URL ||
-  (typeof window !== "undefined"
-    ? window.location.origin.replace(/\/$/, "") + "/api"
-    : "/api");
 
 const TOP_LEAGUES = new Set<string>([
   "Premier League",
@@ -136,14 +131,9 @@ const mapValueBet = (raw: any, index: number): ValueBet => {
 };
 
 const fetchValueBets = async (): Promise<ValueBet[]> => {
-  const res = await fetch(API_BASE + "/value-bets/today");
+  const response = await api.get("/api/value-bets/today");
 
-  if (!res.ok) {
-    console.error("Failed to fetch value bets:", res.status);
-    return [];
-  }
-
-  const body = await res.json();
+  const body = response.data;
 
   const raw =
     Array.isArray(body)
