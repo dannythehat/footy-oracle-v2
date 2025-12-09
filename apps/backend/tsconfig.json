@@ -1,6 +1,6 @@
 {
   "compilerOptions": {
-    "target": "es2020",
+    "target": "ES2020",
     "module": "commonjs",
     "moduleResolution": "node",
     "outDir": "dist",
@@ -12,11 +12,8 @@
   },
   "include": [
     "src/server.ts",
-    "src/routes/**/*",
-    "src/services/apiFootballService.ts",
-    "src/services/mlService.ts",
-    "src/services/fixtureService.ts",
-    "src/services/oddsService.ts"
+    "src/routes/**/*.ts",
+    "src/services/*.ts"
   ],
   "exclude": [
     "src/cron/**/*",
@@ -24,7 +21,6 @@
     "src/routes/fixtures-odds-patch.ts",
     "src/services/betBuilderImporter.ts",
     "src/services/bettingInsightsService.ts",
-    "src/services/cronService.ts",
     "src/services/fixtureExportService.ts",
     "src/services/fixtureStorageService.ts",
     "src/services/pnlTrackingService.ts",
