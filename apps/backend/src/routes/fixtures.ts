@@ -140,3 +140,20 @@ router.post("/:fixtureId/update-odds", async (req, res) => {
 });
 
 export default router;
+ // Legacy /today endpoint
+router.get("/today", async (req, res) => {
+  const today = new Date().toISOString().split("T")[0];
+  return res.redirect(`/api/fixtures?date=${today}`);
+});
+
+// Legacy wildcard date endpoint
+router.get("/:dateParam", async (req, res) => {
+  const { dateParam } = req.params;
+
+  const date =
+    dateParam.toLowerCase() === "today"
+      ? new Date().toISOString().split("T")[0]
+      : dateParam;
+
+  return res.redirect(`/api/fixtures?date=${date}`);
+});

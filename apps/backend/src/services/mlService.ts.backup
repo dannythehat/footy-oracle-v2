@@ -1,0 +1,322 @@
+<<<<<<< HEAD
+import fetch from "node-fetch";
+
+// ===========================================================
+// OPTION A � GitHub Raw ML Source
+// ===========================================================
+=======
+import axios from 'axios';
+import { IFixture } from '../models/Fixture.js';
+
+const ML_API_URL = process.env.ML_API_URL || 'https://football-ml-api.onrender.com';
+const ML_API_TIMEOUT = 30000; // 30 seconds
+>>>>>>> 84560fc068354a4cd06a14a694f3a07a94197bee
+
+const BASE =
+  "https://raw.githubusercontent.com/dannythehat/football-betting-ai-system/main/shared/ml_outputs_v2_v2";
+
+async function loadJsonFile(filename: string) {
+  const url = `${BASE}/${filename}`;
+  const res = await fetch(url);
+
+<<<<<<< HEAD
+  if (!res.ok) {
+    throw new Error(`Failed to fetch ${filename} from GitHub Raw: ${res.status}`);
+  }
+
+  return res.json();
+}
+
+// -----------------------------------------------
+// TOP 50 LEAGUES LIST
+// -----------------------------------------------
+const TOP_LEAGUES = new Set<string>([
+  "Premier League",
+  "Championship",
+  "League One",
+  "League Two",
+  "La Liga",
+  "Serie A",
+  "Serie B",
+  "Bundesliga",
+  "2. Bundesliga",
+  "Ligue 1",
+  "Ligue 2",
+  "Primeira Liga",
+  "Eredivisie",
+  "Belgian Pro League",
+  "Scottish Premiership",
+  "Super Lig",
+  "Major League Soccer",
+  "Brasileirao",
+  "Argentine Primera Division",
+  "A-League",
+  "J1 League"
+]);
+
+function filterTopLeagues(data: any[]) {
+  return data.filter(
+    (x) => x.league && TOP_LEAGUES.has(x.league)
+  );
+}
+
+// -----------------------------------------------
+// PUBLIC LOADERS (Golden, Value, Predictions)
+// -----------------------------------------------
+
+export async function loadGoldenBets() {
+  const data = await loadJsonFile("golden_bets.json");
+  return filterTopLeagues(data);
+}
+
+export async function loadValueBets() {
+  const data = await loadJsonFile("value_bets.json");
+  return filterTopLeagues(data);
+}
+
+export async function loadMLPredictions() {
+  const data = await loadJsonFile("ai_predictions.json");
+  return filterTopLeagues(data);
+}
+=======
+export interface ValueBet extends MLPrediction {
+  odds?: number;
+  expectedValue?: number;
+  aiExplanation?: string;
+  result?: string;
+  profitLoss?: number;
+}
+
+/**
+ * Format fixtures for ML API consumption
+ * Converts our Fixture model to the format expected by the Python ML API
+ * CRITICAL: ML API expects "match_id" and "datetime", not "id" and "date"
+ */
+function formatFixturesForML(fixtures: IFixture[]) {
+  return {
+    matches: fixtures.map(f => ({
+      match_id: f.fixtureId.toString(),  // ← FIXED: was "id"
+      datetime: f.date.toISOString(),     // ← FIXED: was "date"
+      home_team: f.homeTeam,
+      away_team: f.awayTeam,
+      stats: {
+        // Use live statistics if available, otherwise use defaults
+        home_goals_avg: f.statistics?.home?.totalShots ? f.statistics.home.totalShots / 10 : 1.5,
+        away_goals_avg: f.statistics?.away?.totalShots ? f.statistics.away.totalShots / 10 : 1.5,
+        home_cards_avg: (f.statistics?.home?.yellowCards || 0) + (f.statistics?.home?.redCards || 0) * 2,
+        away_cards_avg: (f.statistics?.away?.yellowCards || 0) + (f.statistics?.away?.redCards || 0) * 2,
+        home_corners_avg: f.statistics?.home?.cornerKicks || 5.0,
+        away_corners_avg: f.statistics?.away?.cornerKicks || 5.0
+      },
+      odds: {
+        goals_over_2_5: f.odds?.over25 || 1.85,
+        goals_under_2_5: f.odds?.under25 || 2.10,
+        cards_over_3_5: f.odds?.over35cards || 2.20,
+        cards_under_3_5: 1.75,
+        corners_over_9_5: f.odds?.over95corners || 1.95,
+        corners_under_9_5: 1.90,
+        btts_yes: f.odds?.btts || 1.70,
+        btts_no: 2.25
+      }
+    }))
+  };
+}
+
+/**
+ * Map ML market names to our frontend format
+ */
+function mapMarketName(mlMarket: string): string {
+  const marketMap: { [key: string]: string } = {
+    'goals_over_2_5': 'Over/Under 2.5 Goals',
+    'goals_under_2_5': 'Over/Under 2.5 Goals',
+    'cards_over_3_5': 'Total Cards Over 3.5',
+    'cards_under_3_5': 'Total Cards Under 3.5',
+    'corners_over_9_5': 'Total Corners Over 9.5',
+    'corners_under_9_5': 'Total Corners Under 9.5',
+    'btts_yes': 'Both Teams To Score',
+    'btts_no': 'Both Teams To Score'
+  };
+  
+  return marketMap[mlMarket] || mlMarket;
+}
+
+/** LOAD PREDICTIONS **/
+export async function loadMLPredictions(fixtures?: IFixture[]): Promise<MLPrediction[]> {
+  // If no fixtures provided, return empty array
+  if (!fixtures || fixtures.length === 0) {
+    console.log('No fixtures provided to ML service');
+    return [];
+  }
+
+  try {
+    const payload = formatFixturesForML(fixtures);
+    console.log(`🤖 Calling ML API for ${fixtures.length} fixtures...`);
+    console.log('📤 Payload sample:', JSON.stringify(payload.matches[0], null, 2));
+    
+    const response = await axios.post(
+      `${ML_API_URL}/api/v1/predictions/smart-bets`,
+      payload,
+      { timeout: ML_API_TIMEOUT }
+    );
+    
+    if (!response.data || !response.data.predictions) {
+      console.error('Invalid ML API response format');
+      return [];
+    }
+
+    const predictions = response.data.predictions.map((p: any) => ({
+      fixtureId: parseInt(p.match_id),
+      homeTeam: p.home_team,
+      awayTeam: p.away_team,
+      league: p.league || 'Unknown',
+      market: mapMarketName(p.best_bet?.market || ''),
+      prediction: p.best_bet?.prediction || '',
+      confidence: (p.best_bet?.confidence || 0) * 100
+    }));
+
+    console.log(`✅ Got ${predictions.length} ML predictions`);
+    return predictions;
+    
+  } catch (error: any) {
+    console.error('ML API error:', error.message);
+    if (error.response) {
+      console.error('Response data:', error.response.data);
+      console.error('Response status:', error.response.status);
+    }
+    
+    // If ML API is down, return empty array (graceful degradation)
+    if (error.code === 'ECONNREFUSED' || error.code === 'ETIMEDOUT') {
+      console.warn('⚠️ ML API unavailable, returning empty predictions');
+    }
+    
+    return [];
+  }
+}
+
+/** LOAD GOLDEN BETS **/
+export async function loadGoldenBets(fixtures?: IFixture[]): Promise<GoldenBet[]> {
+  if (!fixtures || fixtures.length === 0) {
+    console.log('No fixtures provided for Golden Bets');
+    return [];
+  }
+
+  try {
+    const payload = formatFixturesForML(fixtures);
+    console.log(`🏆 Calling ML API for Golden Bets (${fixtures.length} fixtures)...`);
+    console.log('📤 Payload sample:', JSON.stringify(payload.matches[0], null, 2));
+    
+    const response = await axios.post(
+      `${ML_API_URL}/api/v1/predictions/golden-bets`,
+      payload,
+      { timeout: ML_API_TIMEOUT }
+    );
+    
+    console.log('📥 ML API Response:', JSON.stringify(response.data, null, 2));
+    
+    if (!response.data || !response.data.golden_bets) {
+      console.error('Invalid Golden Bets API response format');
+      console.error('Expected: { golden_bets: [...] }');
+      console.error('Got:', response.data);
+      return [];
+    }
+
+    const goldenBets = response.data.golden_bets.map((b: any) => ({
+      fixtureId: parseInt(b.match_id),
+      homeTeam: b.home_team,
+      awayTeam: b.away_team,
+      league: b.league || 'Unknown',
+      market: mapMarketName(b.market),
+      prediction: b.prediction,
+      confidence: (b.confidence || 0) * 100,
+      odds: b.odds,
+      aiExplanation: b.reasoning || b.ai_explanation || ''
+    }));
+
+    console.log(`✅ Got ${goldenBets.length} Golden Bets`);
+    return goldenBets;
+    
+  } catch (error: any) {
+    console.error('Golden Bets API error:', error.message);
+    if (error.response) {
+      console.error('Response data:', error.response.data);
+      console.error('Response status:', error.response.status);
+    }
+    
+    if (error.code === 'ECONNREFUSED' || error.code === 'ETIMEDOUT') {
+      console.warn('⚠️ ML API unavailable for Golden Bets');
+    }
+    
+    return [];
+  }
+}
+
+/** LOAD VALUE BETS **/
+export async function loadValueBets(fixtures?: IFixture[]): Promise<ValueBet[]> {
+  if (!fixtures || fixtures.length === 0) {
+    console.log('No fixtures provided for Value Bets');
+    return [];
+  }
+
+  try {
+    const payload = formatFixturesForML(fixtures);
+    console.log(`💰 Calling ML API for Value Bets (${fixtures.length} fixtures)...`);
+    console.log('📤 Payload sample:', JSON.stringify(payload.matches[0], null, 2));
+    
+    const response = await axios.post(
+      `${ML_API_URL}/api/v1/predictions/value-bets`,
+      payload,
+      { timeout: ML_API_TIMEOUT }
+    );
+    
+    if (!response.data || !response.data.value_bets) {
+      console.error('Invalid Value Bets API response format');
+      return [];
+    }
+
+    const valueBets = response.data.value_bets.map((b: any) => ({
+      fixtureId: parseInt(b.match_id),
+      homeTeam: b.home_team,
+      awayTeam: b.away_team,
+      league: b.league || 'Unknown',
+      market: mapMarketName(b.market),
+      prediction: b.prediction,
+      confidence: (b.confidence || b.model_probability || 0) * 100,
+      odds: b.odds || b.bookmaker_odds,
+      expectedValue: b.expected_value || 0,
+      aiExplanation: b.reasoning || b.ai_explanation || ''
+    }));
+
+    console.log(`✅ Got ${valueBets.length} Value Bets`);
+    return valueBets;
+    
+  } catch (error: any) {
+    console.error('Value Bets API error:', error.message);
+    if (error.response) {
+      console.error('Response data:', error.response.data);
+      console.error('Response status:', error.response.status);
+    }
+    
+    if (error.code === 'ECONNREFUSED' || error.code === 'ETIMEDOUT') {
+      console.warn('⚠️ ML API unavailable for Value Bets');
+    }
+    
+    return [];
+  }
+}
+
+/**
+ * Health check for ML API
+ */
+export async function checkMLAPIHealth(): Promise<boolean> {
+  try {
+    const response = await axios.get(`${ML_API_URL}/api/health`, {
+      timeout: 5000
+    });
+    
+    return response.data?.status === 'healthy';
+  } catch (error) {
+    console.error('ML API health check failed:', error);
+    return false;
+  }
+}
+>>>>>>> 84560fc068354a4cd06a14a694f3a07a94197bee
