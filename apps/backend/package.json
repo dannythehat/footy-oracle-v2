@@ -2,8 +2,9 @@
   "name": "footy-oracle-backend",
   "version": "1.0.0",
   "scripts": {
-    "start": "tsx src/server.ts",
-    "build": "echo 'No build needed - using tsx for runtime TypeScript' && exit 0",
+    "build": "tsc",
+    "start": "node dist/server.js",
+    "dev": "tsx watch src/server.ts",
     "test": "echo \"No tests configured yet\" && exit 0",
     "test:db": "tsx src/scripts/testConnection.ts",
     "seed:fixtures": "tsx src/scripts/seedFixtures.ts",
