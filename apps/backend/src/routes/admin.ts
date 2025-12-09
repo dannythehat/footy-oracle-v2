@@ -3,8 +3,58 @@ import { importBetBuilders, importBetBuildersFromAPI } from '../services/betBuil
 import { runBetBuilderImportNow } from '../cron/betBuilderCron.js';
 import { exportFixturesForML, getExportStatus } from '../services/fixtureExportService.js';
 import { updateLiveScores, updateRecentlyFinishedFixtures } from '../services/liveScoresService.js';
+import { runMLPredictionsNow } from '../cron/mlPredictionsCron.js';
+import { predictionCache } from '../services/predictionCache.js';
 
+import { loadTodayFixturesManual } from '../services/manualFixtureLoader.js';
 const router = Router();
+
+/**
+ * POST /api/admin/generate-predictions
+ * Manually trigger ML predictions generation (Golden Bets + Value Bets)
+ */
+router.post('/generate-predictions', async (req, res) => {
+  try {
+    console.log('🤖 Manual ML predictions generation triggered');
+    
+    await runMLPredictionsNow();
+    
+    res.json({
+      success: true,
+      message: 'ML predictions generated successfully',
+      note: 'Golden Bets and Value Bets have been generated and cached for 24 hours',
+      cache: predictionCache.getStatus()
+    });
+  } catch (error: any) {
+    console.error('Error generating predictions:', error);
+    res.status(500).json({
+      success: false,
+      error: error.message,
+    });
+  }
+});
+
+/**
+ * GET /api/admin/cache-status
+ * Check prediction cache status
+ */
+router.get('/cache-status', async (req, res) => {
+  try {
+    const status = predictionCache.getStatus();
+    
+    res.json({
+      success: true,
+      cache: status,
+      note: 'Cache expires after 24 hours. Predictions are regenerated daily at 6 AM UTC.'
+    });
+  } catch (error: any) {
+    console.error('Error checking cache status:', error);
+    res.status(500).json({
+      success: false,
+      error: error.message,
+    });
+  }
+});
 
 /**
  * POST /api/admin/update-live-scores
@@ -305,3 +355,19 @@ router.get('/bet-builder-status', async (req, res) => {
 });
 
 export default router;
+/**
+ * POST /api/admin/load-today-fixtures
+ * Manually load today's fixtures into MongoDB
+ */
+router.post("/load-today-fixtures", async (req, res) => {
+  try {
+    const count = await loadTodayFixturesManual();
+    res.json({
+      success: true,
+      fixtures_loaded: count,
+      message: `Loaded ${count} fixtures for today`
+    });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
