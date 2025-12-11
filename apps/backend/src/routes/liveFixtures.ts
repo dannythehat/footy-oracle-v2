@@ -1,6 +1,6 @@
-import { Router, Request, Response } from 'express';
+﻿import { Router, Request, Response } from 'express';
 import { Fixture } from '../models/Fixture.js';
-import { fetchLiveFixtures, fetchFixtureStatistics, updateLiveScores } from '../services/liveScoresService.js';
+import { fetchLiveFixtures, updateLiveScores } from '../services/liveScoresService.js';
 import { getLeagueLogo } from '../config/leagues.js';
 
 const router = Router();
@@ -25,12 +25,12 @@ function formatDate(date: Date): string {
 }
 
 /* ============================================================
-   🔴 GET LIVE FIXTURES - Real-time scores and statistics
+   ðŸ”´ GET LIVE FIXTURES - Real-time scores and statistics
    Returns all currently live fixtures with scores and stats
    ============================================================ */
 router.get('/', async (req: Request, res: Response) => {
   try {
-    console.log('🔴 Fetching live fixtures from database...');
+    console.log('ðŸ”´ Fetching live fixtures from database...');
     
     // Get live fixtures from database (updated by cron job every minute)
     const liveFixtures = await Fixture.find({ status: 'live' })
@@ -83,7 +83,7 @@ router.get('/', async (req: Request, res: Response) => {
     });
 
   } catch (error: any) {
-    console.error('❌ Error fetching live fixtures:', error);
+    console.error('âŒ Error fetching live fixtures:', error);
     res.status(500).json({
       success: false,
       error: error.message || 'Failed to fetch live fixtures'
@@ -92,7 +92,7 @@ router.get('/', async (req: Request, res: Response) => {
 });
 
 /* ============================================================
-   🔴 GET LIVE FIXTURE STATISTICS - Detailed stats for a fixture
+   ðŸ”´ GET LIVE FIXTURE STATISTICS - Detailed stats for a fixture
    Returns comprehensive statistics for a specific live fixture
    ============================================================ */
 router.get('/:fixtureId/statistics', async (req: Request, res: Response) => {
@@ -106,7 +106,7 @@ router.get('/:fixtureId/statistics', async (req: Request, res: Response) => {
       });
     }
 
-    console.log(`📊 Fetching statistics for fixture ${fixtureId}...`);
+    console.log(`ðŸ“Š Fetching statistics for fixture ${fixtureId}...`);
 
     // Check if fixture exists in database
     const fixture = await Fixture.findOne({ fixtureId }).lean();
@@ -177,7 +177,7 @@ router.get('/:fixtureId/statistics', async (req: Request, res: Response) => {
     });
 
   } catch (error: any) {
-    console.error('❌ Error fetching fixture statistics:', error);
+    console.error('âŒ Error fetching fixture statistics:', error);
     res.status(500).json({
       success: false,
       error: error.message || 'Failed to fetch fixture statistics'
@@ -186,12 +186,12 @@ router.get('/:fixtureId/statistics', async (req: Request, res: Response) => {
 });
 
 /* ============================================================
-   🔄 FORCE UPDATE LIVE SCORES - Manual trigger for live scores update
+   ðŸ”„ FORCE UPDATE LIVE SCORES - Manual trigger for live scores update
    Manually triggers the live scores update process
    ============================================================ */
 router.post('/update', async (req: Request, res: Response) => {
   try {
-    console.log('🔄 Manually triggering live scores update...');
+    console.log('ðŸ”„ Manually triggering live scores update...');
     
     const result = await updateLiveScores();
     
@@ -204,7 +204,7 @@ router.post('/update', async (req: Request, res: Response) => {
     });
 
   } catch (error: any) {
-    console.error('❌ Error updating live scores:', error);
+    console.error('âŒ Error updating live scores:', error);
     res.status(500).json({
       success: false,
       error: error.message || 'Failed to update live scores'

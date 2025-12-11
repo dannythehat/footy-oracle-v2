@@ -1,28 +1,31 @@
 ﻿import "dotenv/config";
+import app from "./app.js";
 import mongoose from "mongoose";
-import app from "./app";
+import { startMlCron } from "./cron/mlPredictionsCron.js";
+import { startBetBuilderCron } from "./cron/betBuilderCron.js";
 
-console.log("🔌 SERVER ENTRY REACHED");
-console.log("🔌 MONGODB_URI =", process.env.MONGODB_URI);
+const PORT = process.env.PORT || 10000;
+const MONGO = process.env.MONGODB_URI;
 
 async function start() {
   try {
-    if (!process.env.MONGODB_URI) {
-      console.error("❌ MONGODB_URI missing");
-    } else {
-      await mongoose.connect(process.env.MONGODB_URI);
-      console.log("✅ MongoDB connected");
+    if (!MONGO) {
+      throw new Error("MONGODB_URI is missing from environment variables.");
     }
+
+    await mongoose.connect(MONGO);
+    console.log("MongoDB connected");
+
+    app.listen(PORT, () => {
+      console.log("Backend running on port", PORT);
+    });
+
+    startMlCron();
+    startBetBuilderCron();
+
   } catch (err) {
-    console.error("❌ MongoDB connection failed:", err.message);
+    console.error("Server start error:", err);
   }
-
-  const port = process.env.PORT || 10000;
-
-  app.listen(port, () =>
-    console.log("🚀 Footy Oracle API running on port " + port)
-  );
 }
 
 start();
-// rebuild

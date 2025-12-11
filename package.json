@@ -1,7 +1,8 @@
-{
+﻿{
   "name": "footy-oracle-v2",
   "version": "1.0.0",
   "private": true,
+  "type": "commonjs",
   "description": "AI-powered football betting platform with Golden Bets, Value Bets, Fixtures, and AI reasoning",
   "workspaces": [
     "apps/frontend",

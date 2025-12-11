@@ -1,0 +1,17 @@
+import mongoose, { Schema, Document } from 'mongoose';
+
+export interface IBetBuilder extends Document {
+  fixtureId: number;
+  legs: any[];
+  reasoning: string;
+  createdAt: Date;
+}
+
+const BetBuilderSchema = new Schema<IBetBuilder>({
+  fixtureId: { type: Number, required: true },
+  legs: { type: Array, default: [] },
+  reasoning: { type: String, default: '' },
+  createdAt: { type: Date, default: Date.now }
+});
+
+export const BetBuilder = mongoose.model<IBetBuilder>('BetBuilder', BetBuilderSchema);

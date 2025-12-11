@@ -1,125 +1,20 @@
-import axios from 'axios';
+export const API_URL =
+  import.meta.env.VITE_API_URL || "https://footy-oracle-backend.onrender.com";
 
-// Use environment variable or fallback to Render backend
-const API_BASE_URL =
-  import.meta.env.VITE_API_BASE_URL || 'https://footy-oracle-backend.onrender.com';
+export async function fetchJSON(endpoint: string) {
+  const url = `${API_URL}${endpoint}`;
 
-const api = axios.create({
-  baseURL: API_BASE_URL,
-  withCredentials: false,
-});
+  const res = await fetch(url);
+  if (!res.ok) {
+    throw new Error(`API error: ${res.status} ${res.statusText}`);
+  }
 
-// Get user's timezone offset in minutes
-const getTimezoneOffset = (): number => {
-  return new Date().getTimezoneOffset();
+  return res.json();
+}
+
+export const api = {
+  fixturesToday: () => fetchJSON("/api/fixtures/today?tzOffset=-120"),
+  goldenBetsToday: () => fetchJSON("/api/golden-bets/today"),
+  valueBetsToday: () => fetchJSON("/api/value-bets/today"),
+  betBuilderToday: () => fetchJSON("/api/betbuilder"),
 };
-
-// -------------------------
-// Fixtures API
-// -------------------------
-export const fixturesApi = {
-  getByDate: (date: string) => {
-    const timezoneOffset = getTimezoneOffset();
-    return api
-      .get('/api/fixtures', {
-        params: { date, timezoneOffset },
-      })
-      .then((r) => r.data);
-  },
-
-  getByDateRange: (startDate: string, endDate: string) =>
-    api.get('/api/fixtures', { params: { startDate, endDate } }).then((r) => r.data),
-
-  getFiltered: (params: any) =>
-    api.get('/api/fixtures', { params }).then((r) => r.data),
-
-  getById: (fixtureId: number) =>
-    api.get(\/api/fixtures/\\).then((r) => r.data),
-
-  getStats: (fixtureId: number) =>
-    api.get(\/api/fixtures/\/stats\).then((r) => r.data),
-
-  getEvents: (fixtureId: number) =>
-    api.get(\/api/fixtures/\/events\).then((r) => r.data),
-
-  getComplete: (fixtureId: number) =>
-    api.get(\/api/fixtures/\/complete\).then((r) => r.data),
-
-  getLive: () =>
-    api.get('/api/live-fixtures').then((r) => r.data),
-
-  refreshScores: (date: string) =>
-    api.post('/api/fixtures/refresh', { date }).then((r) => r.data),
-
-  getH2H: (homeTeamId: number, awayTeamId: number) =>
-    api
-      .get('/api/fixtures/h2h', { params: { homeTeamId, awayTeamId } })
-      .then((r) => r.data),
-
-  getStandings: (leagueId: number, season: number) =>
-    api
-      .get(\/api/leagues/\/standings\, { params: { season } })
-      .then((r) => r.data),
-};
-
-// -------------------------
-// Live Fixtures API
-// -------------------------
-export const liveFixturesApi = {
-  getAll: (params?: any) =>
-    api.get('/api/live-fixtures', { params }).then((r) => r.data),
-
-  updateLiveScores: () =>
-    api.post('/api/live-fixtures/update').then((r) => r.data),
-};
-
-// -------------------------
-// Bet Builder API
-// -------------------------
-export const betBuilderApi = {
-  getDaily: () =>
-    api.get('/api/bet-builder').then((r) => r.data),
-
-  getHistory: (params?: any) =>
-    api.get('/api/bet-builder/history', { params }).then((r) => r.data),
-};
-
-// -------------------------
-// Golden Bets API
-// -------------------------
-export const goldenBetApi = {
-  getToday: (params?: any) =>
-    api.get('/api/golden-bets/today', { params }).then((r) => r.data),
-
-  getAll: (params?: any) =>
-    api.get('/api/golden-bets', { params }).then((r) => r.data),
-};
-
-// -------------------------
-// Value Bets API
-// -------------------------
-export const valueBetApi = {
-  getToday: (params?: any) =>
-    api.get('/api/value-bets/today', { params }).then((r) => r.data),
-
-  getAll: (params?: any) =>
-    api.get('/api/value-bets', { params }).then((r) => r.data),
-};
-
-// -------------------------
-// Betting Insights API
-// -------------------------
-export const bettingInsightsApi = {
-  getAll: (params?: any) =>
-    api.get('/api/betting-insights', { params }).then((r) => r.data),
-};
-
-// -------------------------
-// Predictions API
-// -------------------------
-export const predictionsApi = {
-  getAll: (params?: any) =>
-    api.get('/api/predictions', { params }).then((r) => r.data),
-};
-
-export default api;

@@ -1,16 +1,15 @@
 ﻿import express from "express";
-import { predictionCache } from "../services/predictionCache.js";
+
 
 const router = express.Router();
 
 router.get("/today", async (req, res) => {
   try {
-    const list = predictionCache.getValueBets() || [];
+    const bb = await null;
 
     return res.json({
       success: true,
-      total: list.length,
-      valueBets: list
+      betBuilder: bb || null
     });
   } catch {
     return res.status(500).json({ success: false });
@@ -18,3 +17,4 @@ router.get("/today", async (req, res) => {
 });
 
 export default router;
+

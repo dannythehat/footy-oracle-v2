@@ -1,4 +1,4 @@
-{
+﻿{
   "compilerOptions": {
     "target": "ES2022",
     "module": "ES2022",
@@ -9,28 +9,40 @@
     "strict": false,
     "esModuleInterop": true,
     "skipLibCheck": true,
-    "forceConsistentCasingInFileNames": false,
-    "allowSyntheticDefaultImports": true,
     "resolveJsonModule": true,
-    "incremental": false,
-    "declaration": false,
-    "sourceMap": false
+    "allowSyntheticDefaultImports": true
   },
-  "include": ["src/**/*"],
+  "include": [
+    "src/server.ts",
+    "src/app.ts",
+    "src/config/**/*",
+    "src/models/Fixture.ts",
+    "src/models/Prediction.ts",
+    "src/models/FeaturedSelection.ts",
+    "src/services/**/*",
+    "src/routes/goldenBets.ts",
+    "src/routes/valueBets.ts",
+    "src/routes/betBuilder.ts",
+    "src/routes/admin.ts",
+    "src/cron/**/*"
+  ],
   "exclude": [
     "node_modules",
     "dist",
-    "src/services/fixtureExportService.ts",
-    "src/services/betBuilderImporter.ts",
+    "src/routes/liveFixtures.ts",
+    "src/routes/notifications.ts",
+    "src/routes/fixtureDetails.ts",
+    "src/routes/bettingInsights.ts",
+    "src/routes/stats.ts",
+    "src/models/BetBuilder.ts",
+    "src/services/liveScoresService.ts",
+    "src/services/notificationService.ts",
+    "src/services/fixtureStorageService.ts",
     "src/services/bettingInsightsService.ts",
-    "src/services/cronService.ts",
-    "src/services/websocket.ts",
-    "src/routes/admin.ts",
-    "src/routes/betBuilder.ts",
-    "src/routes/fixtures-odds-patch.ts",
-    "src/services/pnlTrackingService.ts",
+    "src/services/betBuilderOfTheDayService.ts",
+    "src/services/betBuilderService.ts",
     "src/services/trebleService.ts",
-    "src/scripts/*",
-    "test/*"
+    "src/cron/liveScoresCron.ts",
+    "src/cron/mlCron.ts"
   ]
 }

@@ -1,33 +1,56 @@
-import { GoldenBet, ValueBet, MLPrediction } from "./mlService.js";
+let predictions: any[] = [];
+let goldenBets: any[] = [];
+let valueBets: any[] = [];
 
-class PredictionCache {
-  predictions: MLPrediction[] = [];
-  golden: GoldenBet[] = [];
-  value: ValueBet[] = [];
+export const predictionCache = {
+  // SETTERS
+  setPredictions(list: any[]) {
+    predictions = list || [];
+  },
 
-  setPredictions(p: MLPrediction[]) {
-    this.predictions = p;
-  }
+  // Legacy setter names
+  setGolden(list: any[]) {
+    goldenBets = list || [];
+  },
+  setValue(list: any[]) {
+    valueBets = list || [];
+  },
 
-  setGoldenBets(g: GoldenBet[]) {
-    this.golden = g;
-  }
+  // New setter names used by cron
+  setGoldenBets(list: any[]) {
+    goldenBets = list || [];
+  },
+  setValueBets(list: any[]) {
+    valueBets = list || [];
+  },
 
-  setValueBets(v: ValueBet[]) {
-    this.value = v;
-  }
-
+  // GETTERS
   getPredictions() {
-    return this.predictions;
-  }
-
+    return predictions;
+  },
   getGoldenBets() {
-    return this.golden;
-  }
-
+    return goldenBets;
+  },
   getValueBets() {
-    return this.value;
-  }
-}
+    return valueBets;
+  },
 
-export const predictionCache = new PredictionCache();
+  getStatus() {
+    return {
+      predictions: predictions.length,
+      goldenBets: goldenBets.length,
+      valueBets: valueBets.length,
+    };
+  },
+
+  // Property-style access (used in routes like goldenBets.js / valueBets.js)
+  get predictions() {
+    return predictions;
+  },
+  get goldenBets() {
+    return goldenBets;
+  },
+  get valueBets() {
+    return valueBets;
+  },
+};

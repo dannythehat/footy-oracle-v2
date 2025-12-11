@@ -1,0 +1,11 @@
+import express from 'express';
+import { getGoldenBetsToday } from '../services/mlService.js';
+
+const router = express.Router();
+
+router.get('/today', (req, res) => {
+  const data = getGoldenBetsToday() || [];
+  res.json({ success: true, data });
+});
+
+export default router;

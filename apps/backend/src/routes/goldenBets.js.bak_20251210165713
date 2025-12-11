@@ -1,0 +1,127 @@
+﻿import { Router } from "express";
+import { Fixture } from "../models/Fixture.js";
+import { getGoldenBetsJson } from "../services/predictionCache.js";
+
+const router = Router();
+
+/**
+ * Map Golden Bet market -> odds key on the fixture.odds object.
+ */
+function getOddsForMarket(odds, market) {
+  if (!odds) return null;
+  switch (market) {
+    case "over25":
+      return odds.over25 ?? null;
+    case "btts":
+      return odds.btts ?? null;
+    case "over95corners":
+      return odds.over95corners ?? null;
+    case "over35cards":
+      return odds.over35cards ?? null;
+    default:
+      return null;
+  }
+}
+
+/**
+ * GET /api/golden-bets/today
+ *
+ * - Per fixture: Golden Bet is already chosen by ML in golden_bets.json
+ *   (we do NOT change which market is the Golden Bet).
+ * - We enrich with fixture info + odds for that market.
+ * - We mark the daily Top 3 only if marketOdds >= 1.6.
+ */
+router.get("/today", async (req, res) => {
+  try {
+    const today = new Date().toISOString().split("T")[0];
+
+    const [fixtures, goldenRaw] = await Promise.all([
+      Fixture.find({
+        date: {
+          $gte: new Date(`${today}T00:00:00Z`),
+          $lt: new Date(`${today}T23:59:59Z`),
+        },
+      }).lean(),
+      getGoldenBetsJson(),
+    ]);
+
+    if (!goldenRaw || !Array.isArray(goldenRaw)) {
+      return res.json({ success: true, data: [] });
+    }
+
+    // Index fixtures by fixtureId
+    const fixtureById = new Map();
+    for (const fx of fixtures) {
+      fixtureById.set(fx.fixtureId, fx);
+    }
+
+    // 1) Build full list of per-fixture Golden Bets
+    const allGolden = goldenRaw
+      .map((g) => {
+        const fx = fixtureById.get(g.fixtureId);
+        if (!fx) return null;
+
+        const oddsObj = fx.odds || {};
+        const rawOdds = getOddsForMarket(oddsObj, g.market);
+        const marketOdds =
+          rawOdds !== null && rawOdds !== undefined ? parseFloat(rawOdds) : null;
+
+        return {
+          fixtureId: g.fixtureId,
+          market: g.market,
+          probability: g.probability,
+          marketOdds,
+          league: fx.league,
+          leagueId: fx.leagueId,
+          homeTeam: fx.homeTeam,
+          awayTeam: fx.awayTeam,
+          date: fx.date,
+          country: fx.country,
+        };
+      })
+      .filter(Boolean);
+
+    // 2) Compute Top 3: only Golden Bets with odds >= 1.6 are candidates
+    const MIN_ODDS = 1.6;
+
+    const candidates = allGolden
+      .filter(
+        (g) =>
+          g.marketOdds !== null &&
+          !Number.isNaN(g.marketOdds) &&
+          g.marketOdds >= MIN_ODDS
+      )
+      .sort((a, b) => (b.probability ?? 0) - (a.probability ?? 0))
+      .slice(0, 3);
+
+    const top3Key = new Set(
+      candidates.map((g) => `${g.fixtureId}:${g.market}`)
+    );
+
+    // 3) Mark isTop3 on the full list
+    const enriched = allGolden
+      .map((g) => ({
+        ...g,
+        isTop3: top3Key.has(`${g.fixtureId}:${g.market}`),
+      }))
+      .sort((a, b) => (b.probability ?? 0) - (a.probability ?? 0));
+
+    return res.json({
+      success: true,
+      data: enriched,
+    });
+  } catch (err) {
+    console.error("Error in /api/golden-bets/today:", err);
+    return res.status(500).json({
+      success: false,
+      error: err.message || "Failed to load golden bets",
+    });
+  }
+});
+
+// Legacy base route
+router.get("/", (req, res) => {
+  return res.redirect("/api/golden-bets/today");
+});
+
+export default router;

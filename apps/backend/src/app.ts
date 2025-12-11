@@ -1,29 +1,25 @@
-import express from "express";
+﻿import express from "express";
 import cors from "cors";
-import dotenv from "dotenv";
-import connectDB from "./config/database.js";
 
-import fixturesRouter from "./routes/fixtures.js";
-import goldenBetsRouter from "./routes/goldenBets.js";
-import valueBetsRouter from "./routes/valueBets.js";
-
-import { startFixturesCron } from "./cron/fixturesCron.js";
-import { startMLPredictionsCron } from "./cron/mlPredictionsCron.js";
-
-dotenv.config();
+import goldenBetsRoutes from "./routes/goldenBets.js";
+import valueBetsRoutes from "./routes/valueBets.js";
+import betBuilderRoutes from "./routes/betBuilder.js";
+import cacheDebugRoutes from "./routes/cacheDebug.js";
+import adminRoutes from "./routes/admin.js";
+import liveFixturesRoutes from "./routes/liveFixtures.js";
 
 const app = express();
-app.use(express.json());
 app.use(cors());
+app.use(express.json());
 
-connectDB();
+// Core routes
+app.use("/api/golden-bets", goldenBetsRoutes);
+app.use("/api/value-bets", valueBetsRoutes);
+app.use("/api/bet-builder", betBuilderRoutes);
+app.use("/api/debug", cacheDebugRoutes);
+app.use("/api/admin", adminRoutes);
 
-app.use("/api/fixtures", fixturesRouter);
-app.use("/api/golden-bets", goldenBetsRouter);
-app.use("/api/value-bets", valueBetsRouter);
+// NEW — Live fixtures
+app.use("/api/live-fixtures", liveFixturesRoutes);
 
-startFixturesCron();
-startMLPredictionsCron();
-
-const PORT = process.env.PORT || 10000;
-app.listen(PORT, () => console.log(\Backend running on port \\));
+export default app;

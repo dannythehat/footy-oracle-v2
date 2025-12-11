@@ -1,0 +1,24 @@
+﻿
+
+export async function saveBetBuilderOfTheDay(data: any) {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  await BetBuilder.deleteMany({ date: today });
+
+  const stored = new BetBuilder({
+    ...data,
+    date: today
+  });
+
+  await stored.save();
+  return stored;
+}
+
+export async function getBetBuilderOfTheDay() {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  return BetBuilder.findOne({ date: today });
+}
+
