@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import { Fixture } from '../models/Fixture.js';
 import { loadFixturesWindow, loadFixturesForDate } from '../cron/fixturesCron.js';
+import { updateTodayOdds } from '../services/oddsUpdateService.js';
 
 const router = Router();
 
@@ -35,6 +36,131 @@ router.get('/fixtures/count', async (_req, res) => {
   } catch (err) {
     console.error('[ADMIN] fixtures/count error:', err);
     res.status(500).json({ ok: false, error: 'Failed to get fixtures count' });
+  }
+});
+
+/**
+ * GET /api/admin/fixtures/sample-with-odds
+ * Inspect sample fixtures to see which have odds populated
+ */
+router.get('/fixtures/sample-with-odds', async (_req, res) => {
+  try {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const tomorrow = new Date(today);
+    tomorrow.setDate(tomorrow.getDate() + 1);
+
+    const fixtures = await Fixture.find({
+      date: { $gte: today, $lt: tomorrow }
+    }).limit(10).lean();
+
+    const withOdds = fixtures.filter(f => f.odds && Object.keys(f.odds).length > 0);
+    const withoutOdds = fixtures.filter(f => !f.odds || Object.keys(f.odds).length === 0);
+
+    res.json({
+      ok: true,
+      total: fixtures.length,
+      withOdds: withOdds.length,
+      withoutOdds: withoutOdds.length,
+      samples: {
+        withOdds: withOdds.slice(0, 2).map(f => ({
+          fixtureId: f.fixtureId,
+          homeTeam: f.homeTeam,
+          awayTeam: f.awayTeam,
+          league: f.league,
+          odds: f.odds
+        })),
+        withoutOdds: withoutOdds.slice(0, 2).map(f => ({
+          fixtureId: f.fixtureId,
+          homeTeam: f.homeTeam,
+          awayTeam: f.awayTeam,
+          league: f.league,
+          status: f.status
+        }))
+      }
+    });
+  } catch (err: any) {
+    console.error('[ADMIN] fixtures/sample-with-odds error:', err);
+    res.status(500).json({ 
+      ok: false, 
+      error: err.message || 'Failed to get fixture samples' 
+    });
+  }
+});
+
+/**
+ * GET /api/admin/fixtures/odds-stats
+ * Get statistics about odds coverage
+ */
+router.get('/fixtures/odds-stats', async (_req, res) => {
+  try {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const tomorrow = new Date(today);
+    tomorrow.setDate(tomorrow.getDate() + 1);
+
+    const todayFixtures = await Fixture.find({
+      date: { $gte: today, $lt: tomorrow }
+    }).lean();
+
+    const total = todayFixtures.length;
+    const withOdds = todayFixtures.filter(f => f.odds && Object.keys(f.odds).length > 0).length;
+    const withBtts = todayFixtures.filter(f => f.odds?.btts).length;
+    const withOver25 = todayFixtures.filter(f => f.odds?.over25).length;
+    const withOver95Corners = todayFixtures.filter(f => f.odds?.over95corners).length;
+    const withOver35Cards = todayFixtures.filter(f => f.odds?.over35cards).length;
+
+    res.json({
+      ok: true,
+      date: today.toISOString().split('T')[0],
+      total,
+      withOdds,
+      withoutOdds: total - withOdds,
+      coverage: {
+        overall: total > 0 ? ((withOdds / total) * 100).toFixed(1) + '%' : '0%',
+        btts: total > 0 ? ((withBtts / total) * 100).toFixed(1) + '%' : '0%',
+        over25: total > 0 ? ((withOver25 / total) * 100).toFixed(1) + '%' : '0%',
+        over95corners: total > 0 ? ((withOver95Corners / total) * 100).toFixed(1) + '%' : '0%',
+        over35cards: total > 0 ? ((withOver35Cards / total) * 100).toFixed(1) + '%' : '0%'
+      }
+    });
+  } catch (err: any) {
+    console.error('[ADMIN] fixtures/odds-stats error:', err);
+    res.status(500).json({ 
+      ok: false, 
+      error: err.message || 'Failed to get odds statistics' 
+    });
+  }
+});
+
+/**
+ * POST /api/admin/fixtures/update-odds
+ * Manually trigger odds update for today's fixtures
+ */
+router.post('/fixtures/update-odds', async (_req, res) => {
+  try {
+    console.log('💰 Manual odds update triggered...');
+    
+    const result = await updateTodayOdds();
+
+    res.json({
+      ok: true,
+      message: 'Odds update completed',
+      result: {
+        updated: result.updated,
+        total: result.total,
+        errors: result.errors,
+        successRate: result.total > 0 
+          ? ((result.updated / result.total) * 100).toFixed(1) + '%' 
+          : '0%'
+      }
+    });
+  } catch (err: any) {
+    console.error('[ADMIN] fixtures/update-odds error:', err);
+    res.status(500).json({ 
+      ok: false, 
+      error: err.message || 'Failed to update odds' 
+    });
   }
 });
 
