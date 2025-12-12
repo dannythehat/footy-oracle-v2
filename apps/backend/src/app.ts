@@ -1,4 +1,4 @@
-﻿import express from "express";
+import express from "express";
 import cors from "cors";
 
 import goldenBetsRoutes from "./routes/goldenBets.js";
@@ -6,6 +6,7 @@ import valueBetsRoutes from "./routes/valueBets.js";
 import betBuilderRoutes from "./routes/betBuilder.js";
 import cacheDebugRoutes from "./routes/cacheDebug.js";
 import adminRoutes from "./routes/admin.js";
+import fixturesAdminRoutes from "./routes/fixturesAdmin.js";
 import liveFixturesRoutes from "./routes/liveFixtures.js";
 
 const app = express();
@@ -18,8 +19,9 @@ app.use("/api/value-bets", valueBetsRoutes);
 app.use("/api/bet-builder", betBuilderRoutes);
 app.use("/api/debug", cacheDebugRoutes);
 app.use("/api/admin", adminRoutes);
+app.use("/api/admin", fixturesAdminRoutes);
 
-// NEW — Live fixtures
+// Live fixtures
 app.use("/api/live-fixtures", liveFixturesRoutes);
 
 export default app;
