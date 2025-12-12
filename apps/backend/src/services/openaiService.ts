@@ -1,4 +1,7 @@
 import OpenAI from 'openai';
+import { WeatherData } from './weatherService';
+import { TeamAbsences } from './injuryService';
+import { TacticalProfile, MatchupAnalysis } from './tacticalService';
 
 interface BettingContext {
   homeTeam: string;
@@ -13,8 +16,6 @@ interface BettingContext {
   awayCardsAvg: number;
   homeCornersAvg: number;
   awayCornersAvg: number;
-  homeInjuries?: any[];
-  awayInjuries?: any[];
   homeStanding?: { rank: number; points: number };
   awayStanding?: { rank: number; points: number };
   h2h?: {
@@ -27,6 +28,15 @@ interface BettingContext {
       avgCards: number;
     };
   };
+  
+  // NEW: Enhanced context
+  weather?: WeatherData;
+  weatherImpact?: string;
+  homeAbsences?: TeamAbsences;
+  awayAbsences?: TeamAbsences;
+  homeTactical?: TacticalProfile;
+  awayTactical?: TacticalProfile;
+  tacticalMatchup?: MatchupAnalysis;
 }
 
 class OpenAIService {
@@ -62,7 +72,7 @@ class OpenAIService {
           }
         ],
         temperature: 0.8, // Higher for more personality
-        max_tokens: 150
+        max_tokens: 200 // Increased for richer context
       });
       
       return completion.choices[0].message.content?.trim() || 'Analysis unavailable';
@@ -93,22 +103,25 @@ YOUR STYLE:
 ✅ Human touch - show personality, can be humorous when appropriate
 ✅ Lead with the strongest stat that supports the bet
 ✅ Reference actual form strings (WWDWL), goal averages, H2H rates
-✅ 40-60 words MAXIMUM - be punchy and impactful
+✅ USE CONTEXTUAL DATA - weather, injuries, tactics when available
+✅ 50-70 words MAXIMUM - be punchy and impactful
 
 ❌ Don't be boring or robotic
 ❌ Don't hedge excessively ("might", "could", "possibly")
 ❌ Don't ignore the data - numbers are your credibility
-❌ Don't go over 60 words
+❌ Don't go over 70 words
 
-EXAMPLES:
+EXAMPLES WITH CONTEXT:
 
-HOT (78%): "Both teams are leaking goals like sieves. Arsenal conceding 1.8/game at home, Liverpool 1.6 away, and both averaging 2+ goals scored. Their last 5 H2H meetings? All had BTS. This one's a banker. 🔥"
+HOT (78%) with injuries: "Both teams are leaking goals like sieves. Arsenal conceding 1.8/game at home, Liverpool 1.6 away. Plus Liverpool missing Salah (their top scorer) - that's 0.8 goals/game gone. Their last 5 H2H? All had BTS. This one's a banker. 🔥"
 
-WARM (68%): "Solid value here. Combined 3.9 goals/game average between these two, and their H2H shows 70% over 2.5 rate. Not a guarantee, but the numbers are singing. 🟡"
+WARM (68%) with weather: "Solid value here. Combined 3.9 goals/game average, and heavy rain expected which favors mistakes. Their H2H shows 70% over 2.5 rate. Not a guarantee, but the numbers are singing. 🟡"
 
-LOW (52%): "Bit of a coin flip, honestly. Home form suggests it (WWDWL, 2.1 goals/game) but away team's defensive record (0.9 conceded) makes this risky. Proceed with caution. 🔵"
+WARM (65%) with tactics: "Home team's high press (4-3-3) vs away's short build-up play? Recipe for turnovers. Add in 2.1 goals/game home average and away's leaky defense (1.4 conceded). Tactical mismatch screams goals. 🟡"
 
-Remember: Show your research with REAL NUMBERS from the data. That's what separates us from guesswork.`;
+LOW (52%) with context: "Bit of a coin flip. Home form suggests it (WWDWL, 2.1 goals/game) but away team's defensive record (0.9 conceded) is solid. Plus they're missing 3 key players. Proceed with caution. 🔵"
+
+Remember: Show your research with REAL NUMBERS and CONTEXT from the data. That's what separates us from guesswork.`;
   }
   
   /**
@@ -128,7 +141,7 @@ Remember: Show your research with REAL NUMBERS from the data. That's what separa
     
     const confidenceLevel = this.getConfidenceLevel(percentage);
     
-    return `Generate betting reasoning for: ${betDescriptions[betType]}
+    let prompt = `Generate betting reasoning for: ${betDescriptions[betType]}
 
 MATCH: ${context.homeTeam} vs ${context.awayTeam}
 LEAGUE: ${context.league}
@@ -141,7 +154,6 @@ HOME TEAM (${context.homeTeam}):
 - Cards Average: ${context.homeCardsAvg}/game
 - Corners Average: ${context.homeCornersAvg}/game
 ${context.homeStanding ? `- League Position: ${context.homeStanding.rank}` : ''}
-${context.homeInjuries ? `- Key Injuries: ${context.homeInjuries.length}` : ''}
 
 AWAY TEAM (${context.awayTeam}):
 - Recent Form: ${context.awayForm}
@@ -150,7 +162,6 @@ AWAY TEAM (${context.awayTeam}):
 - Cards Average: ${context.awayCardsAvg}/game
 - Corners Average: ${context.awayCornersAvg}/game
 ${context.awayStanding ? `- League Position: ${context.awayStanding.rank}` : ''}
-${context.awayInjuries ? `- Key Injuries: ${context.awayInjuries.length}` : ''}
 
 HEAD-TO-HEAD:
 ${context.h2h ? `- Last ${context.h2h.stats.totalMatches} meetings
@@ -158,16 +169,58 @@ ${context.h2h ? `- Last ${context.h2h.stats.totalMatches} meetings
 - Over 2.5 Rate: ${(context.h2h.stats.over25Rate * 100).toFixed(0)}%
 - BTS Rate: ${(context.h2h.stats.btsRate * 100).toFixed(0)}%
 - Average Corners: ${context.h2h.stats.avgCorners}
-- Average Cards: ${context.h2h.stats.avgCards}` : '- Limited H2H data available'}
+- Average Cards: ${context.h2h.stats.avgCards}` : '- Limited H2H data available'}`;
 
-Write an engaging, fact-driven analysis (40-60 words) that:
+    // Add weather context if available
+    if (context.weather && context.weatherImpact) {
+      prompt += `\n\n🌤️ WEATHER CONDITIONS:
+- ${context.weather.description} (${context.weather.temp}°C, feels like ${context.weather.feelsLike}°C)
+- Wind: ${context.weather.windSpeed}km/h ${context.weather.windDirection}
+- ${context.weather.rain ? `Rain expected (${context.weather.precipitation}mm)` : 'Dry conditions'}
+- Impact: ${context.weatherImpact}`;
+    }
+
+    // Add injury context if available
+    if (context.homeAbsences || context.awayAbsences) {
+      prompt += `\n\n🏥 TEAM NEWS:`;
+      
+      if (context.homeAbsences && context.homeAbsences.totalOut > 0) {
+        prompt += `\nHOME: ${context.homeAbsences.totalOut} players out`;
+        if (context.homeAbsences.keyPlayersOut.length > 0) {
+          prompt += ` (Key: ${context.homeAbsences.keyPlayersOut.slice(0, 3).join(', ')})`;
+        }
+        prompt += ` - Impact: ${context.homeAbsences.impactLevel}`;
+      }
+      
+      if (context.awayAbsences && context.awayAbsences.totalOut > 0) {
+        prompt += `\nAWAY: ${context.awayAbsences.totalOut} players out`;
+        if (context.awayAbsences.keyPlayersOut.length > 0) {
+          prompt += ` (Key: ${context.awayAbsences.keyPlayersOut.slice(0, 3).join(', ')})`;
+        }
+        prompt += ` - Impact: ${context.awayAbsences.impactLevel}`;
+      }
+    }
+
+    // Add tactical context if available
+    if (context.homeTactical && context.awayTactical && context.tacticalMatchup) {
+      prompt += `\n\n⚔️ TACTICAL SETUP:
+HOME: ${context.homeTactical.primaryFormation} | ${context.homeTactical.playingStyle.possession} possession, ${context.homeTactical.playingStyle.pressing} press
+AWAY: ${context.awayTactical.primaryFormation} | ${context.awayTactical.playingStyle.possession} possession, ${context.awayTactical.playingStyle.pressing} press
+MATCHUP: ${context.tacticalMatchup.prediction}
+${context.tacticalMatchup.keyBattles.length > 0 ? `Key Battle: ${context.tacticalMatchup.keyBattles[0]}` : ''}`;
+    }
+
+    prompt += `\n\nWrite an engaging, fact-driven analysis (50-70 words) that:
 1. Leads with the strongest stat supporting this ${percentage}% prediction
 2. Includes 2-3 specific numbers from the data above
-3. Matches the ${confidenceLevel} confidence level in tone
-4. Has personality - be conversational, can add humor if it fits
-5. Shows we did our research with real data
+3. INCORPORATES contextual factors (weather/injuries/tactics) if they're significant
+4. Matches the ${confidenceLevel} confidence level in tone
+5. Has personality - be conversational, can add humor if it fits
+6. Shows we did our research with real data
 
 Remember: ${confidenceLevel === 'HOT 🔥' ? 'Be confident and punchy!' : confidenceLevel === 'WARM 🟡' ? 'Solid pick, show the value!' : 'Be cautious, mention the risks!'}`;
+
+    return prompt;
   }
   
   /**
