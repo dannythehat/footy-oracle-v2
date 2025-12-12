@@ -1,20 +1,28 @@
 import fs from 'fs';
 import path from 'path';
 
-const ML_OUTPUT_DIR = path.resolve(
-  'C:/Users/Danny/football-betting-ai-system/shared/ml_outputs'
-);
+// Use environment variable or fallback to relative path
+const ML_OUTPUT_DIR = process.env.ML_OUTPUT_DIR || 
+  path.resolve('./shared/ml_outputs');
+
+console.log(`📂 ML Output Directory: ${ML_OUTPUT_DIR}`);
 
 function loadJson(file: string) {
   try {
     const full = path.join(ML_OUTPUT_DIR, file);
+    
     if (!fs.existsSync(full)) {
+      console.warn(`⚠️  ML file not found: ${full}`);
       return null;
     }
+    
     const raw = fs.readFileSync(full, 'utf8');
-    return JSON.parse(raw);
+    const data = JSON.parse(raw);
+    
+    console.log(`✅ Loaded ML file: ${file} (${Array.isArray(data) ? data.length : 0} items)`);
+    return data;
   } catch (err) {
-    console.error('Error loading ML JSON file:', file, err);
+    console.error(`❌ Error loading ML JSON file: ${file}`, err);
     return null;
   }
 }
