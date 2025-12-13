@@ -62,6 +62,12 @@ export const fixturesApi = {
     const response = await fetchJSON(`/api/fixtures/${id}/complete`);
     return response;
   },
+
+  // Refresh scores from API-Football for a specific date
+  refreshScores: async (date: string) => {
+    const response = await fetchJSON(`/api/fixtures/refresh?date=${date}`);
+    return response;
+  },
 };
 
 // Bet Builder API
