@@ -8,6 +8,7 @@ import cacheDebugRoutes from "./routes/cacheDebug.js";
 import adminRoutes from "./routes/admin.js";
 import fixturesAdminRoutes from "./routes/fixturesAdmin.js";
 import liveFixturesRoutes from "./routes/liveFixtures.js";
+import fixturesRoutes from "./routes/fixtures.js";
 
 const app = express();
 app.use(cors());
@@ -21,7 +22,8 @@ app.use("/api/debug", cacheDebugRoutes);
 app.use("/api/admin", adminRoutes);
 app.use("/api/admin", fixturesAdminRoutes);
 
-// Live fixtures
+// Fixtures routes
+app.use("/api/fixtures", fixturesRoutes);
 app.use("/api/live-fixtures", liveFixturesRoutes);
 
 export default app;
