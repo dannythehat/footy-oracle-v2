@@ -446,7 +446,11 @@ const FixturesView: React.FC<FixturesViewProps> = ({ onClose, embedded = false }
           {/* Favorite Button */}
           <div className="flex-shrink-0">
             <FavoriteButton 
-              fixtureId={fixture.id || fixture.fixtureId}
+              fixtureId={Number(fixture.id || fixture.fixtureId)}
+              homeTeam={fixture.homeTeam || fixture.homeTeamName || ''}
+              awayTeam={fixture.awayTeam || fixture.awayTeamName || ''}
+              date={fixture.date || ''}
+              league={fixture.league || fixture.leagueName || ''}
               size="sm"
             />
           </div>
