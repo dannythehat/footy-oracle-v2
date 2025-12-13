@@ -1,40 +1,171 @@
-import fs from 'fs';
-import path from 'path';
+import axios from 'axios';
 
-// Use environment variable or fallback to relative path
-const ML_OUTPUT_DIR = process.env.ML_OUTPUT_DIR || 
-  path.resolve('./shared/ml_outputs');
+// ML API URL from environment or default to localhost
+const ML_API_URL = process.env.ML_API_URL || 'http://localhost:8000';
 
-console.log(`📂 ML Output Directory: ${ML_OUTPUT_DIR}`);
+console.log(`🤖 ML API URL: ${ML_API_URL}`);
 
-function loadJson(file: string) {
+// HTTP client with timeout
+const mlClient = axios.create({
+  baseURL: ML_API_URL,
+  timeout: 30000, // 30 second timeout
+  headers: {
+    'Content-Type': 'application/json',
+  },
+});
+
+interface MLPrediction {
+  fixture_id: number;
+  home_team: string;
+  away_team: string;
+  league_id?: number;
+  league_name?: string;
+  date?: string;
+  predictions: {
+    over_25_goals: {
+      probability: number;
+      prediction: boolean;
+      confidence: number;
+    };
+    btts: {
+      probability: number;
+      prediction: boolean;
+      confidence: number;
+    };
+    corners_over_95: {
+      probability: number;
+      prediction: boolean;
+      confidence: number;
+    };
+    cards_over_35: {
+      probability: number;
+      prediction: boolean;
+      confidence: number;
+    };
+  };
+  odds?: any;
+}
+
+interface GoldenBet extends MLPrediction {
+  golden_score: number;
+}
+
+interface ValueBet {
+  fixture_id: number;
+  home_team: string;
+  away_team: string;
+  league_name?: string;
+  date?: string;
+  market: string;
+  prediction: any;
+  odd: number;
+  expected_value: number;
+  edge: number;
+}
+
+/**
+ * Get predictions for today's fixtures
+ * Calls ML API /predictions endpoint
+ */
+export async function getPredictionsToday(): Promise<MLPrediction[]> {
   try {
-    const full = path.join(ML_OUTPUT_DIR, file);
+    console.log('📡 Fetching predictions from ML API...');
     
-    if (!fs.existsSync(full)) {
-      console.warn(`⚠️  ML file not found: ${full}`);
-      return null;
+    const response = await mlClient.post('/predictions', {
+      fixtures: [] // Backend should prepare fixture data with features
+    });
+    
+    if (response.data.success) {
+      console.log(`✅ Received ${response.data.count} predictions from ML API`);
+      return response.data.predictions || [];
     }
     
-    const raw = fs.readFileSync(full, 'utf8');
-    const data = JSON.parse(raw);
+    console.warn('⚠️  ML API returned unsuccessful response');
+    return [];
+  } catch (error: any) {
+    console.error('❌ Error fetching predictions from ML API:', error.message);
     
-    console.log(`✅ Loaded ML file: ${file} (${Array.isArray(data) ? data.length : 0} items)`);
-    return data;
-  } catch (err) {
-    console.error(`❌ Error loading ML JSON file: ${file}`, err);
-    return null;
+    // Check if ML API is unreachable
+    if (error.code === 'ECONNREFUSED' || error.code === 'ETIMEDOUT') {
+      console.error('🔴 ML API is not reachable. Please ensure it is running.');
+      console.error(`   Expected URL: ${ML_API_URL}`);
+      console.error('   Set ML_API_URL environment variable if needed.');
+    }
+    
+    return [];
   }
 }
 
-export function getPredictionsToday() {
-  return loadJson('predictions.json') || [];
+/**
+ * Get golden bets (high confidence predictions)
+ * Calls ML API /golden-bets endpoint
+ */
+export async function getGoldenBetsToday(): Promise<GoldenBet[]> {
+  try {
+    console.log('🏆 Fetching golden bets from ML API...');
+    
+    const response = await mlClient.post('/golden-bets', {
+      fixtures: [], // Backend should prepare fixture data with features
+      min_confidence: 0.75
+    });
+    
+    if (response.data.success) {
+      console.log(`✅ Received ${response.data.count} golden bets from ML API`);
+      return response.data.data || [];
+    }
+    
+    console.warn('⚠️  ML API returned unsuccessful response for golden bets');
+    return [];
+  } catch (error: any) {
+    console.error('❌ Error fetching golden bets from ML API:', error.message);
+    
+    if (error.code === 'ECONNREFUSED' || error.code === 'ETIMEDOUT') {
+      console.error('🔴 ML API is not reachable. Please ensure it is running.');
+    }
+    
+    return [];
+  }
 }
 
-export function getGoldenBetsToday() {
-  return loadJson('golden_bets.json') || [];
+/**
+ * Get value bets (predictions with positive expected value)
+ * Calls ML API /value-bets endpoint
+ */
+export async function getValueBetsToday(): Promise<ValueBet[]> {
+  try {
+    console.log('💎 Fetching value bets from ML API...');
+    
+    const response = await mlClient.post('/value-bets', {
+      fixtures: [], // Backend should prepare fixture data with features
+      min_edge: 0.05
+    });
+    
+    if (response.data.success) {
+      console.log(`✅ Received ${response.data.count} value bets from ML API`);
+      return response.data.data || [];
+    }
+    
+    console.warn('⚠️  ML API returned unsuccessful response for value bets');
+    return [];
+  } catch (error: any) {
+    console.error('❌ Error fetching value bets from ML API:', error.message);
+    
+    if (error.code === 'ECONNREFUSED' || error.code === 'ETIMEDOUT') {
+      console.error('🔴 ML API is not reachable. Please ensure it is running.');
+    }
+    
+    return [];
+  }
 }
 
-export function getValueBetsToday() {
-  return loadJson('value_bets.json') || [];
+/**
+ * Health check for ML API
+ */
+export async function checkMLAPIHealth(): Promise<boolean> {
+  try {
+    const response = await mlClient.get('/health');
+    return response.data.status === 'ok' && response.data.models_loaded === true;
+  } catch (error) {
+    return false;
+  }
 }
