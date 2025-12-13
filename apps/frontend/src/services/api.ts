@@ -31,49 +31,50 @@ export const fixturesApi = {
   // Get fixtures by date (YYYY-MM-DD format)
   getByDate: async (date: string) => {
     const response = await fetchJSON(`/api/fixtures?date=${date}`);
-    return response;
+    // Backend returns { success: true, data: [...] }, extract data field
+    return response.data || response;
   },
 
   // Get single fixture by ID
   getById: async (id: number) => {
     const response = await fetchJSON(`/api/fixtures/${id}`);
-    return response;
+    return response.data || response;
   },
 
   // Get fixture statistics
   getStats: async (id: number) => {
     const response = await fetchJSON(`/api/fixtures/${id}/stats`);
-    return response;
+    return response.data || response;
   },
 
   // Get fixture events (goals, cards, substitutions)
   getEvents: async (id: number) => {
     const response = await fetchJSON(`/api/fixtures/${id}/events`);
-    return response;
+    return response.data || response;
   },
 
   // Get league standings
   getStandings: async (leagueId: number, season: number) => {
     const response = await fetchJSON(`/api/fixtures/standings?leagueId=${leagueId}&season=${season}`);
-    return response;
+    return response.data || response;
   },
 
   // Get head-to-head between two teams
   getH2H: async (homeId: number, awayId: number) => {
     const response = await fetchJSON(`/api/fixtures/h2h?homeId=${homeId}&awayId=${awayId}`);
-    return response;
+    return response.data || response;
   },
 
   // Get complete fixture data (all details)
   getComplete: async (id: number) => {
     const response = await fetchJSON(`/api/fixtures/${id}/complete`);
-    return response;
+    return response.data || response;
   },
 
   // Refresh scores from API-Football for a specific date
   refreshScores: async (date: string) => {
     const response = await fetchJSON(`/api/fixtures/refresh?date=${date}`);
-    return response;
+    return response.data || response;
   },
 };
 
