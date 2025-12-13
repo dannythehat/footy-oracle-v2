@@ -137,13 +137,14 @@ const FixturesView: React.FC<FixturesViewProps> = ({ onClose, embedded = false }
       
       const response = await fixturesApi.getByDate(dateStr);
       
-      if (response && response.data) {
-        setFixtures(response.data);
+      // FIX: response is already the data array (extracted by API service)
+      if (response && Array.isArray(response)) {
+        setFixtures(response);
         
         // Auto-expand all regular leagues on first load
         if (expandedLeagues.size === 0) {
           const leagues = new Set<string>(
-            response.data
+            response
               .map((f: Fixture) => formatLeagueName(f))
               .filter((league: string | undefined): league is string => Boolean(league))
           );
@@ -151,7 +152,7 @@ const FixturesView: React.FC<FixturesViewProps> = ({ onClose, embedded = false }
         }
         
         // Auto-expand all live leagues
-        const liveFixtures = response.data.filter(isLive);
+        const liveFixtures = response.filter(isLive);
         const liveLeagues = new Set<string>(
           liveFixtures
             .map((f: Fixture) => formatLeagueName(f))
@@ -252,8 +253,11 @@ const FixturesView: React.FC<FixturesViewProps> = ({ onClose, embedded = false }
     return acc;
   }, {} as GroupedFixtures);
 
-  // Group fixtures by league (with country)
-  const groupedFixtures: GroupedFixtures = fixtures.reduce((acc, fixture) => {
+  // Get non-live fixtures
+  const nonLiveFixtures = fixtures.filter(f => !isLive(f));
+
+  // Group non-live fixtures by league (with country)
+  const groupedFixtures: GroupedFixtures = nonLiveFixtures.reduce((acc, fixture) => {
     const league = formatLeagueName(fixture);
     if (!acc[league]) {
       acc[league] = [];
@@ -263,459 +267,434 @@ const FixturesView: React.FC<FixturesViewProps> = ({ onClose, embedded = false }
   }, {} as GroupedFixtures);
 
   // Sort leagues: favorites first, then alphabetically
-  const sortLeagues = (leagues: [string, Fixture[]][]): [string, Fixture[]][] => {
-    return leagues.sort(([leagueA], [leagueB]) => {
-      const aIsFavorite = isFavoriteLeague(leagueA);
-      const bIsFavorite = isFavoriteLeague(leagueB);
+  const sortLeagues = (leagues: string[]): string[] => {
+    return leagues.sort((a, b) => {
+      const aIsFavorite = isFavoriteLeague(a);
+      const bIsFavorite = isFavoriteLeague(b);
       
       if (aIsFavorite && !bIsFavorite) return -1;
       if (!aIsFavorite && bIsFavorite) return 1;
-      return leagueA.localeCompare(leagueB);
+      return a.localeCompare(b);
     });
   };
 
-  const formatDate = (date: Date) => {
+  const sortedLiveLeagues = sortLeagues(Object.keys(groupedLiveFixtures));
+  const sortedLeagues = sortLeagues(Object.keys(groupedFixtures));
+
+  const formatDate = (date: Date): string => {
     const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const compareDate = new Date(date);
+    compareDate.setHours(0, 0, 0, 0);
+
+    if (compareDate.getTime() === today.getTime()) {
+      return 'TODAY';
+    }
+
     const tomorrow = new Date(today);
     tomorrow.setDate(tomorrow.getDate() + 1);
+    if (compareDate.getTime() === tomorrow.getTime()) {
+      return 'Tomorrow';
+    }
+
     const yesterday = new Date(today);
     yesterday.setDate(yesterday.getDate() - 1);
+    if (compareDate.getTime() === yesterday.getTime()) {
+      return 'Yesterday';
+    }
 
-    if (date.toDateString() === today.toDateString()) return 'TODAY';
-    if (date.toDateString() === tomorrow.toDateString()) return 'TOMORROW';
-    if (date.toDateString() === yesterday.toDateString()) return 'YESTERDAY';
-    
-    return date.toLocaleDateString('en-GB', { 
-      day: 'numeric', 
-      month: 'short',
-      year: 'numeric'
-    }).toUpperCase();
-  };
-
-  const formatTime = (fixture: Fixture) => {
-    if (fixture.time) return fixture.time;
-    
-    const dateStr = fixture.kickoff || fixture.date;
-    if (!dateStr) return 'TBD';
-    
-    return new Date(dateStr).toLocaleTimeString('en-GB', { 
-      hour: '2-digit', 
-      minute: '2-digit' 
+    return date.toLocaleDateString('en-US', { 
+      weekday: 'short', 
+      month: 'short', 
+      day: 'numeric' 
     });
   };
 
-  const getStatusDisplay = (fixture: Fixture) => {
-    const status = fixture.status;
-    const statusShort = fixture.statusShort;
-    const elapsed = fixture.elapsed;
-
-    // Live match statuses
-    if (status === 'live' || ['1H', '2H', 'ET', 'BT', 'P'].includes(statusShort || '')) {
-      return (
-        <div className="flex items-center gap-1">
-          <span className="text-red-500 font-bold text-[10px] sm:text-xs">{elapsed}'</span>
-          <div className="w-1 h-1 bg-red-500 rounded-full animate-pulse"></div>
-        </div>
-      );
+  const formatTime = (fixture: Fixture): string => {
+    // If match is live, show status
+    if (isLive(fixture)) {
+      const elapsed = fixture.elapsed;
+      const statusShort = fixture.statusShort;
+      
+      if (statusShort === 'HT') return 'HT';
+      if (statusShort === 'ET') return `ET ${elapsed}'`;
+      if (statusShort === 'BT') return 'Break';
+      if (statusShort === 'P') return 'Penalties';
+      if (elapsed) return `${elapsed}'`;
+      return 'LIVE';
     }
 
-    // Half time
-    if (statusShort === 'HT') {
-      return <span className="text-orange-400 font-semibold text-[10px] sm:text-xs">HT</span>;
+    // If match is finished, show FT
+    if (fixture.statusShort === 'FT' || fixture.status === 'finished') {
+      return 'FT';
     }
 
-    // Finished
-    if (status === 'finished' || statusShort === 'FT') {
-      return <span className="text-gray-600 font-semibold text-[10px] sm:text-xs">FT</span>;
-    }
+    // Otherwise show kickoff time
+    const timeStr = fixture.time || fixture.kickoff;
+    if (!timeStr) return 'TBD';
 
-    // Postponed/Cancelled
-    if (status === 'postponed' || statusShort === 'PST') {
-      return <span className="text-yellow-500 font-semibold text-[10px] sm:text-xs">PST</span>;
+    try {
+      // Handle ISO format
+      if (timeStr.includes('T')) {
+        const date = new Date(timeStr);
+        return date.toLocaleTimeString('en-US', { 
+          hour: '2-digit', 
+          minute: '2-digit',
+          hour12: false 
+        });
+      }
+      
+      // Handle HH:MM format
+      return timeStr;
+    } catch {
+      return timeStr;
     }
-
-    if (statusShort === 'CANC') {
-      return <span className="text-red-500 font-semibold text-[10px] sm:text-xs">CANC</span>;
-    }
-
-    // Scheduled - show time
-    return <span className="text-gray-500 text-[10px] sm:text-xs">{formatTime(fixture)}</span>;
   };
 
-  const getScore = (fixture: Fixture): { home: number | null; away: number | null } => {
-    // Try score object first
+  const getScore = (fixture: Fixture): { home: number | string; away: number | string } => {
     if (fixture.score) {
       return {
-        home: fixture.score.home ?? null,
-        away: fixture.score.away ?? null
+        home: fixture.score.home ?? '-',
+        away: fixture.score.away ?? '-'
       };
     }
     
-    // Try individual fields
-    if (fixture.homeScore !== undefined || fixture.awayScore !== undefined) {
+    if (fixture.homeScore !== undefined && fixture.awayScore !== undefined) {
       return {
-        home: fixture.homeScore ?? null,
-        away: fixture.awayScore ?? null
+        home: fixture.homeScore,
+        away: fixture.awayScore
       };
     }
 
-    return { home: null, away: null };
+    return { home: '-', away: '-' };
   };
 
-  const shouldShowScore = (fixture: Fixture): boolean => {
-    const status = fixture.status;
-    const statusShort = fixture.statusShort;
-    return status === 'live' || 
-           status === 'finished' || 
-           ['1H', 'HT', '2H', 'ET', 'BT', 'P', 'FT', 'AET', 'PEN'].includes(statusShort || '');
-  };
-
-  const isSameDay = (date1: Date, date2: Date) => {
-    return date1.toDateString() === date2.toDateString();
-  };
-
-  const isToday = (date: Date) => {
-    return isSameDay(date, new Date());
-  };
-
-  const renderFixtureRow = (fixture: Fixture) => {
+  const renderFixture = (fixture: Fixture) => {
     const score = getScore(fixture);
-    const showScore = shouldShowScore(fixture);
     const live = isLive(fixture);
-    
+    const finished = fixture.statusShort === 'FT' || fixture.status === 'finished';
+
     return (
-      <div 
-        key={fixture.fixtureId || fixture.id} 
+      <div
+        key={fixture.id || fixture.fixtureId}
         onClick={() => handleFixtureClick(fixture)}
-        className={`px-3 py-2 sm:px-2 sm:py-1.5 border-b border-gray-800/50 last:border-b-0 hover:bg-gray-800/30 active:bg-gray-800/50 transition-colors cursor-pointer ${live ? 'bg-purple-950/20 border-l-2 border-l-purple-500' : ''}`}
+        className="bg-gray-800/40 rounded-lg p-3 hover:bg-gray-700/50 transition-all cursor-pointer border border-gray-700/50 hover:border-purple-500/30"
       >
-        <div className="flex items-center justify-between gap-2 sm:gap-1.5">
-          {/* Time/Status Column - Mobile optimized */}
-          <div className="flex items-center justify-center w-12 sm:w-10 flex-shrink-0">
-            {getStatusDisplay(fixture)}
+        <div className="flex items-center justify-between gap-3">
+          {/* Time/Status */}
+          <div className="flex-shrink-0 w-16 text-center">
+            <div className={`text-sm font-medium ${
+              live ? 'text-red-400 animate-pulse' : 
+              finished ? 'text-gray-400' : 
+              'text-purple-400'
+            }`}>
+              {formatTime(fixture)}
+            </div>
+            {live && (
+              <div className="flex items-center justify-center gap-1 mt-1">
+                <Radio className="w-3 h-3 text-red-500 animate-pulse" />
+                <span className="text-xs text-red-400">LIVE</span>
+              </div>
+            )}
           </div>
 
-          {/* Teams Column with Logos - Mobile optimized */}
+          {/* Teams and Score */}
           <div className="flex-1 min-w-0">
-            <div className="flex items-center justify-between mb-1 sm:mb-0.5">
-              <div className="flex items-center gap-2 sm:gap-1.5 flex-1 min-w-0">
-                <TeamLogo
-                  teamId={fixture.homeTeamId}
-                  teamName={fixture.homeTeamName || fixture.homeTeam}
+            {/* Home Team */}
+            <div className="flex items-center justify-between gap-2 mb-1">
+              <div className="flex items-center gap-2 flex-1 min-w-0">
+                <TeamLogo 
+                  teamId={fixture.homeTeamId} 
+                  teamName={fixture.homeTeam || fixture.homeTeamName || ''} 
                   size="sm"
                 />
-                <span className={`text-xs sm:text-[11px] font-medium truncate ${live ? 'text-white' : 'text-gray-300'}`}>
-                  {fixture.homeTeamName || fixture.homeTeam}
+                <span className="text-sm font-medium text-white truncate">
+                  {fixture.homeTeam || fixture.homeTeamName}
                 </span>
               </div>
-              {showScore && (
-                <span className={`text-sm sm:text-xs font-bold ml-2 ${live ? 'text-purple-400' : 'text-white'}`}>
-                  {score.home ?? '-'}
-                </span>
-              )}
+              <span className={`text-base font-bold ${
+                live ? 'text-white' : 
+                finished ? 'text-gray-300' : 
+                'text-gray-500'
+              }`}>
+                {score.home}
+              </span>
             </div>
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2 sm:gap-1.5 flex-1 min-w-0">
-                <TeamLogo
-                  teamId={fixture.awayTeamId}
-                  teamName={fixture.awayTeamName || fixture.awayTeam}
+
+            {/* Away Team */}
+            <div className="flex items-center justify-between gap-2">
+              <div className="flex items-center gap-2 flex-1 min-w-0">
+                <TeamLogo 
+                  teamId={fixture.awayTeamId} 
+                  teamName={fixture.awayTeam || fixture.awayTeamName || ''} 
                   size="sm"
                 />
-                <span className={`text-xs sm:text-[11px] font-medium truncate ${live ? 'text-white' : 'text-gray-300'}`}>
-                  {fixture.awayTeamName || fixture.awayTeam}
+                <span className="text-sm font-medium text-white truncate">
+                  {fixture.awayTeam || fixture.awayTeamName}
                 </span>
               </div>
-              {showScore && (
-                <span className={`text-sm sm:text-xs font-bold ml-2 ${live ? 'text-purple-400' : 'text-white'}`}>
-                  {score.away ?? '-'}
-                </span>
-              )}
+              <span className={`text-base font-bold ${
+                live ? 'text-white' : 
+                finished ? 'text-gray-300' : 
+                'text-gray-500'
+              }`}>
+                {score.away}
+              </span>
             </div>
           </div>
 
-          {/* Favorite Button - Mobile optimized touch target */}
-          <div className="flex-shrink-0 min-w-[44px] flex items-center justify-center sm:min-w-0">
-            <FavoriteButton
-              fixtureId={Number(fixture.fixtureId || fixture.id)}
-              homeTeam={fixture.homeTeamName || fixture.homeTeam}
-              awayTeam={fixture.awayTeamName || fixture.awayTeam}
-              date={fixture.date || selectedDate.toISOString()}
-              league={fixture.league || fixture.leagueName || ''}
+          {/* Favorite Button */}
+          <div className="flex-shrink-0">
+            <FavoriteButton 
+              fixtureId={fixture.id || fixture.fixtureId}
               size="sm"
             />
           </div>
         </div>
 
-        {/* Live Stats - Only show for live matches */}
+        {/* Live Stats Preview */}
         {live && (
-          <LiveMatchStats 
-            fixtureId={Number(fixture.fixtureId || fixture.id)} 
-            compact={true}
-          />
+          <div className="mt-2 pt-2 border-t border-gray-700/50">
+            <LiveMatchStats 
+              fixtureId={Number(fixture.id || fixture.fixtureId)} 
+              compact={true}
+            />
+          </div>
         )}
       </div>
     );
   };
 
-  return (
-    <div className={`${embedded ? '' : 'min-h-screen'} bg-[#0a0a0a]`}>
-      <div className="container mx-auto px-3 py-4 sm:px-2 sm:py-3 max-w-6xl">
-        {/* Header - Mobile optimized */}
-        <div className="flex items-center justify-between mb-3 sm:mb-2">
-          <h1 className="text-lg sm:text-base font-bold text-white">FIXTURES</h1>
-          {onClose && (
-            <button
-              onClick={onClose}
-              className="px-3 py-2 sm:px-2 sm:py-1 bg-gray-900 hover:bg-gray-800 active:bg-gray-700 text-white rounded text-sm sm:text-xs transition-colors border border-gray-800 min-h-[44px] sm:min-h-0"
-            >
-              Close
-            </button>
-          )}
-        </div>
+  const renderLeagueSection = (league: string, fixtures: Fixture[], isLiveSection: boolean = false) => {
+    const isExpanded = isLiveSection ? expandedLiveLeagues.has(league) : expandedLeagues.has(league);
+    const toggleFunc = isLiveSection ? toggleLiveLeague : toggleLeague;
+    const isFavorite = isFavoriteLeague(league);
 
-        {/* Date Selector - Mobile optimized */}
-        <div className="bg-[#0f0f0f] border border-gray-800 rounded-lg p-3 sm:p-2 mb-3 sm:mb-2">
-          <div className="flex items-center gap-2 sm:gap-1.5 mb-2 sm:mb-1.5">
-            <Calendar className="w-4 h-4 sm:w-3 sm:h-3 text-gray-600" />
-            <span className="text-xs sm:text-[10px] font-semibold text-white">SELECT DATE</span>
-          </div>
-          
-          {/* Horizontal scroll date picker - Mobile optimized */}
-          <div className="flex items-center gap-2 sm:gap-1.5 overflow-x-auto pb-2 sm:pb-1 scrollbar-thin scrollbar-thumb-gray-700 scrollbar-track-gray-900 -mx-1 px-1">
-            {dateRange.map((date, index) => {
-              const selected = isSameDay(date, selectedDate);
-              const today = isToday(date);
-              const dateLabel = today ? 'Today' : date.getDate().toString();
-              
-              return (
-                <button
-                  key={index}
-                  onClick={() => setSelectedDate(date)}
-                  className={`flex-shrink-0 px-3 py-2 sm:px-2 sm:py-1 rounded text-xs sm:text-[10px] font-medium transition-all border min-h-[44px] sm:min-h-0 ${
-                    selected
-                      ? 'bg-purple-600 border-purple-500 text-white shadow-lg shadow-purple-500/50'
-                      : today
-                      ? 'bg-purple-900/30 border-purple-700 text-purple-400 font-bold'
-                      : 'bg-gray-900 border-gray-800 text-gray-400 hover:bg-gray-800 active:bg-gray-700'
-                  }`}
-                >
-                  <div className="text-center">
-                    <div className={`font-semibold ${selected ? 'text-white' : today ? 'text-purple-400' : 'text-gray-300'}`}>
-                      {dateLabel}
-                    </div>
-                    <div className={`text-[10px] sm:text-[9px] ${selected ? 'text-purple-200' : today ? 'text-purple-500' : 'text-gray-600'}`}>
-                      {date.toLocaleDateString('en-GB', { month: 'short' })}
-                    </div>
-                  </div>
-                </button>
-              );
-            })}
-          </div>
+    // Extract country from formatted league name
+    const [country, leagueName] = league.includes(': ') 
+      ? league.split(': ') 
+      : [undefined, league];
 
-          {/* Controls - Mobile optimized */}
-          <div className="flex items-center justify-between mt-2 sm:mt-1.5 pt-2 sm:pt-1.5 border-t border-gray-800">
-            <div className="flex items-center gap-2 sm:gap-1.5">
-              <button
-                onClick={() => changeDate(-1)}
-                className="p-2 sm:p-0.5 hover:bg-gray-900 active:bg-gray-800 rounded transition-colors min-h-[44px] min-w-[44px] sm:min-h-0 sm:min-w-0 flex items-center justify-center"
-              >
-                <ChevronLeft className="w-4 h-4 sm:w-3 sm:h-3 text-gray-500" />
-              </button>
-              
-              <span className={`text-xs sm:text-[10px] font-semibold ${isToday(selectedDate) ? 'text-purple-400' : 'text-white'}`}>
-                {formatDate(selectedDate)}
+    // Get league ID from first fixture
+    const leagueId = fixtures[0]?.leagueId;
+
+    return (
+      <div key={league} className="mb-4">
+        <button
+          onClick={() => toggleFunc(league)}
+          className={`w-full flex items-center justify-between p-3 rounded-lg transition-all ${
+            isLiveSection 
+              ? 'bg-gradient-to-r from-red-900/20 to-purple-900/20 hover:from-red-900/30 hover:to-purple-900/30 border border-red-500/20' 
+              : 'bg-gray-800/60 hover:bg-gray-700/60 border border-gray-700/50'
+          }`}
+        >
+          <div className="flex items-center gap-3">
+            <LeagueLogo 
+              leagueId={leagueId} 
+              leagueName={leagueName || league} 
+              size="sm"
+            />
+            <div className="flex items-center gap-2">
+              <span className={`font-semibold ${
+                isLiveSection ? 'text-red-400' : 'text-purple-400'
+              }`}>
+                {league}
               </span>
-
-              <button
-                onClick={() => changeDate(1)}
-                className="p-2 sm:p-0.5 hover:bg-gray-900 active:bg-gray-800 rounded transition-colors min-h-[44px] min-w-[44px] sm:min-h-0 sm:min-w-0 flex items-center justify-center"
-              >
-                <ChevronRight className="w-4 h-4 sm:w-3 sm:h-3 text-gray-500" />
-              </button>
+              {isFavorite && (
+                <Star className="w-4 h-4 text-yellow-400 fill-yellow-400" />
+              )}
             </div>
-
-            <div className="flex items-center gap-2 sm:gap-1.5">
-              <button
-                onClick={() => fetchFixtures(true)}
-                disabled={loading || refreshing}
-                className="flex items-center gap-1.5 sm:gap-1 px-3 py-2 sm:px-2 sm:py-0.5 bg-gray-900 hover:bg-gray-800 active:bg-gray-700 text-white rounded text-xs sm:text-[10px] transition-colors disabled:opacity-50 border border-gray-800 min-h-[44px] sm:min-h-0"
-              >
-                <RefreshCw className={`w-3.5 h-3.5 sm:w-2.5 sm:h-2.5 ${(loading || refreshing) ? 'animate-spin' : ''}`} />
-                <span className="hidden sm:inline">Refresh</span>
-              </button>
-
-              <label className="flex items-center gap-1.5 sm:gap-1 text-white text-xs sm:text-[10px] min-h-[44px] sm:min-h-0">
-                <input
-                  type="checkbox"
-                  checked={autoRefresh}
-                  onChange={(e) => setAutoRefresh(e.target.checked)}
-                  className="w-4 h-4 sm:w-2.5 sm:h-2.5"
-                />
-                Auto
-              </label>
-            </div>
+            <span className="text-sm text-gray-400">
+              ({fixtures.length})
+            </span>
           </div>
-        </div>
-
-        {/* Loading State - Only show on initial load */}
-        {loading && !refreshing && (
-          <div className="text-center py-8 sm:py-6">
-            <RefreshCw className="w-8 h-8 sm:w-6 sm:h-6 text-purple-500 animate-spin mx-auto mb-2 sm:mb-1.5" />
-            <p className="text-gray-600 text-xs sm:text-[10px]">Loading fixtures...</p>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={(e) => handleLeagueFavoriteClick(e, leagueName || league, country)}
+              className="p-1 hover:bg-gray-700/50 rounded transition-colors"
+            >
+              <Star 
+                className={`w-5 h-5 ${
+                  isFavorite 
+                    ? 'text-yellow-400 fill-yellow-400' 
+                    : 'text-gray-500 hover:text-yellow-400'
+                }`}
+              />
+            </button>
+            {isExpanded ? (
+              <ChevronUp className="w-5 h-5 text-gray-400" />
+            ) : (
+              <ChevronDown className="w-5 h-5 text-gray-400" />
+            )}
           </div>
-        )}
+        </button>
 
-        {/* Error State */}
-        {error && (
-          <div className="bg-red-950/30 border border-red-900/50 rounded-lg p-3 sm:p-2 mb-3 sm:mb-2">
-            <div className="flex items-center gap-2 sm:gap-1.5">
-              <AlertCircle className="w-4 h-4 sm:w-3 sm:h-3 text-red-400" />
-              <p className="text-red-400 text-xs sm:text-[10px]">{error}</p>
-            </div>
-          </div>
-        )}
-
-        {/* No Fixtures */}
-        {!loading && !error && fixtures.length === 0 && (
-          <div className="text-center py-8 sm:py-6">
-            <Calendar className="w-10 h-10 sm:w-8 sm:h-8 text-gray-700 mx-auto mb-2 sm:mb-1.5" />
-            <p className="text-gray-600 text-sm sm:text-xs">No fixtures for this date</p>
-          </div>
-        )}
-
-        {/* Live Now Section - Grouped by League - Mobile optimized */}
-        {!loading && !error && liveFixtures.length > 0 && (
-          <div className="mb-3 sm:mb-2">
-            <div className="bg-[#0f0f0f] border-l-2 border-purple-500 border-r border-t border-b border-gray-800 rounded-lg overflow-hidden shadow-lg shadow-purple-500/20">
-              <div className="px-3 py-2 sm:px-2 sm:py-1.5 flex items-center justify-between bg-purple-950/30 border-b border-gray-800">
-                <div className="flex items-center gap-2 sm:gap-1.5">
-                  <Radio className="w-4 h-4 sm:w-3 sm:h-3 text-purple-500 animate-pulse" />
-                  <span className="text-xs sm:text-[10px] font-bold text-purple-400">LIVE NOW</span>
-                  <span className="text-[10px] sm:text-[9px] text-purple-400 bg-purple-950/60 px-1.5 py-0.5 sm:px-1 sm:py-0.5 rounded border border-purple-700/50">
-                    {liveFixtures.length}
-                  </span>
-                </div>
-              </div>
-              
-              {/* Live Leagues - Mobile optimized with enhanced borders */}
-              <div className="space-y-0">
-                {sortLeagues(Object.entries(groupedLiveFixtures)).map(([league, leagueFixtures], index, array) => {
-                  const firstFixture = leagueFixtures[0];
-                  const isFavorite = isFavoriteLeague(league);
-                  const isLast = index === array.length - 1;
-                  return (
-                    <div 
-                      key={league} 
-                      className={`${!isLast ? 'border-b-2 border-purple-900/50 mb-2' : ''}`}
-                    >
-                      {/* Live League Header - Mobile optimized touch target */}
-                      <div className="w-full px-3 py-2 sm:px-2 sm:py-1.5 flex items-center justify-between hover:bg-gray-900/30 min-h-[44px] sm:min-h-0 bg-gradient-to-r from-purple-950/20 to-transparent">
-                        <button
-                          onClick={() => toggleLiveLeague(league)}
-                          className="flex items-center gap-2 sm:gap-1.5 flex-1"
-                        >
-                          <LeagueLogo
-                            leagueId={firstFixture.leagueId}
-                            leagueName={league}
-                            size="sm"
-                          />
-                          <span className="text-xs sm:text-[10px] font-semibold text-white">{league}</span>
-                          <span className="text-[10px] sm:text-[9px] text-gray-600">({leagueFixtures.length})</span>
-                        </button>
-                        <div className="flex items-center gap-2 sm:gap-1">
-                          <button
-                            onClick={(e) => handleLeagueFavoriteClick(e, league, firstFixture.country)}
-                            className="p-1 hover:bg-gray-800/50 rounded transition-colors"
-                            title={isFavorite ? 'Remove from favorites' : 'Add to favorites'}
-                          >
-                            <Star
-                              className={`w-4 h-4 sm:w-3 sm:h-3 ${isFavorite ? 'text-yellow-400 fill-yellow-400' : 'text-gray-600'}`}
-                            />
-                          </button>
-                          <button onClick={() => toggleLiveLeague(league)}>
-                            {expandedLiveLeagues.has(league) ? (
-                              <ChevronUp className="w-4 h-4 sm:w-3 sm:h-3 text-gray-600" />
-                            ) : (
-                              <ChevronDown className="w-4 h-4 sm:w-3 sm:h-3 text-gray-600" />
-                            )}
-                          </button>
-                        </div>
-                      </div>
-
-                      {/* Live League Fixtures */}
-                      {expandedLiveLeagues.has(league) && (
-                        <div>
-                          {leagueFixtures.map(renderFixtureRow)}
-                        </div>
-                      )}
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Fixtures List - Mobile optimized */}
-        {!loading && !error && fixtures.length > 0 && (
-          <div className="space-y-2 sm:space-y-1.5">
-            {sortLeagues(Object.entries(groupedFixtures)).map(([league, leagueFixtures]) => {
-              const firstFixture = leagueFixtures[0];
-              const isFavorite = isFavoriteLeague(league);
-              return (
-                <div key={league} className="bg-[#0f0f0f] border border-gray-800 rounded-lg overflow-hidden">
-                  {/* League Header with Logo and Star - Mobile optimized */}
-                  <div className="w-full px-3 py-2 sm:px-2 sm:py-1.5 flex items-center justify-between hover:bg-gray-900/50 min-h-[44px] sm:min-h-0">
-                    <button
-                      onClick={() => toggleLeague(league)}
-                      className="flex items-center gap-2 sm:gap-1.5 flex-1"
-                    >
-                      <LeagueLogo
-                        leagueId={firstFixture.leagueId}
-                        leagueName={league}
-                        size="sm"
-                      />
-                      <span className="text-xs sm:text-[11px] font-bold text-white">{league}</span>
-                      <span className="text-[10px] sm:text-[9px] text-gray-600">({leagueFixtures.length})</span>
-                    </button>
-                    <div className="flex items-center gap-2 sm:gap-1">
-                      <button
-                        onClick={(e) => handleLeagueFavoriteClick(e, league, firstFixture.country)}
-                        className="p-1 hover:bg-gray-800/50 rounded transition-colors"
-                        title={isFavorite ? 'Remove from favorites' : 'Add to favorites'}
-                      >
-                        <Star
-                          className={`w-4 h-4 sm:w-3 sm:h-3 ${isFavorite ? 'text-yellow-400 fill-yellow-400' : 'text-gray-600'}`}
-                        />
-                      </button>
-                      <button onClick={() => toggleLeague(league)}>
-                        {expandedLeagues.has(league) ? (
-                          <ChevronUp className="w-4 h-4 sm:w-3 sm:h-3 text-gray-600" />
-                        ) : (
-                          <ChevronDown className="w-4 h-4 sm:w-3 sm:h-3 text-gray-600" />
-                        )}
-                      </button>
-                    </div>
-                  </div>
-
-                  {/* League Fixtures */}
-                  {expandedLeagues.has(league) && (
-                    <div className="border-t border-gray-800">
-                      {leagueFixtures.map(renderFixtureRow)}
-                    </div>
-                  )}
-                </div>
-              );
-            })}
+        {isExpanded && (
+          <div className="mt-2 space-y-2">
+            {fixtures.map(renderFixture)}
           </div>
         )}
       </div>
+    );
+  };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="text-center">
+          <RefreshCw className="w-8 h-8 text-purple-500 animate-spin mx-auto mb-2" />
+          <p className="text-gray-400">Loading fixtures...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="text-center">
+          <AlertCircle className="w-8 h-8 text-red-500 mx-auto mb-2" />
+          <p className="text-red-400 mb-4">{error}</p>
+          <button
+            onClick={() => fetchFixtures(true)}
+            className="px-4 py-2 bg-purple-600 hover:bg-purple-700 rounded-lg transition-colors"
+          >
+            Retry
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <h2 className="text-2xl font-bold text-white">Fixtures</h2>
+        <button
+          onClick={() => setAutoRefresh(!autoRefresh)}
+          className={`flex items-center gap-2 px-3 py-2 rounded-lg transition-all ${
+            autoRefresh 
+              ? 'bg-purple-600 hover:bg-purple-700 text-white' 
+              : 'bg-gray-700 hover:bg-gray-600 text-gray-300'
+          }`}
+        >
+          <RefreshCw className={`w-4 h-4 ${refreshing ? 'animate-spin' : ''}`} />
+          <span className="text-sm">Auto-refresh {autoRefresh ? 'ON' : 'OFF'}</span>
+        </button>
+      </div>
+
+      {/* Date Selector */}
+      <div className="bg-gray-800/60 rounded-lg p-4 border border-gray-700/50">
+        <div className="flex items-center justify-between mb-3">
+          <button
+            onClick={() => changeDate(-1)}
+            className="p-2 hover:bg-gray-700/50 rounded-lg transition-colors"
+          >
+            <ChevronLeft className="w-5 h-5 text-purple-400" />
+          </button>
+          
+          <div className="text-center">
+            <div className={`text-lg font-bold ${
+              formatDate(selectedDate) === 'TODAY' 
+                ? 'text-purple-400 text-xl' 
+                : 'text-white'
+            }`}>
+              {formatDate(selectedDate)}
+            </div>
+            <div className="text-sm text-gray-400">
+              {selectedDate.toLocaleDateString('en-US', { 
+                year: 'numeric', 
+                month: 'long', 
+                day: 'numeric' 
+              })}
+            </div>
+          </div>
+
+          <button
+            onClick={() => changeDate(1)}
+            className="p-2 hover:bg-gray-700/50 rounded-lg transition-colors"
+          >
+            <ChevronRight className="w-5 h-5 text-purple-400" />
+          </button>
+        </div>
+
+        {/* Date Pills */}
+        <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
+          {dateRange.map((date, index) => {
+            const isSelected = date.toDateString() === selectedDate.toDateString();
+            const isToday = date.toDateString() === new Date().toDateString();
+            
+            return (
+              <button
+                key={index}
+                onClick={() => setSelectedDate(date)}
+                className={`flex-shrink-0 px-3 py-2 rounded-lg text-sm font-medium transition-all ${
+                  isSelected
+                    ? 'bg-purple-600 text-white'
+                    : isToday
+                    ? 'bg-purple-900/30 text-purple-400 border border-purple-500/30'
+                    : 'bg-gray-700/50 text-gray-300 hover:bg-gray-600/50'
+                }`}
+              >
+                <div className="text-xs opacity-75">
+                  {date.toLocaleDateString('en-US', { weekday: 'short' })}
+                </div>
+                <div className="font-bold">
+                  {date.getDate()}
+                </div>
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Live Fixtures Section */}
+      {liveFixtures.length > 0 && (
+        <div className="space-y-4">
+          <div className="flex items-center gap-2">
+            <Radio className="w-5 h-5 text-red-500 animate-pulse" />
+            <h3 className="text-xl font-bold text-red-400">LIVE NOW</h3>
+            <span className="text-sm text-gray-400">({liveFixtures.length})</span>
+          </div>
+          
+          <div className="space-y-3">
+            {sortedLiveLeagues.map(league => 
+              renderLeagueSection(league, groupedLiveFixtures[league], true)
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Regular Fixtures Section */}
+      {nonLiveFixtures.length > 0 ? (
+        <div className="space-y-4">
+          {liveFixtures.length > 0 && (
+            <div className="border-t border-gray-700/50 pt-4">
+              <h3 className="text-xl font-bold text-purple-400 mb-4">
+                All Fixtures ({nonLiveFixtures.length})
+              </h3>
+            </div>
+          )}
+          
+          <div className="space-y-3">
+            {sortedLeagues.map(league => 
+              renderLeagueSection(league, groupedFixtures[league], false)
+            )}
+          </div>
+        </div>
+      ) : liveFixtures.length === 0 && (
+        <div className="text-center py-12">
+          <Calendar className="w-12 h-12 text-gray-600 mx-auto mb-3" />
+          <p className="text-gray-400">No fixtures for this date</p>
+        </div>
+      )}
 
       {/* Match Detail Drawer */}
       <MatchDetailDrawer
-        fixture={selectedFixture}
         isOpen={isMatchDetailOpen}
         onClose={closeMatchDetail}
+        fixture={selectedFixture}
       />
     </div>
   );
