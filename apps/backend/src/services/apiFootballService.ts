@@ -276,6 +276,58 @@ export async function fetchEvents(fixtureId: number) {
     comments: e.comments,
   }));
 }
+
+/**
+ * Fetch fixtures with odds for a specific date
+ * @param date - Date in YYYY-MM-DD format
+ * @returns Array of fixtures with odds
+ */
+export async function fetchFixturesWithOdds(date: string): Promise<FixtureData[]> {
+  console.log(`📅 Fetching fixtures with odds for ${date}...`);
+
+  try {
+    // Step 1: Fetch all fixtures for the date
+    const fixtures = await fetchFixtures(date);
+    
+    if (fixtures.length === 0) {
+      console.log(`ℹ️  No fixtures found for ${date}`);
+      return [];
+    }
+
+    console.log(`✅ Found ${fixtures.length} fixtures for ${date}`);
+    console.log(`💰 Fetching odds for ${fixtures.length} fixtures...`);
+
+    // Step 2: Fetch odds for each fixture
+    const fixturesWithOdds: FixtureData[] = [];
+    
+    for (const fixture of fixtures) {
+      try {
+        // Fetch odds for this fixture
+        const odds = await fetchOdds(fixture.fixtureId);
+        
+        // Add odds to fixture data
+        fixturesWithOdds.push({
+          ...fixture,
+          odds: odds || undefined  // Only include if odds exist
+        });
+
+        // Rate limiting: Wait 1 second between requests
+        await new Promise(resolve => setTimeout(resolve, 1000));
+      } catch (error: any) {
+        console.warn(`⚠️  Error fetching odds for fixture ${fixture.fixtureId}:`, error.message);
+        // Include fixture without odds
+        fixturesWithOdds.push(fixture);
+      }
+    }
+
+    console.log(`✅ Successfully fetched ${fixturesWithOdds.length} fixtures with odds`);
+    return fixturesWithOdds;
+  } catch (error: any) {
+    console.error(`❌ Error in fetchFixturesWithOdds:`, error.message);
+    throw error;
+  }
+}
+
+// Stub functions for future implementation
 export async function fetchFixtureStats() { return null; }
 export async function fetchTeamLastFixtures() { return null; }
-export async function fetchFixturesWithOdds() { return null; }
