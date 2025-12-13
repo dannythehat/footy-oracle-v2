@@ -98,27 +98,50 @@ export async function fetchOdds(fixtureId: number): Promise<any> {
 
       const bets = res.bookmakers[0].bets;
 
+      // Helper: Get odds by bet ID and value
       function get(bid: number, value: string) {
         const market = bets.find((b: any) => b.id === bid);
         return market?.values?.find((v: any) => v.value === value)?.odd;
+      }
+
+      // Helper: Get odds by string matching (fallback for when IDs don't match)
+      function getByName(namePattern: string, valuePattern: string) {
+        for (const bet of bets) {
+          const betName = (bet.name || "").toLowerCase();
+          if (betName.includes(namePattern)) {
+            const match = bet.values?.find((v: any) => 
+              (v.value || "").toLowerCase().includes(valuePattern)
+            );
+            if (match) {
+              const oddValue = parseFloat(match.odd);
+              return isFinite(oddValue) ? oddValue : undefined;
+            }
+          }
+        }
+        return undefined;
       }
 
       const odds = {
         homeWin: get(1, "Home"),
         draw: get(1, "Draw"),
         awayWin: get(1, "Away"),
-        btts: get(8, "Yes"),
-        over25: get(5, "Over 2.5"),
-        under25: get(5, "Under 2.5"),
-        over95corners: get(12, "Over 9.5"),
-        over35cards: get(11, "Over 3.5"),
+        btts: get(8, "Yes") || getByName("both teams to score", "yes") || getByName("btts", "yes"),
+        over25: get(5, "Over 2.5") || getByName("goals", "over 2.5") || getByName("total", "over 2.5"),
+        under25: get(5, "Under 2.5") || getByName("goals", "under 2.5") || getByName("total", "under 2.5"),
+        over95corners: get(12, "Over 9.5") || getByName("corners", "over 9.5") || getByName("corner", "over 9.5"),
+        over35cards: get(11, "Over 3.5") || getByName("cards", "over 3.5") || getByName("bookings", "over 3.5"),
       };
 
       // Check if we got at least some odds
       const hasOdds = Object.values(odds).some(odd => odd !== undefined);
       
       if (hasOdds) {
-        console.log(`✅ Got odds for fixture ${fixtureId} from ${bookmaker.name}`);
+        console.log(`✅ Got odds for fixture ${fixtureId} from ${bookmaker.name}:`, {
+          btts: odds.btts ? '✓' : '✗',
+          over25: odds.over25 ? '✓' : '✗',
+          over95corners: odds.over95corners ? '✓' : '✗',
+          over35cards: odds.over35cards ? '✓' : '✗'
+        });
         return odds;
       } else {
         console.log(`⚠️  ${bookmaker.name} returned empty odds for fixture ${fixtureId}`);
