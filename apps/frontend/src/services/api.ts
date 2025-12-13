@@ -17,6 +17,13 @@ export const api = {
   goldenBetsToday: () => fetchJSON("/api/golden-bets/today"),
   valueBetsToday: () => fetchJSON("/api/value-bets/today"),
   betBuilderToday: () => fetchJSON("/api/betbuilder"),
+  get: async (endpoint: string) => {
+    const response = await fetch(`${API_URL}${endpoint}`);
+    if (!response.ok) {
+      throw new Error(`API error: ${response.status}`);
+    }
+    return { data: await response.json() };
+  },
 };
 
 // Fixtures API - comprehensive fixture data access
@@ -74,4 +81,8 @@ export const fixturesApi = {
 export const betBuilderApi = {
   getToday: () => fetchJSON("/api/bet-builder/today"),
   getById: (id: string) => fetchJSON(`/api/bet-builder/${id}`),
+  getHistory: () => fetchJSON("/api/bet-builder/history"),
 };
+
+// Default export for backward compatibility
+export default api;
