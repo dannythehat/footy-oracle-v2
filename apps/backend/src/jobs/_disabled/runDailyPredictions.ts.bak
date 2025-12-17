@@ -1,0 +1,158 @@
+﻿import axios from "axios";
+import mongoose from "mongoose";
+import Fixture from "../models/Fixture.js";
+import GoldenBet from "../models/GoldenBet.js";
+import ValueBet from "../models/ValueBet.js";
+import BetBuilder from "../models/BetBuilder.js";
+
+const ML_API_URL = process.env.ML_API_URL;
+const MONGO_URI = process.env.MONGO_URI || process.env.MONGO;
+
+if (!ML_API_URL) {
+  throw new Error("ML_API_URL is not defined");
+}
+
+function startOfTodayUTC() {
+  const d = new Date();
+  d.setUTCHours(0, 0, 0, 0);
+  return d;
+}
+
+function endOfTodayUTC() {
+  const d = new Date();
+  d.setUTCHours(23, 59, 59, 999);
+  return d;
+}
+
+export async function runDailyPredictions() {
+  console.log("🧠 Running daily ML predictions…");
+
+  if (!mongoose.connection.readyState) {
+    await mongoose.connect(MONGO_URI!);
+  }
+
+  const fixtures = await Fixture.find({
+    date: {
+      $gte: startOfTodayUTC(),
+      $lte: endOfTodayUTC(),
+    },
+    odds: { $exists: true },
+    statusShort: "NS",
+  }).lean();
+
+  if (!fixtures.length) {
+    console.log("⚠️ No fixtures found for today");
+    return;
+  }
+
+  console.log(`📅 Fixtures found: ${fixtures.length}`);
+
+  const payload = fixtures.map(f => ({
+    fixtureId: f.fixtureId,
+    homeTeam: f.homeTeam,
+    awayTeam: f.awayTeam,
+    league: f.league,
+    odds: f.odds,
+  }));
+
+  const { data: predictions } = await axios.post(
+    `${ML_API_URL}/predict`,
+    { fixtures: payload },
+    { timeout: 60000 }
+  );
+
+  if (!Array.isArray(predictions)) {
+    throw new Error("Invalid ML response");
+  }
+
+  const goldenBets: any[] = [];
+  const valueBets: any[] = [];
+  let bestBuilder: any | null = null;
+
+  for (const p of predictions) {
+    const fixture = fixtures.find(f => f.fixtureId === p.fixtureId);
+    if (!fixture) continue;
+
+    const probs = p.probabilities;
+
+    const markets = [
+      { key: "btts", label: "BTTS", prob: probs.btts },
+      { key: "over25", label: "Over 2.5 Goals", prob: probs.over25 },
+      { key: "over95corners", label: "Over 9.5 Corners", prob: probs.cornersOver95 },
+      { key: "over35cards", label: "Over 3.5 Cards", prob: probs.cardsOver35 },
+    ].filter(m => m.prob !== undefined);
+
+    markets.sort((a, b) => b.prob - a.prob);
+
+    const top = markets[0];
+    if (top && top.prob >= 0.6) {
+      goldenBets.push({
+        date: startOfTodayUTC(),
+        fixtureId: fixture.fixtureId,
+        league: fixture.league,
+        homeTeam: fixture.homeTeam,
+        awayTeam: fixture.awayTeam,
+        market: top.label,
+        probability: top.prob,
+      });
+    }
+
+    for (const m of markets) {
+      const odds = fixture.odds?.[m.key];
+      if (!odds || odds < 1.6) continue;
+
+      const implied = 1 / odds;
+      const edge = m.prob - implied;
+
+      if (edge >= 0.05) {
+        valueBets.push({
+          date: startOfTodayUTC(),
+          fixtureId: fixture.fixtureId,
+          league: fixture.league,
+          homeTeam: fixture.homeTeam,
+          awayTeam: fixture.awayTeam,
+          market: m.label,
+          odds,
+          probability: m.prob,
+          edge,
+        });
+      }
+    }
+
+    const legs = markets.filter(m => m.prob >= 0.7).slice(0, 3);
+    if (legs.length === 3) {
+      const combinedProb = legs.reduce((a, l) => a * l.prob, 1) * 0.75;
+
+      if (!bestBuilder || combinedProb > bestBuilder.probability) {
+        bestBuilder = {
+          date: startOfTodayUTC(),
+          fixtureId: fixture.fixtureId,
+          league: fixture.league,
+          homeTeam: fixture.homeTeam,
+          awayTeam: fixture.awayTeam,
+          legs: legs.map(l => l.label),
+          probability: combinedProb,
+        };
+      }
+    }
+  }
+
+  await GoldenBet.deleteMany({ date: startOfTodayUTC() });
+  await ValueBet.deleteMany({ date: startOfTodayUTC() });
+  await BetBuilder.deleteMany({ date: startOfTodayUTC() });
+
+  if (goldenBets.length) await GoldenBet.insertMany(goldenBets);
+  if (valueBets.length) await ValueBet.insertMany(valueBets);
+  if (bestBuilder) await BetBuilder.create(bestBuilder);
+
+  console.log("✅ Daily predictions completed");
+}
+
+if (process.argv[1]?.includes("runDailyPredictions")) {
+  runDailyPredictions()
+    .then(() => process.exit(0))
+    .catch(err => {
+      console.error(err);
+      process.exit(1);
+    });
+}

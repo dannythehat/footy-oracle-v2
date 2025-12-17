@@ -1,8 +1,7 @@
 ﻿import "dotenv/config";
 import app from "./app.js";
 import mongoose from "mongoose";
-import { startMlCron } from "./cron/mlPredictionsCron.js";
-import { startBetBuilderCron } from "./cron/betBuilderCron.js";
+import { startDailyOracleCron } from "./cron/dailyOracleCron.js";
 
 const PORT = process.env.PORT || 10000;
 const MONGO = process.env.MONGODB_URI;
@@ -20,8 +19,7 @@ async function start() {
       console.log("Backend running on port", PORT);
     });
 
-    startMlCron();
-    startBetBuilderCron();
+    startDailyOracleCron();
 
   } catch (err) {
     console.error("Server start error:", err);

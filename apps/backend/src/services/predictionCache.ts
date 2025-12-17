@@ -1,14 +1,13 @@
-let predictions: any[] = [];
+﻿let predictions: any[] = [];
 let goldenBets: any[] = [];
 let valueBets: any[] = [];
+let dailyOracle: any = null;
 
 export const predictionCache = {
-  // SETTERS
   setPredictions(list: any[]) {
     predictions = list || [];
   },
 
-  // Legacy setter names
   setGolden(list: any[]) {
     goldenBets = list || [];
   },
@@ -16,7 +15,6 @@ export const predictionCache = {
     valueBets = list || [];
   },
 
-  // New setter names used by cron
   setGoldenBets(list: any[]) {
     goldenBets = list || [];
   },
@@ -24,7 +22,10 @@ export const predictionCache = {
     valueBets = list || [];
   },
 
-  // GETTERS
+  setDailyOracle(snapshot: any) {
+    dailyOracle = snapshot;
+  },
+
   getPredictions() {
     return predictions;
   },
@@ -34,23 +35,16 @@ export const predictionCache = {
   getValueBets() {
     return valueBets;
   },
+  getDailyOracle() {
+    return dailyOracle;
+  },
 
   getStatus() {
     return {
       predictions: predictions.length,
       goldenBets: goldenBets.length,
       valueBets: valueBets.length,
+      hasOracle: !!dailyOracle
     };
-  },
-
-  // Property-style access (used in routes like goldenBets.js / valueBets.js)
-  get predictions() {
-    return predictions;
-  },
-  get goldenBets() {
-    return goldenBets;
-  },
-  get valueBets() {
-    return valueBets;
   },
 };

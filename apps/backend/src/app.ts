@@ -7,6 +7,7 @@ import betBuilderRoutes from "./routes/betBuilder.js";
 import cacheDebugRoutes from "./routes/cacheDebug.js";
 import adminRoutes from "./routes/admin.js";
 import liveFixturesRoutes from "./routes/liveFixtures.js";
+import oracleRoutes from "./routes/oracle.js";
 
 const app = express();
 app.use(cors());
@@ -16,10 +17,9 @@ app.use(express.json());
 app.use("/api/golden-bets", goldenBetsRoutes);
 app.use("/api/value-bets", valueBetsRoutes);
 app.use("/api/bet-builder", betBuilderRoutes);
+app.use("/api/oracle", oracleRoutes);
 app.use("/api/debug", cacheDebugRoutes);
 app.use("/api/admin", adminRoutes);
-
-// NEW — Live fixtures
 app.use("/api/live-fixtures", liveFixturesRoutes);
 
 export default app;
