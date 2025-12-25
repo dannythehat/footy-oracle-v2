@@ -11,6 +11,7 @@ export default function LeagueTablesSection() {
   const topGoalsOver = tables?.goals?.over_2_5?.slice(0, 5) || [];
   const topBTTS = tables?.btts?.yes?.slice(0, 5) || [];
   const topCorners = tables?.corners?.over_9_5?.slice(0, 5) || [];
+  const topCards = tables?.cards?.over_3_5?.slice(0, 5) || [];
 
   return (
     <section className="max-w-7xl mx-auto mt-20 px-4 animate-fade-in">
@@ -30,8 +31,8 @@ export default function LeagueTablesSection() {
       </div>
 
       {isLoading ? (
-        <div className="grid md:grid-cols-3 gap-6">
-          {[1, 2, 3].map((i) => (
+        <div className="grid md:grid-cols-4 gap-6">
+          {[1, 2, 3, 4].map((i) => (
             <div
               key={i}
               className="relative h-80 rounded-2xl bg-gradient-to-br from-purple-950/20 to-black border border-purple-500/20 overflow-hidden"
@@ -42,7 +43,7 @@ export default function LeagueTablesSection() {
         </div>
       ) : (
         <>
-          <div className="grid md:grid-cols-3 gap-6 mb-8">
+          <div className="grid md:grid-cols-4 gap-6 mb-8">
             {/* Goals Over 2.5 */}
             <Premium3DCard glowColor="purple" className="p-6">
               <h3 className="text-xl font-bold text-purple-300 mb-4 flex items-center gap-2">
@@ -95,6 +96,28 @@ export default function LeagueTablesSection() {
               </h3>
               <div className="space-y-3">
                 {topCorners.map((entry, idx) => (
+                  <div key={idx} className="flex items-center justify-between p-3 rounded-lg bg-black/50 border border-purple-500/10">
+                    <div className="flex-1">
+                      <div className="text-sm font-semibold text-white">{entry.team}</div>
+                      <div className="text-xs text-zinc-500">{entry.league}</div>
+                    </div>
+                    <div className="text-right">
+                      <div className="text-sm font-bold text-purple-300">{entry.percentage.toFixed(0)}%</div>
+                      <div className="text-xs text-zinc-500">{entry.games} games</div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </Premium3DCard>
+
+            {/* Cards */}
+            <Premium3DCard glowColor="purple" className="p-6">
+              <h3 className="text-xl font-bold text-purple-300 mb-4 flex items-center gap-2">
+                <Trophy className="w-5 h-5" />
+                Cards Over 3.5
+              </h3>
+              <div className="space-y-3">
+                {topCards.map((entry, idx) => (
                   <div key={idx} className="flex items-center justify-between p-3 rounded-lg bg-black/50 border border-purple-500/10">
                     <div className="flex-1">
                       <div className="text-sm font-semibold text-white">{entry.team}</div>
