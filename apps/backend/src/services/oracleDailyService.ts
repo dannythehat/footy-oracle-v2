@@ -1,85 +1,94 @@
 import fs from "fs";
 import path from "path";
-import { predictionCache } from "./predictionCache.js";
+import { getTodayFixturesFromDB } from "./fixtureReadService";
+import { runOracleSelectionEngine } from "./oracleSelectionEngine";
 
-const ML_OUTPUT_DIR = "C:/Users/Danny/football-betting-ai-system/shared/ml_outputs";
+function loadJson<T>(filePath: string): T {
+  if (!fs.existsSync(filePath)) {
+    throw new Error(`Missing required file: ${filePath}`);
+  }
+  return JSON.parse(fs.readFileSync(filePath, "utf-8"));
+}
 
-function loadJson(file: string) {
-  const full = path.join(ML_OUTPUT_DIR, file);
-  if (!fs.existsSync(full)) return null;
-  return JSON.parse(fs.readFileSync(full, "utf-8"));
+function norm(v: any): string {
+  return String(v)
+    .toLowerCase()
+    .replace(/[^a-z\s]/g, "")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function extractPredictionFixtureId(p: any): string | null {
+  if (p.fixtureId != null) return String(p.fixtureId);
+  if (p.match_id != null) return String(p.match_id);
+  if (p.fixture?.id != null) return String(p.fixture.id);
+  return null;
 }
 
 export async function generateDailyOracle() {
-  const predictions = loadJson("predictions.json") || [];
-  const oddsSnapshot = loadJson("odds_snapshot.json") || {};
-  const aiReasoning = loadJson("ai_reasoning.json") || {};
+  const fixtures = await getTodayFixturesFromDB();
+  if (!fixtures.length) {
+    throw new Error("No fixtures found for today");
+  }
 
-  // ---- GOLDEN PER FIXTURE ----
-  const goldenPerFixture = predictions.map((p: any) => {
-    const markets = [
-      { key: "over25", prob: p.over25 },
-      { key: "btts", prob: p.btts },
-      { key: "corners_over95", prob: p.corners_over95 },
-      { key: "cards_over35", prob: p.cards_over35 }
-    ];
+  const outputsRoot =
+    process.env.ML_OUTPUTS_PATH ||
+    path.resolve(process.cwd(), "../../shared/ml_outputs");
 
-    const best = markets.sort((a, b) => b.prob - a.prob)[0];
-    const odds = oddsSnapshot[p.fixtureId]?.[best.key] ?? null;
+  const predictions = loadJson<any[]>(
+    path.join(outputsRoot, "predictions.json")
+  );
 
-    return {
-      fixtureId: p.fixtureId,
-      league: p.league,
-      homeTeam: p.homeTeam,
-      awayTeam: p.awayTeam,
-      market: best.key,
-      probability: best.prob,
-      odds,
-      reasoning: aiReasoning[p.fixtureId]?.[best.key] ?? null
-    };
-  });
+  const oddsSnapshot = loadJson<any>(
+    path.join(outputsRoot, "odds_snapshot.json")
+  );
 
-  // ---- TOP 3 GOLDEN ----
-  const topGolden = goldenPerFixture
-    .filter(g => g.odds && g.odds >= 1.6)
-    .sort((a, b) => b.probability - a.probability)
-    .slice(0, 3);
+  const predictionMap = new Map<string, any>();
+  for (const p of predictions) {
+    const fid = extractPredictionFixtureId(p);
+    if (fid) predictionMap.set(fid, p);
+  }
 
-  // ---- VALUE BETS ----
-  const valueBets = goldenPerFixture
-    .map(g => {
-      if (!g.odds) return null;
-      const implied = 1 / g.odds;
-      const edge = g.probability - implied;
-      return { ...g, edge };
+  // --- Build odds map ---
+  const oddsMap = new Map<string, any>();
+
+  // Direct fixtureId keys
+  for (const k of Object.keys(oddsSnapshot)) {
+    oddsMap.set(String(k), oddsSnapshot[k]);
+  }
+
+  // Fallback: match by team names
+  for (const f of fixtures) {
+    const fid = String(f.fixtureId);
+    if (oddsMap.has(fid)) continue;
+
+    const fh = norm(f.homeTeam);
+    const fa = norm(f.awayTeam);
+
+    for (const ev of Object.values(oddsSnapshot)) {
+      const eh = norm((ev as any).home_team);
+      const ea = norm((ev as any).away_team);
+      if (fh === eh && fa === ea) {
+        oddsMap.set(fid, ev);
+        break;
+      }
+    }
+  }
+
+  const candidates = fixtures
+    .map(f => {
+      const fid = String(f.fixtureId);
+      return {
+        fixture: f,
+        prediction: predictionMap.get(fid),
+        odds: oddsMap.get(fid),
+      };
     })
-    .filter(v => v && v.odds >= 1.6 && v.edge >= 0.05)
-    .sort((a, b) => b.edge - a.edge)
-    .slice(0, 3);
+    .filter(c => c.prediction && c.odds);
 
-  // ---- BET BUILDER OF THE DAY ----
-  const builderLegs = [...topGolden, ...valueBets]
-    .filter(l => l.probability >= 0.7)
-    .slice(0, 4);
+  if (!candidates.length) {
+    console.warn("⚠️ Oracle ran but no candidates matched.");
+  }
 
-  const betBuilder =
-    builderLegs.length >= 3
-      ? {
-          legs: builderLegs,
-          combinedProbability: builderLegs.reduce((a, b) => a * b.probability, 1),
-          combinedOdds:
-            builderLegs.reduce((a, b) => a * (b.odds || 1), 1) * 0.75
-        }
-      : null;
-
-  const snapshot = {
-    date: new Date().toISOString().slice(0, 10),
-    goldenPerFixture,
-    topGolden,
-    valueBets,
-    betBuilder
-  };
-
-  predictionCache.setDailyOracle(snapshot);
-  return snapshot;
+  return runOracleSelectionEngine(candidates);
 }
