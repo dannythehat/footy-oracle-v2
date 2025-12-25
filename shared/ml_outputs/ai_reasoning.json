@@ -1,0 +1,26 @@
+{
+  "total": 3,
+  "byFixture": {
+    "1001": {
+      "fixtureId": 1001,
+      "match": "Test United vs Mock City",
+      "gaffer": "**Match:** Test United vs Mock City\n**The Gaffer says:**\nThe Gaffer\u2019s crystal ball\u2019s a bit cloudy for this one, lads, but Over 2.5 Goals still feels the right side of it. Once the first goes in, these two don\u2019t know how to sit back \u2014 it opens right up. Both have leaky backlines and pace on the break, so goals can follow once the deadlock\u2019s broken. Not a lump-on, mind you \u2014 more one that creeps there late, proper nervy stuff.\n\n**Prediction:** Over 2.5 Goals\n**Confidence:** 1%",
+      "prediction": "Over 2.5 Goals",
+      "confidence": 1
+    },
+    "1002": {
+      "fixtureId": 1002,
+      "match": "Low Block FC vs Sleepy Town",
+      "gaffer": "**Match:** Low Block FC vs Sleepy Town\n**The Gaffer says:**\nThe Gaffer\u2019s crystal ball\u2019s a bit cloudy for this one, lads, but Over 2.5 Goals still feels the right side of it. Once the first goes in, these two don\u2019t know how to sit back \u2014 it opens right up. Both have leaky backlines and pace on the break, so goals can follow once the deadlock\u2019s broken. Not a lump-on, mind you \u2014 more one that creeps there late, proper nervy stuff.\n\n**Prediction:** Over 2.5 Goals\n**Confidence:** 1%",
+      "prediction": "Over 2.5 Goals",
+      "confidence": 1
+    },
+    "1003": {
+      "fixtureId": 1003,
+      "match": "Card Merchants vs Corner Kings",
+      "gaffer": "**Match:** Card Merchants vs Corner Kings\n**The Gaffer says:**\nThe Gaffer\u2019s crystal ball\u2019s a bit cloudy for this one, lads, but Over 2.5 Goals still feels the right side of it. Once the first goes in, these two don\u2019t know how to sit back \u2014 it opens right up. Both have leaky backlines and pace on the break, so goals can follow once the deadlock\u2019s broken. Not a lump-on, mind you \u2014 more one that creeps there late, proper nervy stuff.\n\n**Prediction:** Over 2.5 Goals\n**Confidence:** 1%",
+      "prediction": "Over 2.5 Goals",
+      "confidence": 1
+    }
+  }
+}

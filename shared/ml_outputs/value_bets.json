@@ -1,1 +1,95 @@
-[]
+{
+  "run_date": "2025-12-25",
+  "value_bets": [
+    {
+      "fixture_id": 1382578,
+      "home_team": "Genk",
+      "away_team": "Club Brugge KV",
+      "league": "Jupiler Pro League",
+      "market": "cards",
+      "confidence": 65.10894012451172,
+      "odds": null
+    },
+    {
+      "fixture_id": 1386255,
+      "home_team": "Milton Keynes Dons",
+      "away_team": "Swindon Town",
+      "league": "League Two",
+      "market": "goals",
+      "confidence": 64.8504638671875,
+      "odds": null
+    },
+    {
+      "fixture_id": 1386257,
+      "home_team": "Tranmere",
+      "away_team": "Fleetwood Town",
+      "league": "League Two",
+      "market": "goals",
+      "confidence": 66.97772979736328,
+      "odds": null
+    },
+    {
+      "fixture_id": 1386258,
+      "home_team": "Walsall",
+      "away_team": "Crewe",
+      "league": "League Two",
+      "market": "cards",
+      "confidence": 64.48905181884766,
+      "odds": null
+    },
+    {
+      "fixture_id": 1386816,
+      "home_team": "Norwich",
+      "away_team": "Charlton",
+      "league": "Championship",
+      "market": "corners",
+      "confidence": 64.6206283569336,
+      "odds": null
+    },
+    {
+      "fixture_id": 1386826,
+      "home_team": "Sheffield Wednesday",
+      "away_team": "Hull City",
+      "league": "Championship",
+      "market": "cards",
+      "confidence": 67.73178100585938,
+      "odds": null
+    },
+    {
+      "fixture_id": 1387356,
+      "home_team": "Barnsley",
+      "away_team": "Mansfield Town",
+      "league": "League One",
+      "market": "corners",
+      "confidence": 65.3403549194336,
+      "odds": null
+    },
+    {
+      "fixture_id": 1387359,
+      "home_team": "Bradford",
+      "away_team": "Wigan",
+      "league": "League One",
+      "market": "cards",
+      "confidence": 67.69473266601562,
+      "odds": null
+    },
+    {
+      "fixture_id": 1387361,
+      "home_team": "Huddersfield",
+      "away_team": "Port Vale",
+      "league": "League One",
+      "market": "goals",
+      "confidence": 60.00165939331055,
+      "odds": null
+    },
+    {
+      "fixture_id": 1387365,
+      "home_team": "Stockport County",
+      "away_team": "Lincoln",
+      "league": "League One",
+      "market": "cards",
+      "confidence": 64.55042266845703,
+      "odds": null
+    }
+  ]
+}

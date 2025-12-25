@@ -1,1 +1,36 @@
-[]
+{
+  "run_date": "2025-12-25",
+  "bet_builder": {
+    "fixture_id": 1386257,
+    "home_team": "Tranmere",
+    "away_team": "Fleetwood Town",
+    "league": "League Two",
+    "kickoff": "2025-12-26T15:00:00+00:00",
+    "markets": [
+      {
+        "market": "corners",
+        "prediction": "Yes",
+        "confidence": 78.05427551269531
+      },
+      {
+        "market": "cards",
+        "prediction": "Yes",
+        "confidence": 83.14466857910156
+      }
+    ],
+    "combined_confidence": 55.163273383821945,
+    "combined_odds": 1.81,
+    "individual_odds": {
+      "over25": 4.2,
+      "under25": 1.16,
+      "btts_yes": 1.66,
+      "btts_no": 2.06,
+      "over95corners": 1.77,
+      "under95corners": 1.79,
+      "over35cards": 1.65,
+      "under35cards": 1.83,
+      "bookmaker_used": "Marathonbet"
+    },
+    "commentary": "Multi-market combination: CORNERS, CARDS. 2 strong signals converge in this match with adjusted 55.2% confidence."
+  }
+}
