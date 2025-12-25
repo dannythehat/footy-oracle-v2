@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import GoldenBetsSection from '../components/sections/GoldenBetsSection';
 import ValueBetsSection from '../components/sections/ValueBetsSection';
 import BetBuilderSection from '../components/sections/BetBuilderSection';
+import LeagueTablesSection from '../components/sections/LeagueTablesSection';
 
 export default function HomePageWithBetBuilder() {
   const navigate = useNavigate();
@@ -46,6 +47,9 @@ export default function HomePageWithBetBuilder() {
 
       {/* BET BUILDER */}
       <BetBuilderSection />
+
+      {/* LEAGUE TABLES */}
+      <LeagueTablesSection />
 
     </div>
   );
