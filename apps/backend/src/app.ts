@@ -9,6 +9,7 @@ import adminRoutes from "./routes/admin.js";
 import liveFixturesRoutes from "./routes/liveFixtures.js";
 import oracleRoutes from "./routes/oracle.js";
 import leagueTablesRoutes from "./routes/leagueTables.js";
+import betHistoryRoutes from "./routes/betHistory.js";
 
 const app = express();
 app.use(cors());
@@ -20,6 +21,7 @@ app.use("/api/value-bets", valueBetsRoutes);
 app.use("/api/bet-builder", betBuilderRoutes);
 app.use("/api/oracle", oracleRoutes);
 app.use("/api/league-tables", leagueTablesRoutes);
+app.use("/api/bet-history", betHistoryRoutes);
 app.use("/api/debug", cacheDebugRoutes);
 app.use("/api/admin", adminRoutes);
 app.use("/api/live-fixtures", liveFixturesRoutes);
