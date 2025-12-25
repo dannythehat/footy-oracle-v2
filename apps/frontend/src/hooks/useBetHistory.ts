@@ -24,26 +24,55 @@ export interface BetHistoryEntry {
   createdAt: string;
 }
 
-export interface BetStats {
+export interface PeriodStats {
   totalBets: number;
   wins: number;
   losses: number;
-  pending: number;
+  totalStake: number;
   totalProfitLoss: number;
   winRate: number;
   avgConfidence: number;
+  avgOdds: number;
+  roi: number;
   byType: {
     goldenBets: {
       total: number;
       wins: number;
+      losses: number;
       profitLoss: number;
+      winRate: number;
     };
     betBuilders: {
       total: number;
       wins: number;
+      losses: number;
       profitLoss: number;
+      winRate: number;
     };
   };
+}
+
+export interface DailyTrend {
+  date: string;
+  bets: number;
+  profitLoss: number;
+  wins: number;
+  losses: number;
+}
+
+export interface BetStats {
+  today: PeriodStats;
+  week: PeriodStats;
+  month: PeriodStats;
+  year: PeriodStats;
+  allTime: PeriodStats;
+  pending: {
+    total: number;
+    goldenBets: number;
+    betBuilders: number;
+    totalStake: number;
+  };
+  dailyTrend: DailyTrend[];
 }
 
 const fetchBetHistory = async (filters?: { betType?: string; result?: string; limit?: number }): Promise<{ bets: BetHistoryEntry[]; total: number }> => {
@@ -56,8 +85,8 @@ const fetchBetHistory = async (filters?: { betType?: string; result?: string; li
   return response.data;
 };
 
-const fetchBetStats = async (days: number = 30): Promise<BetStats> => {
-  const response = await api.get(`/api/bet-history/stats?days=${days}`);
+const fetchBetStats = async (): Promise<BetStats> => {
+  const response = await api.get(`/api/bet-history/stats`);
   return response.data.stats;
 };
 
@@ -68,9 +97,9 @@ export const useBetHistory = (filters?: { betType?: string; result?: string; lim
     staleTime: 1000 * 60 * 5, // 5 minutes
   });
 
-export const useBetStats = (days: number = 30) =>
+export const useBetStats = () =>
   useQuery({
-    queryKey: ["bet-stats", days],
-    queryFn: () => fetchBetStats(days),
+    queryKey: ["bet-stats"],
+    queryFn: fetchBetStats,
     staleTime: 1000 * 60 * 5, // 5 minutes
   });

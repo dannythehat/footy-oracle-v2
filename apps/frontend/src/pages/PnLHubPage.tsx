@@ -1,12 +1,12 @@
 import React, { useState } from 'react';
 import { useBetHistory, useBetStats } from '../hooks/useBetHistory';
-import { TrendingUp, TrendingDown, Trophy, Calendar, CheckCircle, XCircle, Clock, DollarSign, Target } from 'lucide-react';
+import { TrendingUp, TrendingDown, Trophy, Calendar, CheckCircle, XCircle, Clock, DollarSign, Target, BarChart3 } from 'lucide-react';
 import Premium3DCard from '../components/Premium3DCard';
 
 export default function PnLHubPage() {
   const [selectedFilter, setSelectedFilter] = useState<'all' | 'golden_bet' | 'bet_builder'>('all');
   const [resultFilter, setResultFilter] = useState<'all' | 'win' | 'loss' | 'pending'>('all');
-  const [days, setDays] = useState(30);
+  const [periodView, setPeriodView] = useState<'today' | 'week' | 'month' | 'year' | 'allTime'>('month');
   
   const { data: historyData, isLoading: historyLoading } = useBetHistory({
     betType: selectedFilter !== 'all' ? selectedFilter : undefined,
@@ -14,9 +14,10 @@ export default function PnLHubPage() {
     limit: 100
   });
   
-  const { data: stats, isLoading: statsLoading } = useBetStats(days);
+  const { data: stats, isLoading: statsLoading } = useBetStats();
   
   const bets = historyData?.bets || [];
+  const currentStats = stats?.[periodView];
   
   return (
     <div className="min-h-screen bg-[#0a0015] text-white p-6">
@@ -31,20 +32,43 @@ export default function PnLHubPage() {
         </p>
       </div>
 
-      {/* Stats Cards */}
+      {/* Period Tabs */}
       {!statsLoading && stats && (
         <div className="max-w-7xl mx-auto mb-8">
-          <div className="grid md:grid-cols-4 gap-6">
+          <Premium3DCard glowColor="purple" className="p-2">
+            <div className="flex gap-2">
+              {(['today', 'week', 'month', 'year', 'allTime'] as const).map((period) => (
+                <button
+                  key={period}
+                  onClick={() => setPeriodView(period)}
+                  className={`flex-1 px-4 py-3 rounded-lg font-semibold transition-all ${
+                    periodView === period
+                      ? 'bg-purple-500 text-white'
+                      : 'bg-zinc-900 text-zinc-400 hover:bg-zinc-800'
+                  }`}
+                >
+                  {period === 'allTime' ? 'All Time' : period.charAt(0).toUpperCase() + period.slice(1)}
+                </button>
+              ))}
+            </div>
+          </Premium3DCard>
+        </div>
+      )}
+
+      {/* Stats Cards */}
+      {!statsLoading && stats && currentStats && (
+        <div className="max-w-7xl mx-auto mb-8">
+          <div className="grid md:grid-cols-5 gap-6">
             {/* Total P&L */}
-            <Premium3DCard glowColor={stats.totalProfitLoss >= 0 ? 'green' : 'red'} className="p-6">
+            <Premium3DCard glowColor={currentStats.totalProfitLoss >= 0 ? 'green' : 'red'} className="p-6">
               <div className="flex items-center justify-between mb-2">
                 <span className="text-sm text-zinc-400">Total P&L</span>
                 <DollarSign className="w-5 h-5 text-zinc-400" />
               </div>
-              <div className={`text-3xl font-bold ${stats.totalProfitLoss >= 0 ? 'text-green-400' : 'text-red-400'}`}>
-                {stats.totalProfitLoss >= 0 ? '+' : ''}£{stats.totalProfitLoss.toFixed(2)}
+              <div className={`text-3xl font-bold ${currentStats.totalProfitLoss >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                {currentStats.totalProfitLoss >= 0 ? '+' : ''}£{currentStats.totalProfitLoss.toFixed(2)}
               </div>
-              <div className="text-xs text-zinc-500 mt-1">Last {days} days</div>
+              <div className="text-xs text-zinc-500 mt-1">{currentStats.totalBets} bets</div>
             </Premium3DCard>
 
             {/* Win Rate */}
@@ -54,9 +78,21 @@ export default function PnLHubPage() {
                 <Target className="w-5 h-5 text-zinc-400" />
               </div>
               <div className="text-3xl font-bold text-purple-400">
-                {stats.winRate.toFixed(1)}%
+                {currentStats.winRate.toFixed(1)}%
               </div>
-              <div className="text-xs text-zinc-500 mt-1">{stats.wins}/{stats.totalBets} wins</div>
+              <div className="text-xs text-zinc-500 mt-1">{currentStats.wins}W / {currentStats.losses}L</div>
+            </Premium3DCard>
+
+            {/* ROI */}
+            <Premium3DCard glowColor="blue" className="p-6">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-sm text-zinc-400">ROI</span>
+                <BarChart3 className="w-5 h-5 text-zinc-400" />
+              </div>
+              <div className={`text-3xl font-bold ${currentStats.roi >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                {currentStats.roi >= 0 ? '+' : ''}{currentStats.roi.toFixed(1)}%
+              </div>
+              <div className="text-xs text-zinc-500 mt-1">£{currentStats.totalStake} staked</div>
             </Premium3DCard>
 
             {/* Golden Bets */}
@@ -65,31 +101,78 @@ export default function PnLHubPage() {
                 <span className="text-sm text-zinc-400">Golden Bets</span>
                 <Trophy className="w-5 h-5 text-yellow-400" />
               </div>
-              <div className={`text-3xl font-bold ${stats.byType.goldenBets.profitLoss >= 0 ? 'text-green-400' : 'text-red-400'}`}>
-                {stats.byType.goldenBets.profitLoss >= 0 ? '+' : ''}£{stats.byType.goldenBets.profitLoss.toFixed(2)}
+              <div className={`text-3xl font-bold ${currentStats.byType.goldenBets.profitLoss >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                {currentStats.byType.goldenBets.profitLoss >= 0 ? '+' : ''}£{currentStats.byType.goldenBets.profitLoss.toFixed(2)}
               </div>
-              <div className="text-xs text-zinc-500 mt-1">{stats.byType.goldenBets.wins}/{stats.byType.goldenBets.total} wins</div>
+              <div className="text-xs text-zinc-500 mt-1">{currentStats.byType.goldenBets.winRate.toFixed(0)}% WR</div>
             </Premium3DCard>
 
             {/* Bet Builders */}
-            <Premium3DCard glowColor="blue" className="p-6">
+            <Premium3DCard glowColor="cyan" className="p-6">
               <div className="flex items-center justify-between mb-2">
                 <span className="text-sm text-zinc-400">Bet Builders</span>
-                <Trophy className="w-5 h-5 text-blue-400" />
+                <Trophy className="w-5 h-5 text-cyan-400" />
               </div>
-              <div className={`text-3xl font-bold ${stats.byType.betBuilders.profitLoss >= 0 ? 'text-green-400' : 'text-red-400'}`}>
-                {stats.byType.betBuilders.profitLoss >= 0 ? '+' : ''}£{stats.byType.betBuilders.profitLoss.toFixed(2)}
+              <div className={`text-3xl font-bold ${currentStats.byType.betBuilders.profitLoss >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                {currentStats.byType.betBuilders.profitLoss >= 0 ? '+' : ''}£{currentStats.byType.betBuilders.profitLoss.toFixed(2)}
               </div>
-              <div className="text-xs text-zinc-500 mt-1">{stats.byType.betBuilders.wins}/{stats.byType.betBuilders.total} wins</div>
+              <div className="text-xs text-zinc-500 mt-1">{currentStats.byType.betBuilders.winRate.toFixed(0)}% WR</div>
             </Premium3DCard>
           </div>
+        </div>
+      )}
+
+      {/* Daily Trend Chart (30 days) */}
+      {!statsLoading && stats?.dailyTrend && (
+        <div className="max-w-7xl mx-auto mb-8">
+          <Premium3DCard glowColor="purple" className="p-6">
+            <h3 className="text-xl font-bold text-purple-300 mb-4 flex items-center gap-2">
+              <BarChart3 className="w-5 h-5" />
+              30-Day P&L Trend
+            </h3>
+            <div className="h-64 flex items-end gap-1">
+              {stats.dailyTrend.map((day, idx) => {
+                const maxProfit = Math.max(...stats.dailyTrend.map(d => Math.abs(d.profitLoss)));
+                const height = maxProfit > 0 ? (Math.abs(day.profitLoss) / maxProfit) * 100 : 0;
+                
+                return (
+                  <div 
+                    key={idx} 
+                    className="flex-1 group relative flex flex-col justify-end"
+                  >
+                    <div 
+                      className={`w-full rounded-t transition-all ${
+                        day.profitLoss >= 0 
+                          ? 'bg-green-500 hover:bg-green-400' 
+                          : 'bg-red-500 hover:bg-red-400'
+                      }`}
+                      style={{ height: `${height}%`, minHeight: day.bets > 0 ? '4px' : '0' }}
+                    >
+                      {/* Tooltip */}
+                      <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 hidden group-hover:block bg-zinc-900 border border-purple-500/30 rounded-lg p-2 text-xs whitespace-nowrap z-10">
+                        <div className="font-semibold">{new Date(day.date).toLocaleDateString()}</div>
+                        <div className={day.profitLoss >= 0 ? 'text-green-400' : 'text-red-400'}>
+                          {day.profitLoss >= 0 ? '+' : ''}£{day.profitLoss.toFixed(2)}
+                        </div>
+                        <div className="text-zinc-500">{day.wins}W / {day.losses}L</div>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+            <div className="mt-4 flex justify-between text-xs text-zinc-500">
+              <span>{stats.dailyTrend[0]?.date}</span>
+              <span>{stats.dailyTrend[stats.dailyTrend.length - 1]?.date}</span>
+            </div>
+          </Premium3DCard>
         </div>
       )}
 
       {/* Filters */}
       <div className="max-w-7xl mx-auto mb-8">
         <Premium3DCard glowColor="purple" className="p-6">
-          <div className="grid md:grid-cols-3 gap-6">
+          <div className="grid md:grid-cols-2 gap-6">
             <div>
               <label className="block text-sm text-zinc-400 mb-2">Bet Type</label>
               <select
@@ -114,20 +197,6 @@ export default function PnLHubPage() {
                 <option value="win">Wins Only</option>
                 <option value="loss">Losses Only</option>
                 <option value="pending">Pending Only</option>
-              </select>
-            </div>
-
-            <div>
-              <label className="block text-sm text-zinc-400 mb-2">Time Period</label>
-              <select
-                value={days}
-                onChange={(e) => setDays(parseInt(e.target.value))}
-                className="w-full bg-zinc-900 border border-purple-500/30 rounded-lg px-4 py-2 text-white"
-              >
-                <option value="7">Last 7 Days</option>
-                <option value="30">Last 30 Days</option>
-                <option value="90">Last 90 Days</option>
-                <option value="365">Last Year</option>
               </select>
             </div>
           </div>

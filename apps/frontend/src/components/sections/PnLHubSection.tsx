@@ -6,7 +6,9 @@ import Premium3DCard from '../Premium3DCard';
 
 export default function PnLHubSection() {
   const navigate = useNavigate();
-  const { data: stats, isLoading } = useBetStats(30);
+  const { data: stats, isLoading } = useBetStats();
+
+  const monthStats = stats?.month;
 
   return (
     <section className="max-w-7xl mx-auto mt-20 px-4 animate-fade-in">
@@ -29,20 +31,20 @@ export default function PnLHubSection() {
         <div className="text-center py-10">
           <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-green-500 mx-auto"></div>
         </div>
-      ) : stats ? (
+      ) : monthStats ? (
         <>
           <div className="grid md:grid-cols-3 gap-6 mb-8">
             {/* Total P&L */}
-            <Premium3DCard glowColor={stats.totalProfitLoss >= 0 ? 'green' : 'red'} className="p-6">
+            <Premium3DCard glowColor={monthStats.totalProfitLoss >= 0 ? 'green' : 'red'} className="p-6">
               <div className="flex items-center justify-between mb-4">
                 <span className="text-sm text-zinc-400 uppercase tracking-wide">30-Day P&L</span>
                 <DollarSign className="w-5 h-5 text-zinc-400" />
               </div>
-              <div className={`text-4xl font-bold ${stats.totalProfitLoss >= 0 ? 'text-green-400' : 'text-red-400'}`}>
-                {stats.totalProfitLoss >= 0 ? '+' : ''}£{stats.totalProfitLoss.toFixed(2)}
+              <div className={`text-4xl font-bold ${monthStats.totalProfitLoss >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                {monthStats.totalProfitLoss >= 0 ? '+' : ''}£{monthStats.totalProfitLoss.toFixed(2)}
               </div>
               <div className="mt-2 text-xs text-zinc-500">
-                {stats.totalBets} total bets
+                {monthStats.totalBets} total bets
               </div>
             </Premium3DCard>
 
@@ -53,24 +55,24 @@ export default function PnLHubSection() {
                 <Target className="w-5 h-5 text-zinc-400" />
               </div>
               <div className="text-4xl font-bold text-purple-400">
-                {stats.winRate.toFixed(1)}%
+                {monthStats.winRate.toFixed(1)}%
               </div>
               <div className="mt-2 text-xs text-zinc-500">
-                {stats.wins} wins / {stats.losses} losses
+                {monthStats.wins} wins / {monthStats.losses} losses
               </div>
             </Premium3DCard>
 
             {/* Verified Bets */}
             <Premium3DCard glowColor="yellow" className="p-6">
               <div className="flex items-center justify-between mb-4">
-                <span className="text-sm text-zinc-400 uppercase tracking-wide">Verified Bets</span>
+                <span className="text-sm text-zinc-400 uppercase tracking-wide">ROI</span>
                 <Trophy className="w-5 h-5 text-zinc-400" />
               </div>
-              <div className="text-4xl font-bold text-yellow-400">
-                {stats.totalBets}
+              <div className={`text-4xl font-bold ${monthStats.roi >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                {monthStats.roi >= 0 ? '+' : ''}{monthStats.roi.toFixed(1)}%
               </div>
               <div className="mt-2 text-xs text-zinc-500">
-                {stats.pending} pending results
+                on £{monthStats.totalStake} staked
               </div>
             </Premium3DCard>
           </div>
