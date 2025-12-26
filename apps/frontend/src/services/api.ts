@@ -22,4 +22,8 @@ export const api = {
   leagueTables: () => fetchJSON("/api/league-tables"),
 };
 
+export const fixturesApi = {
+  getByDate: (date: string) => fetchJSON(`/api/fixtures/today?tzOffset=-120`),
+};
+
 export default api;
