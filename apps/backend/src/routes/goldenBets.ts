@@ -1,19 +1,21 @@
 import express from "express";
-import { predictionCache } from "../services/predictionCache.js";
+import mongoose from "mongoose";
 
 const router = express.Router();
 
 router.get("/today", async (req, res) => {
   try {
-    const rawData: any = predictionCache.getGoldenBets() || [];
+    // Read directly from MongoDB
+    const GoldenBet = mongoose.connection.collection('golden_bets');
+    const bets = await GoldenBet.find({}).sort({ confidence: -1 }).limit(3).toArray();
     
-    // Handle both old and new data structures
-    let bets: any[] = [];
-    if (rawData && typeof rawData === 'object' && rawData.golden_bets) {
-      // New structure from COMPLETE_PRODUCTION_PIPELINE.py
-      bets = rawData.golden_bets;
-    } else if (Array.isArray(rawData)) {
-      bets = rawData;
+    if (!bets || bets.length === 0) {
+      return res.json({
+        success: true,
+        total: 0,
+        top3: [],
+        all: []
+      });
     }
 
     // Transform to frontend format
@@ -25,25 +27,20 @@ router.get("/today", async (req, res) => {
       league: bet.league,
       kickoff: bet.kickoff,
       market: bet.market,
-      selection: bet.selection,
-      confidence: Math.round(bet.confidence * 100) / 100, // Round to 2 decimals
-      odds: bet.odds || 1.75, // Default odds if missing
-      aiExplanation: bet.ai_explanation || bet.gaffer_says || "No commentary available",
+      selection: bet.prediction || 'Yes',
+      confidence: bet.confidence || 0,
+      odds: bet.odds || 1.75,
+      aiExplanation: bet.commentary || bet.gaffer_says || "No commentary available",
       status: bet.result || "pending"
     }));
-
-    // Sort by confidence and take top 3
-    const top3 = transformed
-      .sort((a, b) => b.confidence - a.confidence)
-      .slice(0, 3);
 
     return res.json({
       success: true,
       total: transformed.length,
-      top3,
+      top3: transformed,
       all: transformed
     });
-  } catch (err) {
+  } catch (err: any) {
     console.error("Golden Bets error:", err);
     return res.status(500).json({ 
       success: false,

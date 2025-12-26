@@ -1,50 +1,48 @@
 ﻿import express from "express";
-import fs from "fs";
-import path from "path";
+import mongoose from "mongoose";
 
 const router = express.Router();
 
-const ML_OUTPUT_DIR = process.env.ML_OUTPUTS_PATH || 
-  path.resolve(process.cwd(), "../../shared/ml_outputs");
-
 router.get("/today", async (req, res) => {
   try {
-    const filePath = path.join(ML_OUTPUT_DIR, "bet_builder.json");
+    const BetBuilder = mongoose.connection.collection('bet_builder_of_day');
+    const data = await BetBuilder.findOne({});
     
-    if (!fs.existsSync(filePath)) {
+    if (!data) {
       return res.json({
         success: true,
         betBuilder: null
       });
     }
 
-    const raw = fs.readFileSync(filePath, "utf8");
-    const data = JSON.parse(raw);
-    
     // Transform to frontend format
-    const bb = data.bet_builder ? {
-      id: data.bet_builder.bet_id || `bb_${data.bet_builder.fixture_id}`,
-      fixtureId: data.bet_builder.fixture_id,
-      homeTeam: data.bet_builder.home_team,
-      awayTeam: data.bet_builder.away_team,
-      league: data.bet_builder.league,
+    const bb = {
+      id: data.bet_id || `bb_${data.fixture_id}`,
+      fixtureId: data.fixture_id,
+      homeTeam: data.fixture?.split(' vs ')[0] || data.home_team || '',
+      awayTeam: data.fixture?.split(' vs ')[1] || data.away_team || '',
+      league: data.league,
       kickoff: data.bet_builder.kickoff,
       legs: (data.bet_builder.markets || data.bet_builder.legs || []).map(m => ({
         market: m.market,
         selection: m.prediction || m.selection,
-        confidence: Math.round((m.confidence || 0) * 100) / 100
+      kickoff: data.kickoff,
+      markets: (data.markets || []).map((m: any) => ({
+        market: m.market,
+        selection: m.prediction || 'Yes',
+        confidence: m.confidence || 0
       })),
-      combinedOdds: data.bet_builder.combined_odds,
-      confidence: Math.round((data.bet_builder.combined_confidence || 0) * 100) / 100,
-      aiExplanation: data.bet_builder.commentary || data.bet_builder.ai_explanation || "Multi-market bet builder",
-      status: data.bet_builder.result || "pending"
-    } : null;
+      combinedOdds: data.combined_odds,
+      confidence: data.combined_confidence || 0,
+      aiExplanation: data.commentary || data.ai_explanation || "Multi-market bet builder",
+      status: data.result || "pending"
+    };
 
     return res.json({
       success: true,
       betBuilder: bb
     });
-  } catch (err) {
+  } catch (err: any) {
     console.error("Bet Builder error:", err);
     return res.status(500).json({ 
       success: false,

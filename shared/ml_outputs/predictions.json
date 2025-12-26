@@ -1,916 +1,1562 @@
 {
   "run_date": "2025-12-26",
-  "total_fixtures": 24,
+  "total_fixtures": 41,
   "predictions": [
     {
-      "fixture_id": 1378029,
-      "home_team": "Parma",
-      "away_team": "Fiorentina",
-      "league": "Serie A",
-      "kickoff": "2025-12-27T11:30:00+00:00",
+      "fixture_id": 1382578,
+      "home_team": "Genk",
+      "away_team": "Club Brugge KV",
+      "league": "Jupiler Pro League",
+      "kickoff": "2025-12-26T12:30:00+00:00",
       "goals": {
         "prediction": "No",
-        "probability": 0.26131245493888855,
-        "confidence": 26.131244659423828
+        "probability": 0.1404321938753128,
+        "confidence": 14.043219566345215
       },
       "btts": {
         "prediction": "No",
-        "probability": 0.07752668112516403,
-        "confidence": 7.7526679039001465
+        "probability": 0.02378254570066929,
+        "confidence": 2.3782546520233154
       },
       "corners": {
-        "prediction": "Yes",
-        "probability": 0.7266242504119873,
-        "confidence": 72.66242218017578
+        "prediction": "No",
+        "probability": 0.22381143271923065,
+        "confidence": 22.38114356994629
       },
       "cards": {
         "prediction": "Yes",
-        "probability": 0.7487441301345825,
-        "confidence": 74.8744125366211
+        "probability": 0.6510893702507019,
+        "confidence": 65.10894012451172
       },
       "odds": {
-        "over25": 5.45,
-        "under25": 1.12,
-        "btts_yes": 1.87,
-        "btts_no": 1.83,
-        "over95corners": 1.87,
-        "under95corners": 1.87,
-        "over35cards": 1.7,
+        "over25": 3.58,
+        "under25": 1.23,
+        "btts_yes": 1.52,
+        "btts_no": 2.33,
+        "over95corners": 1.92,
+        "under95corners": 1.84,
+        "over35cards": 1.77,
         "under35cards": 1.77,
         "bookmaker_used": "Marathonbet"
       }
     },
     {
-      "fixture_id": 1379146,
-      "home_team": "Nottingham Forest",
-      "away_team": "Manchester City",
-      "league": "Premier League",
-      "kickoff": "2025-12-27T12:30:00+00:00",
+      "fixture_id": 1386815,
+      "home_team": "Birmingham",
+      "away_team": "Derby",
+      "league": "Championship",
+      "kickoff": "2025-12-26T12:30:00+00:00",
       "goals": {
         "prediction": "No",
-        "probability": 0.41118595004081726,
-        "confidence": 41.118595123291016
+        "probability": 0.19869157671928406,
+        "confidence": 19.869157791137695
       },
       "btts": {
         "prediction": "No",
-        "probability": 0.07329674065113068,
-        "confidence": 7.329674243927002
-      },
-      "corners": {
-        "prediction": "No",
-        "probability": 0.2799384891986847,
-        "confidence": 27.99384880065918
-      },
-      "cards": {
-        "prediction": "Yes",
-        "probability": 0.7823072671890259,
-        "confidence": 78.23072814941406
-      },
-      "odds": {
-        "over25": 3.58,
-        "under25": 1.27,
-        "btts_yes": 1.66,
-        "btts_no": 2.09,
-        "over95corners": 1.85,
-        "under95corners": 1.84,
-        "over35cards": 1.75,
-        "under35cards": 1.66,
-        "bookmaker_used": "Marathonbet"
-      }
-    },
-    {
-      "fixture_id": 1382585,
-      "home_team": "Antwerp",
-      "away_team": "Zulte Waregem",
-      "league": "Jupiler Pro League",
-      "kickoff": "2025-12-27T12:30:00+00:00",
-      "goals": {
-        "prediction": "Yes",
-        "probability": 0.6950011253356934,
-        "confidence": 69.50011444091797
-      },
-      "btts": {
-        "prediction": "No",
-        "probability": 0.09023966640233994,
-        "confidence": 9.023966789245605
+        "probability": 0.00739005021750927,
+        "confidence": 0.7390050292015076
       },
       "corners": {
         "prediction": "Yes",
-        "probability": 0.5588973760604858,
-        "confidence": 55.88973617553711
+        "probability": 0.860004186630249,
+        "confidence": 86.00041961669922
       },
       "cards": {
         "prediction": "Yes",
-        "probability": 0.6417523622512817,
-        "confidence": 64.17523956298828
+        "probability": 0.8287439942359924,
+        "confidence": 82.87439727783203
       },
       "odds": {
-        "over25": 4.2,
-        "under25": 1.17,
-        "btts_yes": 1.67,
-        "btts_no": 2.05,
-        "over95corners": 1.79,
-        "under95corners": 1.85,
-        "over35cards": 1.65,
-        "under35cards": 1.68,
-        "bookmaker_used": "Marathonbet"
-      }
-    },
-    {
-      "fixture_id": 1382774,
-      "home_team": "Hibernian",
-      "away_team": "Heart Of Midlothian",
-      "league": "Premiership",
-      "kickoff": "2025-12-27T12:30:00+00:00",
-      "goals": {
-        "prediction": "No",
-        "probability": 0.1741514801979065,
-        "confidence": 17.41514778137207
-      },
-      "btts": {
-        "prediction": "No",
-        "probability": 0.05673661828041077,
-        "confidence": 5.673661708831787
-      },
-      "corners": {
-        "prediction": "Yes",
-        "probability": 0.5769996643066406,
-        "confidence": 57.69996643066406
-      },
-      "cards": {
-        "prediction": "Yes",
-        "probability": 0.855678141117096,
-        "confidence": 85.56781768798828
-      },
-      "odds": {
-        "over25": 4.65,
-        "under25": 1.14,
-        "btts_yes": 1.73,
-        "btts_no": 1.97,
-        "over95corners": 1.75,
-        "under95corners": 1.76,
-        "over35cards": 1.78,
-        "under35cards": 1.85,
-        "bookmaker_used": "Marathonbet"
-      }
-    },
-    {
-      "fixture_id": 1378027,
-      "home_team": "Lecce",
-      "away_team": "Como",
-      "league": "Serie A",
-      "kickoff": "2025-12-27T14:00:00+00:00",
-      "goals": {
-        "prediction": "No",
-        "probability": 0.33549076318740845,
-        "confidence": 33.549076080322266
-      },
-      "btts": {
-        "prediction": "No",
-        "probability": 0.402010053396225,
-        "confidence": 40.20100402832031
-      },
-      "corners": {
-        "prediction": "No",
-        "probability": 0.3346400558948517,
-        "confidence": 33.46400451660156
-      },
-      "cards": {
-        "prediction": "Yes",
-        "probability": 0.5102051496505737,
-        "confidence": 51.02051544189453
-      },
-      "odds": {
-        "over25": 5.6,
+        "over25": 4.95,
         "under25": 1.11,
-        "btts_yes": 2.03,
-        "btts_no": 1.7,
-        "over95corners": 1.76,
-        "under95corners": 1.77,
-        "over35cards": 1.74,
-        "under35cards": 1.82,
+        "btts_yes": 1.94,
+        "btts_no": 1.75,
+        "over95corners": 1.84,
+        "under95corners": 1.85,
+        "over35cards": 1.71,
+        "under35cards": 1.73,
         "bookmaker_used": "Marathonbet"
       }
     },
     {
-      "fixture_id": 1378032,
-      "home_team": "Torino",
-      "away_team": "Cagliari",
-      "league": "Serie A",
-      "kickoff": "2025-12-27T14:00:00+00:00",
+      "fixture_id": 1386820,
+      "home_team": "Millwall",
+      "away_team": "Ipswich",
+      "league": "Championship",
+      "kickoff": "2025-12-26T13:00:00+00:00",
       "goals": {
         "prediction": "No",
-        "probability": 0.4453697204589844,
-        "confidence": 44.53697204589844
+        "probability": 0.4241572916507721,
+        "confidence": 42.41572952270508
       },
       "btts": {
         "prediction": "No",
-        "probability": 0.1888343095779419,
-        "confidence": 18.88343048095703
+        "probability": 0.11266268789768219,
+        "confidence": 11.266268730163574
       },
       "corners": {
         "prediction": "Yes",
-        "probability": 0.5999341607093811,
-        "confidence": 59.99341583251953
+        "probability": 0.5760215520858765,
+        "confidence": 57.60215377807617
       },
       "cards": {
         "prediction": "Yes",
-        "probability": 0.8753447532653809,
-        "confidence": 87.53447723388672
+        "probability": 0.8492541313171387,
+        "confidence": 84.9254150390625
       },
       "odds": {
-        "over25": 5.4,
-        "under25": 1.13,
-        "btts_yes": 1.93,
-        "btts_no": 1.78,
-        "over95corners": 1.76,
-        "under95corners": 1.91,
-        "over35cards": 1.76,
-        "under35cards": 1.84,
-        "bookmaker_used": "Marathonbet"
-      }
-    },
-    {
-      "fixture_id": 1379139,
-      "home_team": "Arsenal",
-      "away_team": "Brighton",
-      "league": "Premier League",
-      "kickoff": "2025-12-27T15:00:00+00:00",
-      "goals": {
-        "prediction": "No",
-        "probability": 0.10449180752038956,
-        "confidence": 10.449180603027344
-      },
-      "btts": {
-        "prediction": "No",
-        "probability": 0.02240658551454544,
-        "confidence": 2.2406585216522217
-      },
-      "corners": {
-        "prediction": "No",
-        "probability": 0.254652202129364,
-        "confidence": 25.465219497680664
-      },
-      "cards": {
-        "prediction": "Yes",
-        "probability": 0.505581259727478,
-        "confidence": 50.55812454223633
-      },
-      "odds": {
-        "over25": 3.58,
-        "under25": 1.27,
-        "btts_yes": 1.85,
-        "btts_no": 1.85,
-        "over95corners": 1.93,
-        "under95corners": 1.87,
+        "over25": 5.15,
+        "under25": 1.11,
+        "btts_yes": 1.89,
+        "btts_no": 1.79,
+        "over95corners": 1.94,
+        "under95corners": 1.84,
         "over35cards": 1.82,
         "under35cards": 1.8,
         "bookmaker_used": "Marathonbet"
       }
     },
     {
-      "fixture_id": 1379140,
-      "home_team": "Brentford",
-      "away_team": "Bournemouth",
-      "league": "Premier League",
-      "kickoff": "2025-12-27T15:00:00+00:00",
-      "goals": {
-        "prediction": "No",
-        "probability": 0.20321212708950043,
-        "confidence": 20.321212768554688
-      },
-      "btts": {
-        "prediction": "No",
-        "probability": 0.025552891194820404,
-        "confidence": 2.5552890300750732
-      },
-      "corners": {
-        "prediction": "Yes",
-        "probability": 0.7124823331832886,
-        "confidence": 71.24822998046875
-      },
-      "cards": {
-        "prediction": "Yes",
-        "probability": 0.7707405686378479,
-        "confidence": 77.07405853271484
-      },
-      "odds": {
-        "over25": 3.75,
-        "under25": 1.25,
-        "btts_yes": 1.56,
-        "btts_no": 2.27,
-        "over95corners": 1.93,
-        "under95corners": 1.87,
-        "over35cards": 1.68,
-        "under35cards": 1.75,
-        "bookmaker_used": "Marathonbet"
-      }
-    },
-    {
-      "fixture_id": 1379141,
-      "home_team": "Burnley",
-      "away_team": "Everton",
-      "league": "Premier League",
-      "kickoff": "2025-12-27T15:00:00+00:00",
-      "goals": {
-        "prediction": "No",
-        "probability": 0.2840864956378937,
-        "confidence": 28.408649444580078
-      },
-      "btts": {
-        "prediction": "No",
-        "probability": 0.071743443608284,
-        "confidence": 7.174344539642334
-      },
-      "corners": {
-        "prediction": "No",
-        "probability": 0.4527140259742737,
-        "confidence": 45.27140426635742
-      },
-      "cards": {
-        "prediction": "Yes",
-        "probability": 0.6645891666412354,
-        "confidence": 66.45891571044922
-      },
-      "odds": {
-        "over25": 5.25,
-        "under25": 1.13,
-        "btts_yes": 1.92,
-        "btts_no": 1.79,
-        "over95corners": 1.79,
-        "under95corners": 1.92,
-        "over35cards": 1.7,
-        "under35cards": 1.75,
-        "bookmaker_used": "Marathonbet"
-      }
-    },
-    {
-      "fixture_id": 1379144,
-      "home_team": "Liverpool",
-      "away_team": "Wolves",
-      "league": "Premier League",
-      "kickoff": "2025-12-27T15:00:00+00:00",
-      "goals": {
-        "prediction": "No",
-        "probability": 0.33423087000846863,
-        "confidence": 33.42308807373047
-      },
-      "btts": {
-        "prediction": "No",
-        "probability": 0.19290275871753693,
-        "confidence": 19.29027557373047
-      },
-      "corners": {
-        "prediction": "Yes",
-        "probability": 0.6713350415229797,
-        "confidence": 67.13350677490234
-      },
-      "cards": {
-        "prediction": "Yes",
-        "probability": 0.767238199710846,
-        "confidence": 76.72382354736328
-      },
-      "odds": {
-        "over25": 3.18,
-        "under25": 1.33,
-        "btts_yes": 1.96,
-        "btts_no": 1.75,
-        "over95corners": 1.86,
-        "under95corners": 1.82,
-        "over35cards": 1.84,
-        "under35cards": 1.73,
-        "bookmaker_used": "Marathonbet"
-      }
-    },
-    {
-      "fixture_id": 1379148,
-      "home_team": "West Ham",
-      "away_team": "Fulham",
-      "league": "Premier League",
-      "kickoff": "2025-12-27T15:00:00+00:00",
-      "goals": {
-        "prediction": "No",
-        "probability": 0.31450024247169495,
-        "confidence": 31.450023651123047
-      },
-      "btts": {
-        "prediction": "No",
-        "probability": 0.09394357353448868,
-        "confidence": 9.394357681274414
-      },
-      "corners": {
-        "prediction": "Yes",
-        "probability": 0.7561653256416321,
-        "confidence": 75.61653137207031
-      },
-      "cards": {
-        "prediction": "Yes",
-        "probability": 0.8723276257514954,
-        "confidence": 87.2327651977539
-      },
-      "odds": {
-        "over25": 4.2,
-        "under25": 1.21,
-        "btts_yes": 1.61,
-        "btts_no": 2.17,
-        "over95corners": 1.79,
-        "under95corners": 1.92,
-        "over35cards": 1.83,
-        "under35cards": 1.71,
-        "bookmaker_used": "Marathonbet"
-      }
-    },
-    {
-      "fixture_id": 1382580,
-      "home_team": "RAAL La Louvi\u00e8re",
-      "away_team": "OH Leuven",
+      "fixture_id": 1382584,
+      "home_team": "Cercle Brugge",
+      "away_team": "Union St. Gilloise",
       "league": "Jupiler Pro League",
-      "kickoff": "2025-12-27T15:00:00+00:00",
+      "kickoff": "2025-12-26T15:00:00+00:00",
       "goals": {
         "prediction": "No",
-        "probability": 0.28527674078941345,
-        "confidence": 28.527673721313477
+        "probability": 0.1869177669286728,
+        "confidence": 18.691776275634766
       },
       "btts": {
         "prediction": "No",
-        "probability": 0.16599266231060028,
-        "confidence": 16.599266052246094
-      },
-      "corners": {
-        "prediction": "Yes",
-        "probability": 0.7298875451087952,
-        "confidence": 72.98875427246094
-      },
-      "cards": {
-        "prediction": "Yes",
-        "probability": 0.7294044494628906,
-        "confidence": 72.94044494628906
-      },
-      "odds": {
-        "over25": 5.6,
-        "under25": 1.08,
-        "btts_yes": 1.95,
-        "btts_no": 1.74,
-        "over95corners": 1.79,
-        "under95corners": 1.81,
-        "over35cards": 1.83,
-        "under35cards": 1.73,
-        "bookmaker_used": "Marathonbet"
-      }
-    },
-    {
-      "fixture_id": 1382776,
-      "home_team": "Dundee",
-      "away_team": "Falkirk",
-      "league": "Premiership",
-      "kickoff": "2025-12-27T15:00:00+00:00",
-      "goals": {
-        "prediction": "No",
-        "probability": 0.11913499981164932,
-        "confidence": 11.91349983215332
-      },
-      "btts": {
-        "prediction": "No",
-        "probability": 0.10595815628767014,
-        "confidence": 10.595815658569336
+        "probability": 0.0598076656460762,
+        "confidence": 5.980766773223877
       },
       "corners": {
         "prediction": "No",
-        "probability": 0.2367805391550064,
-        "confidence": 23.678054809570312
+        "probability": 0.4437997043132782,
+        "confidence": 44.37997055053711
       },
       "cards": {
         "prediction": "Yes",
-        "probability": 0.7440298795700073,
-        "confidence": 74.40298461914062
+        "probability": 0.8677220940589905,
+        "confidence": 86.77220916748047
       },
       "odds": {
-        "over25": 4.7,
-        "under25": 1.14,
+        "over25": 4.3,
+        "under25": 1.16,
         "btts_yes": 1.72,
         "btts_no": 1.98,
-        "over95corners": 1.91,
-        "under95corners": 1.86,
-        "over35cards": 1.72,
-        "under35cards": 1.7,
+        "over95corners": 1.87,
+        "under95corners": 1.81,
+        "over35cards": 1.81,
+        "under35cards": 1.76,
         "bookmaker_used": "Marathonbet"
       }
     },
     {
-      "fixture_id": 1382777,
-      "home_team": "Livingston",
-      "away_team": "Celtic",
-      "league": "Premiership",
-      "kickoff": "2025-12-27T15:00:00+00:00",
+      "fixture_id": 1386248,
+      "home_team": "Accrington ST",
+      "away_team": "Barrow",
+      "league": "League Two",
+      "kickoff": "2025-12-26T15:00:00+00:00",
       "goals": {
-        "prediction": "No",
-        "probability": 0.3228569030761719,
-        "confidence": 32.28569030761719
+        "prediction": "Yes",
+        "probability": 0.5953854918479919,
+        "confidence": 59.53854751586914
       },
       "btts": {
         "prediction": "No",
-        "probability": 0.04000869765877724,
-        "confidence": 4.0008697509765625
+        "probability": 0.07094407826662064,
+        "confidence": 7.09440803527832
       },
       "corners": {
         "prediction": "No",
-        "probability": 0.35097789764404297,
-        "confidence": 35.0977897644043
+        "probability": 0.39858946204185486,
+        "confidence": 39.85894775390625
       },
       "cards": {
         "prediction": "Yes",
-        "probability": 0.8367538452148438,
-        "confidence": 83.67538452148438
+        "probability": 0.7012238502502441,
+        "confidence": 70.12238311767578
       },
       "odds": {
-        "over25": 3.22,
-        "under25": 1.28,
-        "btts_yes": 1.77,
-        "btts_no": 1.92,
-        "over95corners": 1.79,
-        "under95corners": 1.79,
-        "over35cards": 1.85,
-        "under35cards": 1.72,
-        "bookmaker_used": "Marathonbet"
-      }
-    },
-    {
-      "fixture_id": 1382778,
-      "home_team": "Rangers",
-      "away_team": "Motherwell",
-      "league": "Premiership",
-      "kickoff": "2025-12-27T15:00:00+00:00",
-      "goals": {
-        "prediction": "No",
-        "probability": 0.3764011859893799,
-        "confidence": 37.64011764526367
-      },
-      "btts": {
-        "prediction": "No",
-        "probability": 0.057726722210645676,
-        "confidence": 5.772672176361084
-      },
-      "corners": {
-        "prediction": "No",
-        "probability": 0.2505550980567932,
-        "confidence": 25.055509567260742
-      },
-      "cards": {
-        "prediction": "Yes",
-        "probability": 0.6787881851196289,
-        "confidence": 67.87881469726562
-      },
-      "odds": {
-        "over25": 4.2,
-        "under25": 1.17,
-        "btts_yes": 1.75,
-        "btts_no": 1.94,
-        "over95corners": 1.9,
-        "under95corners": 1.92,
-        "over35cards": 1.75,
-        "under35cards": 1.71,
-        "bookmaker_used": "Marathonbet"
-      }
-    },
-    {
-      "fixture_id": 1382779,
-      "home_team": "ST Mirren",
-      "away_team": "Kilmarnock",
-      "league": "Premiership",
-      "kickoff": "2025-12-27T15:00:00+00:00",
-      "goals": {
-        "prediction": "No",
-        "probability": 0.32524386048316956,
-        "confidence": 32.52438735961914
-      },
-      "btts": {
-        "prediction": "No",
-        "probability": 0.08890905231237411,
-        "confidence": 8.890905380249023
-      },
-      "corners": {
-        "prediction": "Yes",
-        "probability": 0.6545286178588867,
-        "confidence": 65.45286560058594
-      },
-      "cards": {
-        "prediction": "Yes",
-        "probability": 0.8565461039543152,
-        "confidence": 85.65460968017578
-      },
-      "odds": {
-        "over25": 4.55,
-        "under25": 1.15,
-        "btts_yes": 1.81,
-        "btts_no": 1.87,
-        "over95corners": 1.93,
-        "under95corners": 1.85,
-        "over35cards": 1.75,
-        "under35cards": 1.75,
-        "bookmaker_used": "Marathonbet"
-      }
-    },
-    {
-      "fixture_id": 1378033,
-      "home_team": "Udinese",
-      "away_team": "Lazio",
-      "league": "Serie A",
-      "kickoff": "2025-12-27T17:00:00+00:00",
-      "goals": {
-        "prediction": "No",
-        "probability": 0.21237081289291382,
-        "confidence": 21.23708152770996
-      },
-      "btts": {
-        "prediction": "No",
-        "probability": 0.33859366178512573,
-        "confidence": 33.85936737060547
-      },
-      "corners": {
-        "prediction": "No",
-        "probability": 0.08010602742433548,
-        "confidence": 8.010602951049805
-      },
-      "cards": {
-        "prediction": "Yes",
-        "probability": 0.7428721189498901,
-        "confidence": 74.2872085571289
-      },
-      "odds": {
-        "over25": 5.4,
-        "under25": 1.12,
-        "btts_yes": 1.89,
-        "btts_no": 1.81,
-        "over95corners": 1.82,
-        "under95corners": 1.83,
-        "over35cards": 1.67,
-        "under35cards": 1.72,
-        "bookmaker_used": "Marathonbet"
-      }
-    },
-    {
-      "fixture_id": 1382582,
-      "home_team": "KV Mechelen",
-      "away_team": "Dender",
-      "league": "Jupiler Pro League",
-      "kickoff": "2025-12-27T17:15:00+00:00",
-      "goals": {
-        "prediction": "Yes",
-        "probability": 0.7009292840957642,
-        "confidence": 70.09292602539062
-      },
-      "btts": {
-        "prediction": "No",
-        "probability": 0.13030028343200684,
-        "confidence": 13.030028343200684
-      },
-      "corners": {
-        "prediction": "No",
-        "probability": 0.48655030131340027,
-        "confidence": 48.655029296875
-      },
-      "cards": {
-        "prediction": "Yes",
-        "probability": 0.8028292655944824,
-        "confidence": 80.28292846679688
-      },
-      "odds": {
-        "over25": 4.2,
-        "under25": 1.17,
-        "btts_yes": 1.62,
-        "btts_no": 2.14,
-        "over95corners": 1.93,
-        "under95corners": 1.77,
-        "over35cards": 1.71,
-        "under35cards": 1.84,
-        "bookmaker_used": "Marathonbet"
-      }
-    },
-    {
-      "fixture_id": 1379142,
-      "home_team": "Chelsea",
-      "away_team": "Aston Villa",
-      "league": "Premier League",
-      "kickoff": "2025-12-27T17:30:00+00:00",
-      "goals": {
-        "prediction": "No",
-        "probability": 0.36352136731147766,
-        "confidence": 36.35213851928711
-      },
-      "btts": {
-        "prediction": "No",
-        "probability": 0.13084140419960022,
-        "confidence": 13.08414077758789
-      },
-      "corners": {
-        "prediction": "No",
-        "probability": 0.4737417697906494,
-        "confidence": 47.374176025390625
-      },
-      "cards": {
-        "prediction": "Yes",
-        "probability": 0.58292156457901,
-        "confidence": 58.29215621948242
-      },
-      "odds": {
-        "over25": 3.75,
-        "under25": 1.25,
-        "btts_yes": 1.61,
-        "btts_no": 2.17,
-        "over95corners": 1.94,
-        "under95corners": 1.92,
-        "over35cards": 1.65,
-        "under35cards": 1.72,
-        "bookmaker_used": "Marathonbet"
-      }
-    },
-    {
-      "fixture_id": 1382775,
-      "home_team": "Aberdeen",
-      "away_team": "Dundee Utd",
-      "league": "Premiership",
-      "kickoff": "2025-12-27T17:45:00+00:00",
-      "goals": {
-        "prediction": "No",
-        "probability": 0.47339972853660583,
-        "confidence": 47.33997344970703
-      },
-      "btts": {
-        "prediction": "No",
-        "probability": 0.05889667943120003,
-        "confidence": 5.889667987823486
-      },
-      "corners": {
-        "prediction": "Yes",
-        "probability": 0.7406638860702515,
-        "confidence": 74.06639099121094
-      },
-      "cards": {
-        "prediction": "Yes",
-        "probability": 0.6321372389793396,
-        "confidence": 63.213722229003906
-      },
-      "odds": {
-        "over25": 4.2,
-        "under25": 1.17,
-        "btts_yes": 1.67,
-        "btts_no": 2.05,
+        "over25": 5.1,
+        "under25": 1.11,
+        "btts_yes": 1.84,
+        "btts_no": 1.84,
         "over95corners": 1.78,
-        "under95corners": 1.83,
-        "over35cards": 1.77,
+        "under95corners": 1.85,
+        "over35cards": 1.69,
         "under35cards": 1.69,
         "bookmaker_used": "Marathonbet"
       }
     },
     {
-      "fixture_id": 1396376,
-      "home_team": "Famalicao",
-      "away_team": "Estrela",
-      "league": "Primeira Liga",
-      "kickoff": "2025-12-27T18:00:00+00:00",
+      "fixture_id": 1386249,
+      "home_team": "Bristol Rovers",
+      "away_team": "Bromley",
+      "league": "League Two",
+      "kickoff": "2025-12-26T15:00:00+00:00",
       "goals": {
-        "prediction": "Yes",
-        "probability": 0.6685574054718018,
-        "confidence": 66.85574340820312
+        "prediction": "No",
+        "probability": 0.3856651186943054,
+        "confidence": 38.56651306152344
       },
       "btts": {
         "prediction": "No",
-        "probability": 0.15865373611450195,
-        "confidence": 15.865373611450195
+        "probability": 0.17771585285663605,
+        "confidence": 17.77158546447754
       },
       "corners": {
-        "prediction": "Yes",
-        "probability": 0.5190365314483643,
-        "confidence": 51.90365219116211
+        "prediction": "No",
+        "probability": 0.38728711009025574,
+        "confidence": 38.72871017456055
       },
       "cards": {
         "prediction": "Yes",
-        "probability": 0.7607430219650269,
-        "confidence": 76.07430267333984
+        "probability": 0.847680389881134,
+        "confidence": 84.76803588867188
+      },
+      "odds": {
+        "over25": 4.85,
+        "under25": 1.12,
+        "btts_yes": 1.75,
+        "btts_no": 1.94,
+        "over95corners": 1.93,
+        "under95corners": 1.84,
+        "over35cards": 1.67,
+        "under35cards": 1.75,
+        "bookmaker_used": "Marathonbet"
+      }
+    },
+    {
+      "fixture_id": 1386250,
+      "home_team": "Cheltenham",
+      "away_team": "Shrewsbury",
+      "league": "League Two",
+      "kickoff": "2025-12-26T15:00:00+00:00",
+      "goals": {
+        "prediction": "No",
+        "probability": 0.12587903439998627,
+        "confidence": 12.587903022766113
+      },
+      "btts": {
+        "prediction": "No",
+        "probability": 0.0498623251914978,
+        "confidence": 4.986232757568359
+      },
+      "corners": {
+        "prediction": "Yes",
+        "probability": 0.7493852972984314,
+        "confidence": 74.93852996826172
+      },
+      "cards": {
+        "prediction": "Yes",
+        "probability": 0.7154549956321716,
+        "confidence": 71.54550170898438
+      },
+      "odds": {
+        "over25": 5.1,
+        "under25": 1.11,
+        "btts_yes": 1.77,
+        "btts_no": 1.92,
+        "over95corners": 1.77,
+        "under95corners": 1.85,
+        "over35cards": 1.73,
+        "under35cards": 1.79,
+        "bookmaker_used": "Marathonbet"
+      }
+    },
+    {
+      "fixture_id": 1386251,
+      "home_team": "Chesterfield",
+      "away_team": "Notts County",
+      "league": "League Two",
+      "kickoff": "2025-12-26T15:00:00+00:00",
+      "goals": {
+        "prediction": "No",
+        "probability": 0.4413405656814575,
+        "confidence": 44.134056091308594
+      },
+      "btts": {
+        "prediction": "No",
+        "probability": 0.0638972595334053,
+        "confidence": 6.389726161956787
+      },
+      "corners": {
+        "prediction": "No",
+        "probability": 0.3726568818092346,
+        "confidence": 37.265689849853516
+      },
+      "cards": {
+        "prediction": "Yes",
+        "probability": 0.7764331102371216,
+        "confidence": 77.643310546875
+      },
+      "odds": {
+        "over25": 4.05,
+        "under25": 1.18,
+        "btts_yes": 1.6,
+        "btts_no": 2.16,
+        "over95corners": 1.75,
+        "under95corners": 1.86,
+        "over35cards": 1.79,
+        "under35cards": 1.74,
+        "bookmaker_used": "Marathonbet"
+      }
+    },
+    {
+      "fixture_id": 1386252,
+      "home_team": "Crawley Town",
+      "away_team": "Colchester",
+      "league": "League Two",
+      "kickoff": "2025-12-26T15:00:00+00:00",
+      "goals": {
+        "prediction": "Yes",
+        "probability": 0.5523077249526978,
+        "confidence": 55.23077392578125
+      },
+      "btts": {
+        "prediction": "No",
+        "probability": 0.14101634919643402,
+        "confidence": 14.101634979248047
+      },
+      "corners": {
+        "prediction": "No",
+        "probability": 0.3537847697734833,
+        "confidence": 35.378475189208984
+      },
+      "cards": {
+        "prediction": "Yes",
+        "probability": 0.7792953848838806,
+        "confidence": 77.92953491210938
+      },
+      "odds": {
+        "over25": 4.0,
+        "under25": 1.18,
+        "btts_yes": 1.62,
+        "btts_no": 2.14,
+        "over95corners": 1.83,
+        "under95corners": 1.81,
+        "over35cards": 1.79,
+        "under35cards": 1.69,
+        "bookmaker_used": "Marathonbet"
+      }
+    },
+    {
+      "fixture_id": 1386253,
+      "home_team": "Gillingham",
+      "away_team": "Cambridge United",
+      "league": "League Two",
+      "kickoff": "2025-12-26T15:00:00+00:00",
+      "goals": {
+        "prediction": "No",
+        "probability": 0.3709762990474701,
+        "confidence": 37.09762954711914
+      },
+      "btts": {
+        "prediction": "No",
+        "probability": 0.09158807247877121,
+        "confidence": 9.158806800842285
+      },
+      "corners": {
+        "prediction": "No",
+        "probability": 0.45317018032073975,
+        "confidence": 45.3170166015625
+      },
+      "cards": {
+        "prediction": "Yes",
+        "probability": 0.8288604617118835,
+        "confidence": 82.88604736328125
+      },
+      "odds": {
+        "over25": 5.95,
+        "under25": 1.07,
+        "btts_yes": 1.98,
+        "btts_no": 1.72,
+        "over95corners": 1.89,
+        "under95corners": 1.85,
+        "over35cards": 1.66,
+        "under35cards": 1.78,
+        "bookmaker_used": "Marathonbet"
+      }
+    },
+    {
+      "fixture_id": 1386254,
+      "home_team": "Grimsby",
+      "away_team": "Oldham",
+      "league": "League Two",
+      "kickoff": "2025-12-26T15:00:00+00:00",
+      "goals": {
+        "prediction": "No",
+        "probability": 0.271862268447876,
+        "confidence": 27.18622589111328
+      },
+      "btts": {
+        "prediction": "No",
+        "probability": 0.06465709209442139,
+        "confidence": 6.465709209442139
+      },
+      "corners": {
+        "prediction": "No",
+        "probability": 0.2646024525165558,
+        "confidence": 26.46024513244629
+      },
+      "cards": {
+        "prediction": "Yes",
+        "probability": 0.8999751210212708,
+        "confidence": 89.99751281738281
+      },
+      "odds": {
+        "over25": 4.05,
+        "under25": 1.18,
+        "btts_yes": 1.65,
+        "btts_no": 2.08,
+        "over95corners": 1.91,
+        "under95corners": 1.86,
+        "over35cards": 1.71,
+        "under35cards": 1.74,
+        "bookmaker_used": "Marathonbet"
+      }
+    },
+    {
+      "fixture_id": 1386255,
+      "home_team": "Milton Keynes Dons",
+      "away_team": "Swindon Town",
+      "league": "League Two",
+      "kickoff": "2025-12-26T15:00:00+00:00",
+      "goals": {
+        "prediction": "Yes",
+        "probability": 0.6485046148300171,
+        "confidence": 64.8504638671875
+      },
+      "btts": {
+        "prediction": "No",
+        "probability": 0.06814714521169662,
+        "confidence": 6.814714431762695
+      },
+      "corners": {
+        "prediction": "Yes",
+        "probability": 0.5522305369377136,
+        "confidence": 55.223052978515625
+      },
+      "cards": {
+        "prediction": "Yes",
+        "probability": 0.7730641961097717,
+        "confidence": 77.3064193725586
+      },
+      "odds": {
+        "over25": 4.1,
+        "under25": 1.17,
+        "btts_yes": 1.64,
+        "btts_no": 2.1,
+        "over95corners": 1.94,
+        "under95corners": 1.93,
+        "over35cards": 1.75,
+        "under35cards": 1.67,
+        "bookmaker_used": "Marathonbet"
+      }
+    },
+    {
+      "fixture_id": 1386256,
+      "home_team": "Salford City",
+      "away_team": "Harrogate Town",
+      "league": "League Two",
+      "kickoff": "2025-12-26T15:00:00+00:00",
+      "goals": {
+        "prediction": "Yes",
+        "probability": 0.6947110891342163,
+        "confidence": 69.47110748291016
+      },
+      "btts": {
+        "prediction": "No",
+        "probability": 0.12072163075208664,
+        "confidence": 12.072162628173828
+      },
+      "corners": {
+        "prediction": "Yes",
+        "probability": 0.5272582173347473,
+        "confidence": 52.72582244873047
+      },
+      "cards": {
+        "prediction": "Yes",
+        "probability": 0.7281838059425354,
+        "confidence": 72.8183822631836
+      },
+      "odds": {
+        "over25": 3.6,
+        "under25": 1.22,
+        "btts_yes": 1.87,
+        "btts_no": 1.81,
+        "over95corners": 1.88,
+        "under95corners": 1.9,
+        "over35cards": 1.75,
+        "under35cards": 1.77,
+        "bookmaker_used": "Marathonbet"
+      }
+    },
+    {
+      "fixture_id": 1386257,
+      "home_team": "Tranmere",
+      "away_team": "Fleetwood Town",
+      "league": "League Two",
+      "kickoff": "2025-12-26T15:00:00+00:00",
+      "goals": {
+        "prediction": "Yes",
+        "probability": 0.6697773337364197,
+        "confidence": 66.97772979736328
+      },
+      "btts": {
+        "prediction": "No",
+        "probability": 0.04223205894231796,
+        "confidence": 4.223206043243408
+      },
+      "corners": {
+        "prediction": "Yes",
+        "probability": 0.7805427312850952,
+        "confidence": 78.05427551269531
+      },
+      "cards": {
+        "prediction": "Yes",
+        "probability": 0.831446647644043,
+        "confidence": 83.14466857910156
+      },
+      "odds": {
+        "over25": 4.25,
+        "under25": 1.16,
+        "btts_yes": 1.67,
+        "btts_no": 2.05,
+        "over95corners": 1.8,
+        "under95corners": 1.88,
+        "over35cards": 1.84,
+        "under35cards": 1.79,
+        "bookmaker_used": "Marathonbet"
+      }
+    },
+    {
+      "fixture_id": 1386258,
+      "home_team": "Walsall",
+      "away_team": "Crewe",
+      "league": "League Two",
+      "kickoff": "2025-12-26T15:00:00+00:00",
+      "goals": {
+        "prediction": "No",
+        "probability": 0.45586875081062317,
+        "confidence": 45.586875915527344
+      },
+      "btts": {
+        "prediction": "No",
+        "probability": 0.040809739381074905,
+        "confidence": 4.080974102020264
+      },
+      "corners": {
+        "prediction": "Yes",
+        "probability": 0.6845553517341614,
+        "confidence": 68.45553588867188
+      },
+      "cards": {
+        "prediction": "Yes",
+        "probability": 0.6448904871940613,
+        "confidence": 64.48905181884766
+      },
+      "odds": {
+        "over25": 5.15,
+        "under25": 1.11,
+        "btts_yes": 1.82,
+        "btts_no": 1.86,
+        "over95corners": 1.83,
+        "under95corners": 1.77,
+        "over35cards": 1.74,
+        "under35cards": 1.8,
+        "bookmaker_used": "Marathonbet"
+      }
+    },
+    {
+      "fixture_id": 1386259,
+      "home_team": "Newport County",
+      "away_team": "Barnet",
+      "league": "League Two",
+      "kickoff": "2025-12-26T15:00:00+00:00",
+      "goals": {
+        "prediction": "No",
+        "probability": 0.28600287437438965,
+        "confidence": 28.60028839111328
+      },
+      "btts": {
+        "prediction": "No",
+        "probability": 0.053539346903562546,
+        "confidence": 5.3539347648620605
+      },
+      "corners": {
+        "prediction": "Yes",
+        "probability": 0.5931312441825867,
+        "confidence": 59.31312561035156
+      },
+      "cards": {
+        "prediction": "Yes",
+        "probability": 0.8587461709976196,
+        "confidence": 85.87461853027344
+      },
+      "odds": {
+        "over25": 3.98,
+        "under25": 1.18,
+        "btts_yes": 1.77,
+        "btts_no": 1.92,
+        "over95corners": 1.84,
+        "under95corners": 1.83,
+        "over35cards": 1.74,
+        "under35cards": 1.82,
+        "bookmaker_used": "Marathonbet"
+      }
+    },
+    {
+      "fixture_id": 1386816,
+      "home_team": "Norwich",
+      "away_team": "Charlton",
+      "league": "Championship",
+      "kickoff": "2025-12-26T15:00:00+00:00",
+      "goals": {
+        "prediction": "Yes",
+        "probability": 0.7421904802322388,
+        "confidence": 74.21904754638672
+      },
+      "btts": {
+        "prediction": "No",
+        "probability": 0.2971821129322052,
+        "confidence": 29.718212127685547
+      },
+      "corners": {
+        "prediction": "Yes",
+        "probability": 0.646206259727478,
+        "confidence": 64.6206283569336
+      },
+      "cards": {
+        "prediction": "Yes",
+        "probability": 0.8408761024475098,
+        "confidence": 84.08760833740234
+      },
+      "odds": {
+        "over25": 4.45,
+        "under25": 1.15,
+        "btts_yes": 1.73,
+        "btts_no": 1.97,
+        "over95corners": 1.8,
+        "under95corners": 1.79,
+        "over35cards": 1.66,
+        "under35cards": 1.77,
+        "bookmaker_used": "Marathonbet"
+      }
+    },
+    {
+      "fixture_id": 1386817,
+      "home_team": "Portsmouth",
+      "away_team": "QPR",
+      "league": "Championship",
+      "kickoff": "2025-12-26T15:00:00+00:00",
+      "goals": {
+        "prediction": "No",
+        "probability": 0.21721182763576508,
+        "confidence": 21.721181869506836
+      },
+      "btts": {
+        "prediction": "No",
+        "probability": 0.0784054845571518,
+        "confidence": 7.840548515319824
+      },
+      "corners": {
+        "prediction": "Yes",
+        "probability": 0.698692798614502,
+        "confidence": 69.86927795410156
+      },
+      "cards": {
+        "prediction": "Yes",
+        "probability": 0.8087372183799744,
+        "confidence": 80.87371826171875
+      },
+      "odds": {
+        "over25": 4.6,
+        "under25": 1.14,
+        "btts_yes": 1.72,
+        "btts_no": 1.98,
+        "over95corners": 1.85,
+        "under95corners": 1.91,
+        "over35cards": 1.82,
+        "under35cards": 1.78,
+        "bookmaker_used": "Marathonbet"
+      }
+    },
+    {
+      "fixture_id": 1386819,
+      "home_team": "Coventry",
+      "away_team": "Swansea",
+      "league": "Championship",
+      "kickoff": "2025-12-26T15:00:00+00:00",
+      "goals": {
+        "prediction": "No",
+        "probability": 0.28648248314857483,
+        "confidence": 28.64824867248535
+      },
+      "btts": {
+        "prediction": "No",
+        "probability": 0.10962717980146408,
+        "confidence": 10.96271800994873
+      },
+      "corners": {
+        "prediction": "Yes",
+        "probability": 0.8000115156173706,
+        "confidence": 80.00115203857422
+      },
+      "cards": {
+        "prediction": "Yes",
+        "probability": 0.7625125646591187,
+        "confidence": 76.25125885009766
+      },
+      "odds": {
+        "over25": 3.66,
+        "under25": 1.22,
+        "btts_yes": 1.71,
+        "btts_no": 1.99,
+        "over95corners": 1.94,
+        "under95corners": 1.91,
+        "over35cards": 1.74,
+        "under35cards": 1.74,
+        "bookmaker_used": "Marathonbet"
+      }
+    },
+    {
+      "fixture_id": 1386821,
+      "home_team": "Leicester",
+      "away_team": "Watford",
+      "league": "Championship",
+      "kickoff": "2025-12-26T15:00:00+00:00",
+      "goals": {
+        "prediction": "Yes",
+        "probability": 0.7447957992553711,
+        "confidence": 74.47958374023438
+      },
+      "btts": {
+        "prediction": "No",
+        "probability": 0.10023027658462524,
+        "confidence": 10.023027420043945
+      },
+      "corners": {
+        "prediction": "Yes",
+        "probability": 0.8107854127883911,
+        "confidence": 81.07854461669922
+      },
+      "cards": {
+        "prediction": "Yes",
+        "probability": 0.8665747046470642,
+        "confidence": 86.657470703125
+      },
+      "odds": {
+        "over25": 4.33,
+        "under25": 1.16,
+        "btts_yes": 1.68,
+        "btts_no": 2.03,
+        "over95corners": 1.86,
+        "under95corners": 1.88,
+        "over35cards": 1.8,
+        "under35cards": 1.81,
+        "bookmaker_used": "Marathonbet"
+      }
+    },
+    {
+      "fixture_id": 1386822,
+      "home_team": "Oxford United",
+      "away_team": "Southampton",
+      "league": "Championship",
+      "kickoff": "2025-12-26T15:00:00+00:00",
+      "goals": {
+        "prediction": "No",
+        "probability": 0.284450888633728,
+        "confidence": 28.44508934020996
+      },
+      "btts": {
+        "prediction": "No",
+        "probability": 0.17072580754756927,
+        "confidence": 17.072580337524414
+      },
+      "corners": {
+        "prediction": "Yes",
+        "probability": 0.7703532576560974,
+        "confidence": 77.03532409667969
+      },
+      "cards": {
+        "prediction": "Yes",
+        "probability": 0.8242797255516052,
+        "confidence": 82.42797088623047
+      },
+      "odds": {
+        "over25": 4.05,
+        "under25": 1.18,
+        "btts_yes": 1.66,
+        "btts_no": 2.06,
+        "over95corners": 1.77,
+        "under95corners": 1.84,
+        "over35cards": 1.83,
+        "under35cards": 1.69,
+        "bookmaker_used": "Marathonbet"
+      }
+    },
+    {
+      "fixture_id": 1386823,
+      "home_team": "Stoke City",
+      "away_team": "Preston",
+      "league": "Championship",
+      "kickoff": "2025-12-26T15:00:00+00:00",
+      "goals": {
+        "prediction": "No",
+        "probability": 0.38845810294151306,
+        "confidence": 38.84580993652344
+      },
+      "btts": {
+        "prediction": "No",
+        "probability": 0.10557881742715836,
+        "confidence": 10.557881355285645
+      },
+      "corners": {
+        "prediction": "Yes",
+        "probability": 0.5347157120704651,
+        "confidence": 53.47157287597656
+      },
+      "cards": {
+        "prediction": "Yes",
+        "probability": 0.8261890411376953,
+        "confidence": 82.61890411376953
+      },
+      "odds": {
+        "over25": 5.15,
+        "under25": 1.11,
+        "btts_yes": 1.83,
+        "btts_no": 1.85,
+        "over95corners": 1.84,
+        "under95corners": 1.8,
+        "over35cards": 1.72,
+        "under35cards": 1.83,
+        "bookmaker_used": "Marathonbet"
+      }
+    },
+    {
+      "fixture_id": 1386824,
+      "home_team": "Middlesbrough",
+      "away_team": "Blackburn",
+      "league": "Championship",
+      "kickoff": "2025-12-26T15:00:00+00:00",
+      "goals": {
+        "prediction": "Yes",
+        "probability": 0.6951279640197754,
+        "confidence": 69.5127944946289
+      },
+      "btts": {
+        "prediction": "No",
+        "probability": 0.03484184667468071,
+        "confidence": 3.484184741973877
+      },
+      "corners": {
+        "prediction": "Yes",
+        "probability": 0.7702279686927795,
+        "confidence": 77.02279663085938
+      },
+      "cards": {
+        "prediction": "Yes",
+        "probability": 0.7603404521942139,
+        "confidence": 76.03404235839844
+      },
+      "odds": {
+        "over25": 4.3,
+        "under25": 1.16,
+        "btts_yes": 1.79,
+        "btts_no": 1.89,
+        "over95corners": 1.88,
+        "under95corners": 1.94,
+        "over35cards": 1.69,
+        "under35cards": 1.8,
+        "bookmaker_used": "Marathonbet"
+      }
+    },
+    {
+      "fixture_id": 1386825,
+      "home_team": "West Brom",
+      "away_team": "Bristol City",
+      "league": "Championship",
+      "kickoff": "2025-12-26T15:00:00+00:00",
+      "goals": {
+        "prediction": "No",
+        "probability": 0.43596771359443665,
+        "confidence": 43.596771240234375
+      },
+      "btts": {
+        "prediction": "No",
+        "probability": 0.12344513088464737,
+        "confidence": 12.344512939453125
+      },
+      "corners": {
+        "prediction": "No",
+        "probability": 0.3725273311138153,
+        "confidence": 37.25273132324219
+      },
+      "cards": {
+        "prediction": "Yes",
+        "probability": 0.8414116501808167,
+        "confidence": 84.14116668701172
       },
       "odds": {
         "over25": 4.5,
         "under25": 1.15,
+        "btts_yes": 1.76,
+        "btts_no": 1.93,
+        "over95corners": 1.88,
+        "under95corners": 1.93,
+        "over35cards": 1.79,
+        "under35cards": 1.8,
+        "bookmaker_used": "Marathonbet"
+      }
+    },
+    {
+      "fixture_id": 1386826,
+      "home_team": "Sheffield Wednesday",
+      "away_team": "Hull City",
+      "league": "Championship",
+      "kickoff": "2025-12-26T15:00:00+00:00",
+      "goals": {
+        "prediction": "No",
+        "probability": 0.3841974139213562,
+        "confidence": 38.419742584228516
+      },
+      "btts": {
+        "prediction": "No",
+        "probability": 0.0738987997174263,
+        "confidence": 7.389880180358887
+      },
+      "corners": {
+        "prediction": "No",
+        "probability": 0.4310643970966339,
+        "confidence": 43.106441497802734
+      },
+      "cards": {
+        "prediction": "Yes",
+        "probability": 0.6773177981376648,
+        "confidence": 67.73178100585938
+      },
+      "odds": {
+        "over25": 4.15,
+        "under25": 1.18,
+        "btts_yes": 1.69,
+        "btts_no": 2.02,
+        "over95corners": 1.92,
+        "under95corners": 1.78,
+        "over35cards": 1.85,
+        "under35cards": 1.75,
+        "bookmaker_used": "Marathonbet"
+      }
+    },
+    {
+      "fixture_id": 1387355,
+      "home_team": "AFC Wimbledon",
+      "away_team": "Stevenage",
+      "league": "League One",
+      "kickoff": "2025-12-26T15:00:00+00:00",
+      "goals": {
+        "prediction": "No",
+        "probability": 0.351561576128006,
+        "confidence": 35.156158447265625
+      },
+      "btts": {
+        "prediction": "No",
+        "probability": 0.09072449058294296,
+        "confidence": 9.07244873046875
+      },
+      "corners": {
+        "prediction": "No",
+        "probability": 0.2604823708534241,
+        "confidence": 26.048236846923828
+      },
+      "cards": {
+        "prediction": "Yes",
+        "probability": 0.8101068735122681,
+        "confidence": 81.01068878173828
+      },
+      "odds": {
+        "over25": 6.45,
+        "under25": 1.05,
+        "btts_yes": 2.15,
+        "btts_no": 1.61,
+        "over95corners": 1.77,
+        "under95corners": 1.88,
+        "over35cards": 1.78,
+        "under35cards": 1.72,
+        "bookmaker_used": "Marathonbet"
+      }
+    },
+    {
+      "fixture_id": 1387356,
+      "home_team": "Barnsley",
+      "away_team": "Mansfield Town",
+      "league": "League One",
+      "kickoff": "2025-12-26T15:00:00+00:00",
+      "goals": {
+        "prediction": "No",
+        "probability": 0.2564114034175873,
+        "confidence": 25.64113998413086
+      },
+      "btts": {
+        "prediction": "No",
+        "probability": 0.032710038125514984,
+        "confidence": 3.2710037231445312
+      },
+      "corners": {
+        "prediction": "Yes",
+        "probability": 0.6534035801887512,
+        "confidence": 65.3403549194336
+      },
+      "cards": {
+        "prediction": "Yes",
+        "probability": 0.5643294453620911,
+        "confidence": 56.432945251464844
+      },
+      "odds": {
+        "over25": 3.75,
+        "under25": 1.21,
+        "btts_yes": 1.62,
+        "btts_no": 2.13,
+        "over95corners": 1.94,
+        "under95corners": 1.76,
+        "over35cards": 1.81,
+        "under35cards": 1.76,
+        "bookmaker_used": "Marathonbet"
+      }
+    },
+    {
+      "fixture_id": 1387357,
+      "home_team": "Blackpool",
+      "away_team": "Doncaster",
+      "league": "League One",
+      "kickoff": "2025-12-26T15:00:00+00:00",
+      "goals": {
+        "prediction": "Yes",
+        "probability": 0.8056448698043823,
+        "confidence": 80.56448364257812
+      },
+      "btts": {
+        "prediction": "No",
+        "probability": 0.02832566201686859,
+        "confidence": 2.832566261291504
+      },
+      "corners": {
+        "prediction": "Yes",
+        "probability": 0.8500399589538574,
+        "confidence": 85.00399780273438
+      },
+      "cards": {
+        "prediction": "Yes",
+        "probability": 0.7129677534103394,
+        "confidence": 71.2967758178711
+      },
+      "odds": {
+        "over25": 3.88,
+        "under25": 1.2,
+        "btts_yes": 1.57,
+        "btts_no": 2.22,
+        "over95corners": 1.95,
+        "under95corners": 1.84,
+        "over35cards": 1.79,
+        "under35cards": 1.81,
+        "bookmaker_used": "Marathonbet"
+      }
+    },
+    {
+      "fixture_id": 1387358,
+      "home_team": "Bolton",
+      "away_team": "Rotherham",
+      "league": "League One",
+      "kickoff": "2025-12-26T15:00:00+00:00",
+      "goals": {
+        "prediction": "No",
+        "probability": 0.14244715869426727,
+        "confidence": 14.244715690612793
+      },
+      "btts": {
+        "prediction": "No",
+        "probability": 0.08567798882722855,
+        "confidence": 8.567798614501953
+      },
+      "corners": {
+        "prediction": "No",
+        "probability": 0.4308025538921356,
+        "confidence": 43.08025360107422
+      },
+      "cards": {
+        "prediction": "Yes",
+        "probability": 0.8602353930473328,
+        "confidence": 86.0235366821289
+      },
+      "odds": {
+        "over25": 3.75,
+        "under25": 1.21,
         "btts_yes": 1.93,
         "btts_no": 1.76,
-        "over95corners": 1.83,
-        "under95corners": 1.77,
-        "over35cards": 1.71,
-        "under35cards": 1.82,
-        "bookmaker_used": "Marathonbet"
-      }
-    },
-    {
-      "fixture_id": 1378030,
-      "home_team": "Pisa",
-      "away_team": "Juventus",
-      "league": "Serie A",
-      "kickoff": "2025-12-27T19:45:00+00:00",
-      "goals": {
-        "prediction": "No",
-        "probability": 0.3065550625324249,
-        "confidence": 30.655506134033203
-      },
-      "btts": {
-        "prediction": "No",
-        "probability": 0.032709233462810516,
-        "confidence": 3.270923376083374
-      },
-      "corners": {
-        "prediction": "Yes",
-        "probability": 0.6484795808792114,
-        "confidence": 64.84796142578125
-      },
-      "cards": {
-        "prediction": "Yes",
-        "probability": 0.8929213881492615,
-        "confidence": 89.2921371459961
-      },
-      "odds": {
-        "over25": 4.8,
-        "under25": 1.16,
-        "btts_yes": 2.07,
-        "btts_no": 1.67,
         "over95corners": 1.76,
-        "under95corners": 1.83,
-        "over35cards": 1.75,
-        "under35cards": 1.82,
-        "bookmaker_used": "Marathonbet"
-      }
-    },
-    {
-      "fixture_id": 1382583,
-      "home_team": "Gent",
-      "away_team": "KVC Westerlo",
-      "league": "Jupiler Pro League",
-      "kickoff": "2025-12-27T19:45:00+00:00",
-      "goals": {
-        "prediction": "Yes",
-        "probability": 0.5040680766105652,
-        "confidence": 50.40680694580078
-      },
-      "btts": {
-        "prediction": "No",
-        "probability": 0.1245451495051384,
-        "confidence": 12.454514503479004
-      },
-      "corners": {
-        "prediction": "Yes",
-        "probability": 0.716293215751648,
-        "confidence": 71.62931823730469
-      },
-      "cards": {
-        "prediction": "Yes",
-        "probability": 0.7949966788291931,
-        "confidence": 79.49966430664062
-      },
-      "odds": {
-        "over25": 3.34,
-        "under25": 1.26,
-        "btts_yes": 1.46,
-        "btts_no": 2.49,
-        "over95corners": 1.86,
-        "under95corners": 1.78,
-        "over35cards": 1.7,
-        "under35cards": 1.85,
-        "bookmaker_used": "Marathonbet"
-      }
-    },
-    {
-      "fixture_id": 1396375,
-      "home_team": "Estoril",
-      "away_team": "Alverca",
-      "league": "Primeira Liga",
-      "kickoff": "2025-12-27T20:30:00+00:00",
-      "goals": {
-        "prediction": "Yes",
-        "probability": 0.6101811528205872,
-        "confidence": 61.01811599731445
-      },
-      "btts": {
-        "prediction": "No",
-        "probability": 0.17845040559768677,
-        "confidence": 17.845041275024414
-      },
-      "corners": {
-        "prediction": "Yes",
-        "probability": 0.6799426078796387,
-        "confidence": 67.9942626953125
-      },
-      "cards": {
-        "prediction": "Yes",
-        "probability": 0.7756935954093933,
-        "confidence": 77.5693588256836
-      },
-      "odds": {
-        "over25": 4.85,
-        "under25": 1.13,
-        "btts_yes": 1.8,
-        "btts_no": 1.88,
-        "over95corners": 1.94,
-        "under95corners": 1.86,
+        "under95corners": 1.76,
         "over35cards": 1.8,
         "under35cards": 1.73,
+        "bookmaker_used": "Marathonbet"
+      }
+    },
+    {
+      "fixture_id": 1387359,
+      "home_team": "Bradford",
+      "away_team": "Wigan",
+      "league": "League One",
+      "kickoff": "2025-12-26T15:00:00+00:00",
+      "goals": {
+        "prediction": "Yes",
+        "probability": 0.7001413106918335,
+        "confidence": 70.01412963867188
+      },
+      "btts": {
+        "prediction": "No",
+        "probability": 0.20773902535438538,
+        "confidence": 20.773902893066406
+      },
+      "corners": {
+        "prediction": "Yes",
+        "probability": 0.5681973099708557,
+        "confidence": 56.819732666015625
+      },
+      "cards": {
+        "prediction": "Yes",
+        "probability": 0.676947295665741,
+        "confidence": 67.69473266601562
+      },
+      "odds": {
+        "over25": 4.6,
+        "under25": 1.14,
+        "btts_yes": 1.79,
+        "btts_no": 1.89,
+        "over95corners": 1.75,
+        "under95corners": 1.89,
+        "over35cards": 1.8,
+        "under35cards": 1.69,
+        "bookmaker_used": "Marathonbet"
+      }
+    },
+    {
+      "fixture_id": 1387360,
+      "home_team": "Burton Albion",
+      "away_team": "Northampton",
+      "league": "League One",
+      "kickoff": "2025-12-26T15:00:00+00:00",
+      "goals": {
+        "prediction": "No",
+        "probability": 0.17890992760658264,
+        "confidence": 17.890993118286133
+      },
+      "btts": {
+        "prediction": "No",
+        "probability": 0.06449230015277863,
+        "confidence": 6.449230194091797
+      },
+      "corners": {
+        "prediction": "No",
+        "probability": 0.4880828559398651,
+        "confidence": 48.808284759521484
+      },
+      "cards": {
+        "prediction": "Yes",
+        "probability": 0.7051264643669128,
+        "confidence": 70.51264953613281
+      },
+      "odds": {
+        "over25": 5.2,
+        "under25": 1.1,
+        "btts_yes": 1.87,
+        "btts_no": 1.81,
+        "over95corners": 1.76,
+        "under95corners": 1.76,
+        "over35cards": 1.78,
+        "under35cards": 1.67,
+        "bookmaker_used": "Marathonbet"
+      }
+    },
+    {
+      "fixture_id": 1387361,
+      "home_team": "Huddersfield",
+      "away_team": "Port Vale",
+      "league": "League One",
+      "kickoff": "2025-12-26T15:00:00+00:00",
+      "goals": {
+        "prediction": "Yes",
+        "probability": 0.6000165939331055,
+        "confidence": 60.00165939331055
+      },
+      "btts": {
+        "prediction": "No",
+        "probability": 0.3124192953109741,
+        "confidence": 31.24193000793457
+      },
+      "corners": {
+        "prediction": "Yes",
+        "probability": 0.5418020486831665,
+        "confidence": 54.180206298828125
+      },
+      "cards": {
+        "prediction": "Yes",
+        "probability": 0.5885023474693298,
+        "confidence": 58.85023498535156
+      },
+      "odds": {
+        "over25": 4.35,
+        "under25": 1.16,
+        "btts_yes": 1.81,
+        "btts_no": 1.87,
+        "over95corners": 1.88,
+        "under95corners": 1.82,
+        "over35cards": 1.65,
+        "under35cards": 1.67,
+        "bookmaker_used": "Marathonbet"
+      }
+    },
+    {
+      "fixture_id": 1387362,
+      "home_team": "Luton",
+      "away_team": "Wycombe",
+      "league": "League One",
+      "kickoff": "2025-12-26T15:00:00+00:00",
+      "goals": {
+        "prediction": "No",
+        "probability": 0.10548754036426544,
+        "confidence": 10.54875373840332
+      },
+      "btts": {
+        "prediction": "No",
+        "probability": 0.3359070420265198,
+        "confidence": 33.59070587158203
+      },
+      "corners": {
+        "prediction": "No",
+        "probability": 0.4290200173854828,
+        "confidence": 42.902000427246094
+      },
+      "cards": {
+        "prediction": "Yes",
+        "probability": 0.699873149394989,
+        "confidence": 69.98731231689453
+      },
+      "odds": {
+        "over25": 4.95,
+        "under25": 1.12,
+        "btts_yes": 1.83,
+        "btts_no": 1.85,
+        "over95corners": 1.81,
+        "under95corners": 1.79,
+        "over35cards": 1.72,
+        "under35cards": 1.69,
+        "bookmaker_used": "Marathonbet"
+      }
+    },
+    {
+      "fixture_id": 1387363,
+      "home_team": "Peterborough",
+      "away_team": "Leyton Orient",
+      "league": "League One",
+      "kickoff": "2025-12-26T15:00:00+00:00",
+      "goals": {
+        "prediction": "Yes",
+        "probability": 0.7549951076507568,
+        "confidence": 75.49951171875
+      },
+      "btts": {
+        "prediction": "No",
+        "probability": 0.04249344766139984,
+        "confidence": 4.249344825744629
+      },
+      "corners": {
+        "prediction": "Yes",
+        "probability": 0.872990071773529,
+        "confidence": 87.29900360107422
+      },
+      "cards": {
+        "prediction": "Yes",
+        "probability": 0.7859317660331726,
+        "confidence": 78.59317779541016
+      },
+      "odds": {
+        "over25": 3.98,
+        "under25": 1.19,
+        "btts_yes": 1.6,
+        "btts_no": 2.16,
+        "over95corners": 1.8,
+        "under95corners": 1.85,
+        "over35cards": 1.7,
+        "under35cards": 1.76,
+        "bookmaker_used": "Marathonbet"
+      }
+    },
+    {
+      "fixture_id": 1387364,
+      "home_team": "Plymouth",
+      "away_team": "Reading",
+      "league": "League One",
+      "kickoff": "2025-12-26T15:00:00+00:00",
+      "goals": {
+        "prediction": "No",
+        "probability": 0.39004743099212646,
+        "confidence": 39.00474166870117
+      },
+      "btts": {
+        "prediction": "No",
+        "probability": 0.2984747886657715,
+        "confidence": 29.84747886657715
+      },
+      "corners": {
+        "prediction": "No",
+        "probability": 0.2503260672092438,
+        "confidence": 25.03260612487793
+      },
+      "cards": {
+        "prediction": "Yes",
+        "probability": 0.8436366319656372,
+        "confidence": 84.36366271972656
+      },
+      "odds": {
+        "over25": 4.5,
+        "under25": 1.15,
+        "btts_yes": 1.7,
+        "btts_no": 2.01,
+        "over95corners": 1.77,
+        "under95corners": 1.82,
+        "over35cards": 1.76,
+        "under35cards": 1.68,
+        "bookmaker_used": "Marathonbet"
+      }
+    },
+    {
+      "fixture_id": 1387365,
+      "home_team": "Stockport County",
+      "away_team": "Lincoln",
+      "league": "League One",
+      "kickoff": "2025-12-26T15:00:00+00:00",
+      "goals": {
+        "prediction": "No",
+        "probability": 0.31949353218078613,
+        "confidence": 31.949352264404297
+      },
+      "btts": {
+        "prediction": "No",
+        "probability": 0.06989333033561707,
+        "confidence": 6.989333152770996
+      },
+      "corners": {
+        "prediction": "Yes",
+        "probability": 0.5484426617622375,
+        "confidence": 54.84426498413086
+      },
+      "cards": {
+        "prediction": "Yes",
+        "probability": 0.6455042362213135,
+        "confidence": 64.55042266845703
+      },
+      "odds": {
+        "over25": 5.1,
+        "under25": 1.12,
+        "btts_yes": 1.8,
+        "btts_no": 1.88,
+        "over95corners": 1.78,
+        "under95corners": 1.92,
+        "over35cards": 1.73,
+        "under35cards": 1.7,
+        "bookmaker_used": "Marathonbet"
+      }
+    },
+    {
+      "fixture_id": 1387366,
+      "home_team": "Cardiff",
+      "away_team": "Exeter City",
+      "league": "League One",
+      "kickoff": "2025-12-26T15:00:00+00:00",
+      "goals": {
+        "prediction": "Yes",
+        "probability": 0.5416577458381653,
+        "confidence": 54.165775299072266
+      },
+      "btts": {
+        "prediction": "No",
+        "probability": 0.10871628671884537,
+        "confidence": 10.871628761291504
+      },
+      "corners": {
+        "prediction": "Yes",
+        "probability": 0.7562236189842224,
+        "confidence": 75.62236022949219
+      },
+      "cards": {
+        "prediction": "Yes",
+        "probability": 0.8173903226852417,
+        "confidence": 81.73902893066406
+      },
+      "odds": {
+        "over25": 3.9,
+        "under25": 1.2,
+        "btts_yes": 1.75,
+        "btts_no": 1.94,
+        "over95corners": 1.79,
+        "under95corners": 1.88,
+        "over35cards": 1.72,
+        "under35cards": 1.69,
+        "bookmaker_used": "Marathonbet"
+      }
+    },
+    {
+      "fixture_id": 1382579,
+      "home_team": "Standard Liege",
+      "away_team": "St. Truiden",
+      "league": "Jupiler Pro League",
+      "kickoff": "2025-12-26T17:30:00+00:00",
+      "goals": {
+        "prediction": "Yes",
+        "probability": 0.5828449130058289,
+        "confidence": 58.28449249267578
+      },
+      "btts": {
+        "prediction": "No",
+        "probability": 0.05739430710673332,
+        "confidence": 5.739430904388428
+      },
+      "corners": {
+        "prediction": "No",
+        "probability": 0.4200398921966553,
+        "confidence": 42.003990173339844
+      },
+      "cards": {
+        "prediction": "Yes",
+        "probability": 0.7815032005310059,
+        "confidence": 78.15032196044922
+      },
+      "odds": {
+        "over25": 5.1,
+        "under25": 1.12,
+        "btts_yes": 1.81,
+        "btts_no": 1.87,
+        "over95corners": 1.85,
+        "under95corners": 1.81,
+        "over35cards": 1.68,
+        "under35cards": 1.8,
+        "bookmaker_used": "Marathonbet"
+      }
+    },
+    {
+      "fixture_id": 1386818,
+      "home_team": "Wrexham",
+      "away_team": "Sheffield Utd",
+      "league": "Championship",
+      "kickoff": "2025-12-26T17:30:00+00:00",
+      "goals": {
+        "prediction": "Yes",
+        "probability": 0.6721825003623962,
+        "confidence": 67.21824645996094
+      },
+      "btts": {
+        "prediction": "No",
+        "probability": 0.06489323824644089,
+        "confidence": 6.489323616027832
+      },
+      "corners": {
+        "prediction": "Yes",
+        "probability": 0.560392439365387,
+        "confidence": 56.03924560546875
+      },
+      "cards": {
+        "prediction": "Yes",
+        "probability": 0.7647926211357117,
+        "confidence": 76.47926330566406
+      },
+      "odds": {
+        "over25": 4.7,
+        "under25": 1.14,
+        "btts_yes": 1.75,
+        "btts_no": 1.94,
+        "over95corners": 1.92,
+        "under95corners": 1.94,
+        "over35cards": 1.72,
+        "under35cards": 1.67,
+        "bookmaker_used": "Marathonbet"
+      }
+    },
+    {
+      "fixture_id": 1382581,
+      "home_team": "Anderlecht",
+      "away_team": "Charleroi",
+      "league": "Jupiler Pro League",
+      "kickoff": "2025-12-26T19:45:00+00:00",
+      "goals": {
+        "prediction": "No",
+        "probability": 0.0767398476600647,
+        "confidence": 7.673984527587891
+      },
+      "btts": {
+        "prediction": "No",
+        "probability": 0.05590631067752838,
+        "confidence": 5.590631008148193
+      },
+      "corners": {
+        "prediction": "No",
+        "probability": 0.4775643050670624,
+        "confidence": 47.756431579589844
+      },
+      "cards": {
+        "prediction": "Yes",
+        "probability": 0.7813030481338501,
+        "confidence": 78.13030242919922
+      },
+      "odds": {
+        "over25": 4.95,
+        "under25": 1.12,
+        "btts_yes": 1.85,
+        "btts_no": 1.83,
+        "over95corners": 1.76,
+        "under95corners": 1.87,
+        "over35cards": 1.68,
+        "under35cards": 1.73,
+        "bookmaker_used": "Marathonbet"
+      }
+    },
+    {
+      "fixture_id": 1379145,
+      "home_team": "Manchester United",
+      "away_team": "Newcastle",
+      "league": "Premier League",
+      "kickoff": "2025-12-26T20:00:00+00:00",
+      "goals": {
+        "prediction": "No",
+        "probability": 0.1344907581806183,
+        "confidence": 13.449075698852539
+      },
+      "btts": {
+        "prediction": "No",
+        "probability": 0.1275220811367035,
+        "confidence": 12.75220775604248
+      },
+      "corners": {
+        "prediction": "Yes",
+        "probability": 0.931086003780365,
+        "confidence": 93.10859680175781
+      },
+      "cards": {
+        "prediction": "Yes",
+        "probability": 0.7522334456443787,
+        "confidence": 75.22334289550781
+      },
+      "odds": {
+        "over25": 3.54,
+        "under25": 1.25,
+        "btts_yes": 1.5,
+        "btts_no": 2.41,
+        "over95corners": 1.81,
+        "under95corners": 1.79,
+        "over35cards": 1.79,
+        "under35cards": 1.69,
         "bookmaker_used": "Marathonbet"
       }
     }

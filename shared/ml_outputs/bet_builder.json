@@ -1,36 +1,36 @@
 {
   "run_date": "2025-12-26",
   "bet_builder": {
-    "fixture_id": 1382583,
-    "home_team": "Gent",
-    "away_team": "KVC Westerlo",
-    "league": "Jupiler Pro League",
-    "kickoff": "2025-12-27T19:45:00+00:00",
+    "fixture_id": 1386257,
+    "home_team": "Tranmere",
+    "away_team": "Fleetwood Town",
+    "league": "League Two",
+    "kickoff": "2025-12-26T15:00:00+00:00",
     "markets": [
       {
         "market": "corners",
         "prediction": "Yes",
-        "confidence": 71.62931823730469
+        "confidence": 78.05427551269531
       },
       {
         "market": "cards",
         "prediction": "Yes",
-        "confidence": 79.49966430664062
+        "confidence": 83.14466857910156
       }
     ],
-    "combined_confidence": 48.403307412223654,
-    "combined_odds": 2.07,
+    "combined_confidence": 55.163273383821945,
+    "combined_odds": 1.81,
     "individual_odds": {
-      "over25": 3.34,
-      "under25": 1.26,
-      "btts_yes": 1.46,
-      "btts_no": 2.49,
-      "over95corners": 1.86,
-      "under95corners": 1.78,
-      "over35cards": 1.7,
-      "under35cards": 1.85,
+      "over25": 4.25,
+      "under25": 1.16,
+      "btts_yes": 1.67,
+      "btts_no": 2.05,
+      "over95corners": 1.8,
+      "under95corners": 1.88,
+      "over35cards": 1.84,
+      "under35cards": 1.79,
       "bookmaker_used": "Marathonbet"
     },
-    "commentary": "Multi-market combination: CORNERS, CARDS. 2 strong signals converge in this match with adjusted 48.4% confidence."
+    "commentary": "Multi-market combination: CORNERS, CARDS. 2 strong signals converge in this match with adjusted 55.2% confidence."
   }
 }
