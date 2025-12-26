@@ -22,6 +22,7 @@
     "src/cron/mlCron.ts",
     "src/routes/bettingInsights.ts",
     "src/routes/notifications.ts",
+    "src/routes/stats.ts",
     "src/services/betBuilderOfTheDayService.ts",
     "src/services/betBuilderService.ts",
     "src/services/fetchAndNormalizeOdds.ts",
