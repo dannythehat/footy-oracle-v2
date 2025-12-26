@@ -1,4 +1,4 @@
-﻿import express from "express";
+import express from "express";
 import mongoose from "mongoose";
 
 const router = express.Router();
@@ -22,10 +22,6 @@ router.get("/today", async (req, res) => {
       homeTeam: data.fixture?.split(' vs ')[0] || data.home_team || '',
       awayTeam: data.fixture?.split(' vs ')[1] || data.away_team || '',
       league: data.league,
-      kickoff: data.bet_builder.kickoff,
-      legs: (data.bet_builder.markets || data.bet_builder.legs || []).map(m => ({
-        market: m.market,
-        selection: m.prediction || m.selection,
       kickoff: data.kickoff,
       markets: (data.markets || []).map((m: any) => ({
         market: m.market,
@@ -52,4 +48,3 @@ router.get("/today", async (req, res) => {
 });
 
 export default router;
-
