@@ -19,20 +19,25 @@ router.get("/today", async (req, res) => {
     }
 
     // Transform to frontend format
-    const transformed = bets.map(bet => ({
-      id: bet.bet_id || `${bet.fixture_id}_${bet.market}`,
-      fixtureId: bet.fixture_id,
-      homeTeam: bet.home_team,
-      awayTeam: bet.away_team,
-      league: bet.league,
-      kickoff: bet.kickoff,
-      market: bet.market,
-      selection: bet.prediction || 'Yes',
-      confidence: bet.confidence || 0,
-      odds: bet.odds || 1.75,
-      aiExplanation: bet.commentary || bet.gaffer_says || "No commentary available",
-      status: bet.result || "pending"
-    }));
+    const transformed = bets.map(bet => {
+      // Parse "Team A vs Team B" from fixture string
+      const teams = bet.fixture ? bet.fixture.split(' vs ') : ['Unknown', 'Unknown'];
+      
+      return {
+        id: bet.bet_id || `${bet.fixture_id}_${bet.market}`,
+        fixtureId: bet.fixture_id,
+        homeTeam: teams[0] || bet.home_team || '',
+        awayTeam: teams[1] || bet.away_team || '',
+        league: bet.league,
+        kickoff: bet.kickoff,
+        market: bet.market,
+        selection: bet.prediction || 'Yes',
+        confidence: bet.confidence || 0,
+        odds: bet.odds || 1.75,
+        aiExplanation: bet.commentary || bet.gaffer_says || "No commentary available",
+        status: bet.result || "pending"
+      };
+    });
 
     return res.json({
       success: true,
