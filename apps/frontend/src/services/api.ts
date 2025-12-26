@@ -21,3 +21,5 @@ export const api = {
   fixturesStats: () => fetchJSON("/api/fixtures/stats"),
   leagueTables: () => fetchJSON("/api/league-tables"),
 };
+
+export default api;
