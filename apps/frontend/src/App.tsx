@@ -1,7 +1,7 @@
 import React from 'react';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import HomePageWithBetBuilder from './pages/HomePageWithBetBuilder';
+import HomePage from './pages';
 import LeagueTablesPage from './pages/LeagueTablesPage';
 import PnLHubPage from './pages/PnLHubPage';
 import './index.css';
@@ -13,7 +13,7 @@ function App() {
     <QueryClientProvider client={queryClient}>
       <BrowserRouter>
         <Routes>
-          <Route path="/" element={<HomePageWithBetBuilder />} />
+          <Route path="/" element={<HomePage />} />
           <Route path="/league-tables" element={<LeagueTablesPage />} />
           <Route path="/pnl-hub" element={<PnLHubPage />} />
         </Routes>
