@@ -7,7 +7,7 @@ services:
 
     rootDir: ./apps/backend
 
-    buildCommand: npm install
+    buildCommand: npm install && npm run build
     startCommand: npm start
 
     healthCheckPath: /health
