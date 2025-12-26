@@ -16,5 +16,8 @@ export const api = {
   fixturesToday: () => fetchJSON("/api/fixtures/today?tzOffset=-120"),
   goldenBetsToday: () => fetchJSON("/api/golden-bets/today"),
   valueBetsToday: () => fetchJSON("/api/value-bets/today"),
-  betBuilderToday: () => fetchJSON("/api/betbuilder"),
+  betBuilderToday: () => fetchJSON("/api/bet-builder/today"),
+  pnlSummary: () => fetchJSON("/api/pnl/summary"),
+  fixturesStats: () => fetchJSON("/api/fixtures/stats"),
+  leagueTables: () => fetchJSON("/api/league-tables"),
 };

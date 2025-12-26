@@ -5,11 +5,11 @@ const router = express.Router();
 
 router.get("/today", async (req, res) => {
   try {
-    const rawData = predictionCache.getGoldenBets() || [];
+    const rawData: any = predictionCache.getGoldenBets() || [];
     
     // Handle both old and new data structures
-    let bets = [];
-    if (rawData.golden_bets) {
+    let bets: any[] = [];
+    if (rawData && typeof rawData === 'object' && rawData.golden_bets) {
       // New structure from COMPLETE_PRODUCTION_PIPELINE.py
       bets = rawData.golden_bets;
     } else if (Array.isArray(rawData)) {
