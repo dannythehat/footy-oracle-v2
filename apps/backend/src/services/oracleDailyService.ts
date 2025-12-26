@@ -1,7 +1,8 @@
 import fs from "fs";
 import path from "path";
 import { getTodayFixturesFromDB } from "./fixtureReadService";
-import { runOracleSelectionEngine } from "./oracleSelectionEngine";
+import { runOracleSelectionEngine, BetCandidate } from "./oracleSelectionEngine";
+import { SupportedMarketGroup } from "../config/supportedMarkets";
 
 function loadJson<T>(filePath: string): T {
   if (!fs.existsSync(filePath)) {
@@ -75,16 +76,39 @@ export async function generateDailyOracle() {
     }
   }
 
-  const candidates = fixtures
-    .map(f => {
-      const fid = String(f.fixtureId);
-      return {
-        fixture: f,
-        prediction: predictionMap.get(fid),
-        odds: oddsMap.get(fid),
-      };
-    })
-    .filter(c => c.prediction && c.odds);
+  const candidates: BetCandidate[] = [];
+  
+  for (const f of fixtures) {
+    const fid = String(f.fixtureId);
+    const prediction = predictionMap.get(fid);
+    const odds = oddsMap.get(fid);
+    
+    if (!prediction || !odds) continue;
+    
+    // Extract predictions for each market
+    const markets = [
+      { key: 'goals', market: 'GOALS' as SupportedMarketGroup, line: 'O2.5' },
+      { key: 'btts', market: 'BTTS' as SupportedMarketGroup, line: 'BTTS_YES' },
+      { key: 'corners', market: 'CORNERS' as SupportedMarketGroup, line: 'O9.5' },
+      { key: 'cards', market: 'CARDS' as SupportedMarketGroup, line: 'O3.5' }
+    ];
+    
+    for (const m of markets) {
+      const prob = prediction[m.key]?.probability || prediction[`${m.key}_probability`];
+      const marketOdds = odds[m.key]?.odds || odds[`${m.key}_odds`];
+      
+      if (prob && marketOdds && marketOdds > 1.0) {
+        candidates.push({
+          fixtureId: Number(f.fixtureId),
+          league: f.league || 'Unknown',
+          market: m.market,
+          line: m.line,
+          odds: marketOdds,
+          modelProbability: prob
+        });
+      }
+    }
+  }
 
   if (!candidates.length) {
     console.warn("⚠️ Oracle ran but no candidates matched.");
