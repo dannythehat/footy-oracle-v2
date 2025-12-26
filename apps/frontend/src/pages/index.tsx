@@ -160,9 +160,6 @@ export default function HomePage() {
                       <span className="px-3 py-1 bg-yellow-500/20 border border-yellow-500/50 rounded text-yellow-400 font-bold text-sm uppercase">
                         {bet.market}
                       </span>
-                      <span className="px-3 py-1 bg-[#00dd00]/10 border border-[#00dd00]/30 rounded text-[#00dd00] font-bold text-sm">
-                        Odds: {bet.odds}
-                      </span>
                     </div>
                     <div className="text-[#00dd00]/80 text-sm leading-relaxed">
                       {bet.aiExplanation}
