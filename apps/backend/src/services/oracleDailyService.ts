@@ -1,8 +1,8 @@
 import fs from "fs";
 import path from "path";
-import { getTodayFixturesFromDB } from "./fixtureReadService";
-import { runOracleSelectionEngine, BetCandidate } from "./oracleSelectionEngine";
-import { SupportedMarketGroup } from "../config/supportedMarkets";
+import { getTodayFixturesFromDB } from "./fixtureReadService.js";
+import { runOracleSelectionEngine, BetCandidate } from "./oracleSelectionEngine.js";
+import { SupportedMarketGroup } from "../config/supportedMarkets.js";
 
 function loadJson<T>(filePath: string): T {
   if (!fs.existsSync(filePath)) {

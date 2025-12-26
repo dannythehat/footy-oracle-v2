@@ -17,6 +17,11 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
+// Health check
+app.get("/health", (req, res) => {
+  res.json({ status: "ok", timestamp: new Date().toISOString() });
+});
+
 // Core routes
 app.use("/api/golden-bets", goldenBetsRoutes);
 app.use("/api/value-bets", valueBetsRoutes);
