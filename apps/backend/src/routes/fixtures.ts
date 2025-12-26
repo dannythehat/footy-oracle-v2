@@ -7,13 +7,16 @@ router.get("/today", async (req, res) => {
   try {
     const Fixture = mongoose.model("Fixture");
     
+    // Get today's date in YYYY-MM-DD format
     const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    const tomorrow = new Date(today);
-    tomorrow.setDate(tomorrow.getDate() + 2);
+    const year = today.getFullYear();
+    const month = String(today.getMonth() + 1).padStart(2, '0');
+    const day = String(today.getDate()).padStart(2, '0');
+    const dateStr = `${year}-${month}-${day}`;
 
+    // Match fixtures where kickoff string starts with today's date
     const fixtures = await Fixture.find({
-      kickoff: { $gte: today, $lt: tomorrow }
+      kickoff: { $regex: `^${dateStr}` }
     }).sort({ kickoff: 1 }).limit(100);
 
     return res.json({
@@ -28,10 +31,10 @@ router.get("/today", async (req, res) => {
         kickoff: f.kickoff,
         status: f.status || "scheduled",
         predictions: {
-          goals: f.goals_pred,
-          btts: f.btts_pred,
-          corners: f.corners_pred,
-          cards: f.cards_pred
+          goals: f.predictions?.goals?.confidence || null,
+          btts: f.predictions?.btts?.confidence || null,
+          corners: f.predictions?.corners?.confidence || null,
+          cards: f.predictions?.cards?.confidence || null
         }
       }))
     });
@@ -48,32 +51,34 @@ router.get("/stats", async (req, res) => {
   try {
     const Fixture = mongoose.model("Fixture");
     
+    // Get today's date in YYYY-MM-DD format
     const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    const tomorrow = new Date(today);
-    tomorrow.setDate(tomorrow.getDate() + 2);
+    const year = today.getFullYear();
+    const month = String(today.getMonth() + 1).padStart(2, '0');
+    const day = String(today.getDate()).padStart(2, '0');
+    const dateStr = `${year}-${month}-${day}`;
 
     const count = await Fixture.countDocuments({
-      kickoff: { $gte: today, $lt: tomorrow }
+      kickoff: { $regex: `^${dateStr}` }
     });
 
     // Get predictions count
     const fixtures = await Fixture.find({
-      kickoff: { $gte: today, $lt: tomorrow }
+      kickoff: { $regex: `^${dateStr}` }
     });
 
     const predictionsCount = fixtures.filter(f => 
-      f.goals_pred || f.btts_pred || f.corners_pred || f.cards_pred
+      f.predictions?.goals || f.predictions?.btts || f.predictions?.corners || f.predictions?.cards
     ).length;
 
     // Calculate average confidence
     let totalConf = 0;
     let confCount = 0;
     fixtures.forEach(f => {
-      if (f.goals_pred) { totalConf += f.goals_pred; confCount++; }
-      if (f.btts_pred) { totalConf += f.btts_pred; confCount++; }
-      if (f.corners_pred) { totalConf += f.corners_pred; confCount++; }
-      if (f.cards_pred) { totalConf += f.cards_pred; confCount++; }
+      if (f.predictions?.goals?.confidence) { totalConf += f.predictions.goals.confidence; confCount++; }
+      if (f.predictions?.btts?.confidence) { totalConf += f.predictions.btts.confidence; confCount++; }
+      if (f.predictions?.corners?.confidence) { totalConf += f.predictions.corners.confidence; confCount++; }
+      if (f.predictions?.cards?.confidence) { totalConf += f.predictions.cards.confidence; confCount++; }
     });
 
     const avgConfidence = confCount > 0 ? (totalConf / confCount) : 0;
