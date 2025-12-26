@@ -64,9 +64,9 @@ router.get('/fixtures/:fixtureId/complete', async (req: Request, res: Response):
     const mergedData = {
       ...completeData,
       // Include odds from MongoDB
-      odds: fixtureDoc.odds || {},
+      odds: (fixtureDoc as any).odds || {},
       // Include AI predictions from MongoDB
-      aiBets: fixtureDoc.aiBets || null,
+      aiBets: (fixtureDoc as any).aiBets || null,
       // Include basic fixture info
       fixtureId: fixtureDoc.fixtureId,
       homeTeam: fixtureDoc.homeTeam,
@@ -76,16 +76,16 @@ router.get('/fixtures/:fixtureId/complete', async (req: Request, res: Response):
       league: fixtureDoc.league,
       leagueName: fixtureDoc.league,
       leagueId: fixtureDoc.leagueId,
-      country: fixtureDoc.country,
-      season: fixtureDoc.season,
+      country: (fixtureDoc as any).country || '',
+      season: (fixtureDoc as any).season || '',
       date: fixtureDoc.date,
       kickoff: fixtureDoc.date,
       status: fixtureDoc.status,
-      statusShort: fixtureDoc.statusShort,
-      elapsed: fixtureDoc.elapsed,
-      homeScore: fixtureDoc.homeScore,
-      awayScore: fixtureDoc.awayScore,
-      score: fixtureDoc.score
+      statusShort: (fixtureDoc as any).statusShort || '',
+      elapsed: (fixtureDoc as any).elapsed || 0,
+      homeScore: (fixtureDoc as any).homeScore || 0,
+      awayScore: (fixtureDoc as any).awayScore || 0,
+      score: (fixtureDoc as any).score || null
     };
 
     res.json({

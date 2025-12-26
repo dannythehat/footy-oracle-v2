@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { Prediction } from '../models/Prediction.js';
-import { getTrebleStats, getTodaysTreble, getHistoricalTrebles } from '../services/trebleService.js';
+// import { getTrebleStats, getTodaysTreble, getHistoricalTrebles } from '../services/trebleService.js';
 import { getSettlementStats } from '../services/resultSettlementService.js';
 
 const router = Router();

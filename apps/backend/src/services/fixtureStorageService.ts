@@ -11,7 +11,7 @@ export async function fetchAndStoreFixtures(date: string): Promise<number> {
     console.log(`\n🔄 Starting fixture fetch and store for ${date}...`);
     
     // Fetch fixtures with odds from API-Football
-    const fixturesData = await fetchFixturesWithOdds(date);
+    const fixturesData = await fetchFixturesWithOdds();
     
     if (fixturesData.length === 0) {
       console.log(`ℹ️  No fixtures to store for ${date}`);
